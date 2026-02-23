@@ -23,6 +23,12 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // add exchange_template_id to patients so each patient can be linked to a template
+        if (Schema::hasTable('patients') && !Schema::hasColumn('patients', 'exchange_template_id')) {
+            Schema::table('patients', function (Blueprint $table) {
+                $table->foreignId('exchange_template_id')->nullable()->constrained('exchange_templates')->nullOnDelete();
+            });
+        }
     }
 
     /**
