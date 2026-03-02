@@ -52,7 +52,6 @@
                                         <select name="gender" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
-                                            <option value="other">Other</option>
                                         </select>
                                         <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                                     </td>

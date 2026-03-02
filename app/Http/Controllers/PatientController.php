@@ -35,7 +35,7 @@ class PatientController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'age' => 'required|integer|min:0|max:150',
-            'gender' => 'required|in:male,female,other',
+            'gender' => 'required|in:male,female',
             'weight' => 'required|numeric|min:0',
             'height' => 'required|numeric|min:0',
             'activity_factor' => 'required|numeric|min:0',
@@ -114,7 +114,7 @@ class PatientController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'age' => 'required|integer|min:0|max:150',
-            'gender' => 'required|in:male,female,other',
+            'gender' => 'required|in:male,female',
             'weight' => 'required|numeric|min:0',
             'height' => 'required|numeric|min:0',
             'activity_factor' => 'required|numeric|min:0',
