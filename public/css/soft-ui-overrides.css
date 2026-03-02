@@ -681,6 +681,107 @@ select.edit-input { cursor: pointer; }
 .exchange-table tbody tr:last-child td { border-bottom: none; }
 .exchange-table tbody tr:hover { background: #fef9f5; }
 
+/* Meal plan distribution table */
+#meal-plan-table { table-layout: fixed; width: 100%; min-width: 600px; }
+#meal-plan-table thead th {
+    padding: .55rem .5rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#meal-plan-table thead th:first-child { text-align: left; min-width: 120px; }
+#meal-plan-table thead th:nth-child(2) { width: 48px; }
+#meal-plan-table thead th:last-child   { width: 64px; }
+#meal-plan-table tbody td {
+    padding: .35rem .4rem;
+    text-align: center;
+    vertical-align: middle;
+}
+#meal-plan-table tbody td:first-child { text-align: left; padding-left: .6rem; }
+.meal-slot-input {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .3rem .25rem;
+    font-size: .82rem;
+    background: #fafafa;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .15s, background .15s;
+}
+.meal-slot-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(249,115,22,.15);
+}
+.meal-slot-input::placeholder { color: #cbd5e1; }
+
+/* ── Form helpers (used in meal-items create/edit) ───────────── */
+.form-label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: .35rem;
+    letter-spacing: .02em;
+}
+.form-input {
+    width: 100%;
+    padding: .45rem .7rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .85rem;
+    background: #fafafa;
+    color: var(--text-primary);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .15s, box-shadow .15s;
+}
+.form-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+}
+.form-error {
+    font-size: .75rem;
+    color: #b91c1c;
+    margin: .25rem 0 0;
+}
+
+/* Form fields (meal items create/edit) */
+.form-label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: .35rem;
+}
+.form-input {
+    display: block;
+    width: 100%;
+    padding: .45rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .85rem;
+    color: var(--text-primary);
+    background: #fff;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    box-sizing: border-box;
+}
+.form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+}
+.form-error {
+    font-size: .72rem;
+    color: #b91c1c;
+    margin-top: .25rem;
+}
+
 /* Back link */
 .btn-back {
     display: inline-flex;

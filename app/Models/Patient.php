@@ -25,15 +25,79 @@ class Patient extends Model
         'activity_factor' => 'float',
     ];
 
-    // Accessor to calculate BMR using Mifflin-St Jeor Equation
-    public function getBmrAttribute()
+    /**
+     * Mifflin-St Jeor helper — computes BMR in kcal/day using a given weight (kg).
+     */
+    private function mifflinStJeor(float $weightKg): ?float
     {
         if ($this->gender === 'male') {
-            return (10 * $this->weight) + (6.25 * $this->height) - (5 * $this->age) + 5;
+            return (10 * $weightKg) + (6.25 * $this->height) - (5 * $this->age) + 5;
         } elseif ($this->gender === 'female') {
-            return (10 * $this->weight) + (6.25 * $this->height) - (5 * $this->age) - 161;
+            return (10 * $weightKg) + (6.25 * $this->height) - (5 * $this->age) - 161;
         }
-        return null; // In case gender is not set or invalid
+        return null;
+    }
+
+    /**
+     * For obese patients (BMI > 30) the Mifflin-St Jeor equation overestimates
+     * energy needs when actual body weight is used. This accessor returns the
+     * weight that will be plugged into the equation:
+     *
+     *  - BMI ≤ 30 → actual weight
+     *  - BMI > 30 → Obesity-adjusted weight: IBW + 0.25 × (actual − IBW)
+     *
+     * Note: the 0.25 factor here is specifically for BMR estimation; it differs
+     * from the 0.4 factor used in the general clinical ABW accessor (getAbwAttribute).
+     */
+    public function getWeightForBmrAttribute(): ?float
+    {
+        $bmi = $this->bmi;
+        $ibw = $this->ibw;
+
+        if ($bmi && $bmi > 30 && $ibw && $this->weight > $ibw) {
+            return $ibw + 0.25 * ((float) $this->weight - $ibw);
+        }
+
+        return (float) $this->weight;
+    }
+
+    /**
+     * Accessor to calculate BMR using Mifflin-St Jeor Equation.
+     *
+     * When BMI > 30 the obesity-adjusted body weight (IBW + 0.25 × excess) is
+     * substituted for actual weight to avoid overestimating energy needs.
+     * Returns kcal/day (the rest of the application converts to kJ via × 4.184).
+     */
+    public function getBmrAttribute(): ?float
+    {
+        $weight = $this->weight_for_bmr;
+        return $weight !== null ? $this->mifflinStJeor($weight) : null;
+    }
+
+    /**
+     * BMR calculated with actual body weight (no obesity correction).
+     * Useful for displaying the "uncorrected" value alongside adjusted estimates.
+     */
+    public function getBmrActualAttribute(): ?float
+    {
+        return $this->mifflinStJeor((float) $this->weight);
+    }
+
+    /**
+     * BMR using the BMI-adjusted weight cap method:
+     * The weight entered into Mifflin-St Jeor is capped at the weight
+     * corresponding to BMI 25 kg/m²  (i.e. 25 × height² in metres).
+     * Only differs from getBmrAttribute when BMI > 25.
+     */
+    public function getBmrBmiAdjustedAttribute(): ?float
+    {
+        if (!$this->height || $this->height <= 0) {
+            return null;
+        }
+        $heightM      = $this->height / 100;
+        $cappedWeight = 25 * $heightM * $heightM;           // weight at BMI = 25
+        $weight       = min((float) $this->weight, $cappedWeight);
+        return $this->mifflinStJeor($weight);
     }
 
     // Accessor to calculate BMI

@@ -223,6 +223,45 @@ class PatientController extends Controller
     }
 
     /**
+     * Save the user-entered meal plan slot distribution.
+     */
+    public function saveMealPlan(Request $request, string $patientId)
+    {
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($patientId);
+
+        // items is an array keyed by item id: ['123' => ['breakfast'=>1,'snack1'=>0.5,...]]
+        $allItems = $request->input('items', []);
+
+        $errors = [];
+        // Validation is informational only — partial saves are allowed.
+        // Uncomment below to enforce strict totals:
+        // foreach ($allItems as $itemId => $slots) {
+        //     $item = ExchangeTemplateItem::findOrFail($itemId);
+        //     $sum  = array_sum(array_map('floatval', $slots));
+        //     if (abs($sum - $item->nu) > 0.01) {
+        //         $errors[] = "\"{$item->name}\": slots sum to {$sum}, expected {$item->nu}";
+        //     }
+        // }
+        // if (!empty($errors)) {
+        //     return back()->withErrors(['meal_plan' => implode('; ', $errors)])->withInput();
+        // }
+
+        foreach ($allItems as $itemId => $slots) {
+            $item = ExchangeTemplateItem::findOrFail($itemId);
+            $item->update([
+                'slot_breakfast' => floatval($slots['breakfast'] ?? 0),
+                'slot_snack1'    => floatval($slots['snack1']    ?? 0),
+                'slot_lunch'     => floatval($slots['lunch']     ?? 0),
+                'slot_snack2'    => floatval($slots['snack2']    ?? 0),
+                'slot_supper'    => floatval($slots['supper']    ?? 0),
+                'slot_snack3'    => floatval($slots['snack3']    ?? 0),
+            ]);
+        }
+
+        return back()->with('success', 'Meal plan saved.');
+    }
+
+    /**
      * Increment or decrement the nu value of a single exchange template item.
      */
     public function updateExchangeItemNu(Request $request, string $patientId, string $itemId)

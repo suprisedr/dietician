@@ -19,6 +19,21 @@ class ExchangeTemplateItem extends Model
         'fat_min_g',
         'fat_max_g',
         'kj',
+        'slot_breakfast',
+        'slot_snack1',
+        'slot_lunch',
+        'slot_snack2',
+        'slot_supper',
+        'slot_snack3',
+    ];
+
+    protected $casts = [
+        'slot_breakfast' => 'float',
+        'slot_snack1'    => 'float',
+        'slot_lunch'     => 'float',
+        'slot_snack2'    => 'float',
+        'slot_supper'    => 'float',
+        'slot_snack3'    => 'float',
     ];
 
     public function template(): BelongsTo

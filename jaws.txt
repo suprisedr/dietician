@@ -1,0 +1,6 @@
+DB_CONNECTION: mysql
+DB_HOST: ou6zjjcqbi307lip.cbetxkdyhwsb.us-east-1.rds.amazonaws.com
+DB_PORT: 3306
+DB_DATABASE: oxvcd9eyceps5n03
+DB_USERNAME: faj41f6udyt0vy43
+DB_PASSWORD: kak605d7yumqvkko

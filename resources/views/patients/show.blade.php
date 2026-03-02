@@ -9,11 +9,40 @@
         $teeKcal  = $patient->tee ? round($patient->tee / 4.184) : null;
         $teeKj    = ($patient->tee ?? 0) * 4.184;
 
+        // Obesity BMR adjustments (only relevant when BMI > 30)
+        $isObese          = ($patient->bmi ?? 0) > 30;
+        $bmrActual        = $patient->bmr_actual;           // kcal — actual weight, no correction
+        $bmrAbwAdj        = $patient->bmr;                  // kcal — IBW + 0.25×(actual−IBW)
+        $bmrBmiAdj        = $patient->bmr_bmi_adjusted;     // kcal — capped at BMI 25 weight
+        $weightForBmr     = $patient->weight_for_bmr;       // kg used in primary BMR
+
+        // TEE variants (kJ) for the two additional estimates
+        $teeAbwAdjKj      = ($bmrAbwAdj  && $patient->activity_factor) ? $bmrAbwAdj  * $patient->activity_factor * 4.184 : null;
+        $teeBmiAdjKj      = ($bmrBmiAdj  && $patient->activity_factor) ? $bmrBmiAdj  * $patient->activity_factor * 4.184 : null;
+        $teeActualKj      = ($bmrActual  && $patient->activity_factor) ? $bmrActual  * $patient->activity_factor * 4.184 : null;
+
         $macroColors = [
             'carbohydrate' => ['dot'=>'#f97316','bg'=>'rgba(249,115,22,.12)','text'=>'#c2410c'],
             'protein'      => ['dot'=>'#6366f1','bg'=>'rgba(99,102,241,.12)', 'text'=>'#4338ca'],
             'fat'          => ['dot'=>'#14b8a6','bg'=>'rgba(20,184,166,.12)',  'text'=>'#0f766e'],
         ];
+
+        // Recommended intakes derived from TEE + macro targets
+        // kJ factors: CHO=17, Protein=17, Fat=37 (Atwater)
+        $macroByType = $patient->macronutrients->keyBy('type');
+        $recCho_g    = null; $recPro_g  = null; $recFat_g  = null;
+        $recCho_kj   = null; $recPro_kj = null; $recFat_kj = null;
+        if ($teeKj > 0) {
+            $choPct  = optional($macroByType->get('carbohydrate'))->selected_percentage ?? 0;
+            $proPct  = optional($macroByType->get('protein'))->selected_percentage      ?? 0;
+            $fatPct  = optional($macroByType->get('fat'))->selected_percentage          ?? 0;
+            $recCho_kj  = round($teeKj * $choPct / 100);
+            $recPro_kj  = round($teeKj * $proPct / 100);
+            $recFat_kj  = round($teeKj * $fatPct / 100);
+            $recCho_g   = $recCho_kj > 0 ? round($recCho_kj / 17) : 0;
+            $recPro_g   = $recPro_kj > 0 ? round($recPro_kj / 17) : 0;
+            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 37) : 0;
+        }
     @endphp
 
     <div class="patient-hero">
@@ -66,8 +95,8 @@
                 @endif
             </div>
             <div class="metric-card">
-                <div class="mc-val">{{ $patient->bmr ? number_format($patient->bmr, 0) : '—' }}</div>
-                <div class="mc-label">BMR</div>
+                <div class="mc-val">{{ $patient->bmr ? number_format($patient->bmr * 4.184, 0) : '—' }}</div>
+                <div class="mc-label">BMR @if($isObese)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#fff7ed;color:#c2410c;border-radius:999px;vertical-align:middle">Adj.</span>@endif</div>
                 <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
@@ -115,12 +144,78 @@
                         <div class="info-item"><dt>Weight</dt><dd>{{ $patient->weight }} kg</dd></div>
                         <div class="info-item"><dt>Height</dt><dd>{{ $patient->height }} cm</dd></div>
                         <div class="info-item"><dt>IBW</dt><dd>{{ $patient->ibw ? number_format($patient->ibw, 2).' kg' : '—' }}</dd></div>
-                        <div class="info-item"><dt>ABW</dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
+                        <div class="info-item"><dt>ABW <span style="font-size:.65rem;color:var(--text-muted);font-weight:500">(0.4 factor)</span></dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
                         <div class="info-item"><dt>Activity Factor</dt><dd>{{ $patient->activity_factor }}</dd></div>
-                        <div class="info-item"><dt>BMR / RMR</dt><dd>{{ $patient->bmr ? number_format($patient->bmr, 0).' kJ/day' : '—' }}</dd></div>
+                        <div class="info-item">
+                            <dt>BMR / RMR
+                                @if($isObese)
+                                    <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
+                                @endif
+                            </dt>
+                            <dd>{{ $patient->bmr ? number_format($patient->bmr * 4.184, 0).' kJ/day' : '—' }}</dd>
+                        </div>
                         <div class="info-item"><dt>TEE</dt><dd>{{ $patient->tee ? number_format($patient->tee, 0).' kJ/day' : '—' }}</dd></div>
                         <div class="info-item"><dt>TEE (kcal)</dt><dd>{{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}</dd></div>
                     </dl>
+
+                    @if($isObese)
+                    {{-- ── Obesity energy adjustment panel ── --}}
+                    <div style="padding:1rem 1.25rem;border-top:1px solid var(--border);background:#fff7ed">
+                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:#f97316;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            </svg>
+                            <span style="font-size:.78rem;font-weight:700;color:#c2410c">Obesity adjustment active (BMI {{ number_format($patient->bmi, 1) }} &gt; 30)</span>
+                        </div>
+                        <p style="font-size:.75rem;color:#92400e;line-height:1.6;margin-bottom:1rem">
+                            Using <strong>actual body weight</strong> in Mifflin-St Jeor overestimates
+                            energy needs in obesity. The primary BMR above uses
+                            <strong>{{ number_format($weightForBmr, 1) }} kg</strong>
+                            (IBW&nbsp;+&nbsp;0.25&nbsp;×&nbsp;excess).
+                            Two alternative estimates are shown below for comparison.
+                        </p>
+
+                        <table style="width:100%;font-size:.78rem;border-collapse:collapse">
+                            <thead>
+                                <tr style="border-bottom:1px solid #fed7aa">
+                                    <th style="text-align:left;font-weight:700;color:#92400e;padding:.35rem .5rem .35rem 0">Method</th>
+                                    <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">Weight used</th>
+                                    <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">BMR (kJ)</th>
+                                    <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">TEE (kJ)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background:rgba(249,115,22,.06)">
+                                    <td style="padding:.45rem .5rem .45rem 0;font-weight:700;color:#c2410c">
+                                        ABW-adjusted
+                                        <span style="display:block;font-size:.65rem;font-weight:500;color:#92400e">IBW + 0.25 × (actual − IBW)</span>
+                                    </td>
+                                    <td style="text-align:right;font-weight:700;color:#0f172a">{{ number_format($weightForBmr, 1) }} kg</td>
+                                    <td style="text-align:right;font-weight:700;color:#0f172a">{{ $bmrAbwAdj ? number_format($bmrAbwAdj * 4.184, 0) : '—' }}</td>
+                                    <td style="text-align:right;font-weight:700;color:#0f172a">{{ $teeAbwAdjKj ? number_format($teeAbwAdjKj, 0) : '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:.45rem .5rem .45rem 0;color:#374151">
+                                        BMI-adjusted cap
+                                        <span style="display:block;font-size:.65rem;color:#6b7280">Weight capped at BMI&nbsp;25&nbsp;({{ number_format(25 * pow($patient->height / 100, 2), 1) }}&nbsp;kg)</span>
+                                    </td>
+                                    <td style="text-align:right;color:#374151">{{ number_format(min((float)$patient->weight, 25 * pow($patient->height / 100, 2)), 1) }} kg</td>
+                                    <td style="text-align:right;color:#374151">{{ $bmrBmiAdj ? number_format($bmrBmiAdj * 4.184, 0) : '—' }}</td>
+                                    <td style="text-align:right;color:#374151">{{ $teeBmiAdjKj ? number_format($teeBmiAdjKj, 0) : '—' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #fed7aa">
+                                    <td style="padding:.45rem .5rem .45rem 0;color:#6b7280">
+                                        Actual weight (no correction)
+                                        <span style="display:block;font-size:.65rem;color:#9ca3af">May overestimate in obesity</span>
+                                    </td>
+                                    <td style="text-align:right;color:#6b7280">{{ $patient->weight }} kg</td>
+                                    <td style="text-align:right;color:#6b7280">{{ $bmrActual ? number_format($bmrActual * 4.184, 0) : '—' }}</td>
+                                    <td style="text-align:right;color:#6b7280">{{ $teeActualKj ? number_format($teeActualKj, 0) : '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
                 </div>
 
 
@@ -359,68 +454,159 @@
                     </button>
                 </form>
             </div>
-        </div>
+        </details>
         @endif
 
         {{-- ═══════════════════════════════════════════
-             MEAL PLAN DISTRIBUTION (uses nu values)
+             NUTRIENT ANALYSIS SUMMARY
         ═══════════════════════════════════════════ --}}
-        @if($patient->exchangeTemplate)
-        <details class="mt-6">
-            <summary class="font-semibold cursor-pointer py-2">Meal Plan ▾</summary>
-            <div class="dash-section">
+        @if($patient->exchangeTemplate && $teeKj > 0)
+        <details class="mt-4" id="nutrient-analysis-details" open>
+            <summary class="font-semibold cursor-pointer py-2">Nutrient Analysis ▾</summary>
+            <div class="dash-section" id="nutrient-analysis">
             <div class="dash-section-header">
-                <span class="dash-section-title">Meal Plan</span>
+                <span class="dash-section-title">Nutrient Analysis</span>
+                <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="exchange-table">
+            <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
+                <table style="width:100%;border-collapse:collapse;font-size:.84rem">
                     <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>No</th>
-                            <th>Breakf</th>
-                            <th>Snack</th>
-                            <th>Lunch</th>
-                            <th>Snack</th>
-                            <th>Supper</th>
-                            <th>Snack</th>
-                            <th>Total</th>
+                        <tr style="border-bottom:2px solid var(--border)">
+                            <th style="text-align:left;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc"></th>
+                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Recommended</th>
+                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Actual</th>
+                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Difference</th>
+                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">% of TEE</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($patient->exchangeTemplate->items as $item)
-                        @php
-                            // simple sequential allocation of nu across six meal slots
-                            $slots = ['b','s1','l','s2','su','s3'];
-                            $remain = $item->nu;
-                            $plan = array_fill_keys($slots, 0);
-                            foreach($slots as $slot) {
-                                if($remain <= 0) break;
-                                if($remain >= 1) {
-                                    $plan[$slot] = 1;
-                                    $remain -= 1;
-                                } else {
-                                    $plan[$slot] = $remain;
-                                    $remain = 0;
-                                }
-                            }
-                        @endphp
-                        <tr>
-                            <td>{{ Str::limit($item->name, 5) }}</td>
-                            <td>{{ $item->nu }}</td>
-                            <td>{{ $plan['b'] ?: '' }}</td>
-                            <td>{{ $plan['s1'] ?: '' }}</td>
-                            <td>{{ $plan['l'] ?: '' }}</td>
-                            <td>{{ $plan['s2'] ?: '' }}</td>
-                            <td>{{ $plan['su'] ?: '' }}</td>
-                            <td>{{ $plan['s3'] ?: '' }}</td>
-                            <td>{{ $item->nu }}</td>
+                        {{-- Carbohydrates --}}
+                        <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                            <td style="padding:.6rem .75rem;font-weight:700;color:#c2410c">
+                                <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#f97316;margin-right:.4rem;vertical-align:.05rem"></span>
+                                Carbs (g)
+                            </td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:700" id="na-cho-act">—</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-cho-diff">—</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-cho-pct">—</td>
                         </tr>
-                        @endforeach
+                        {{-- Protein --}}
+                        <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                            <td style="padding:.6rem .75rem;font-weight:700;color:#4338ca">
+                                <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#6366f1;margin-right:.4rem;vertical-align:.05rem"></span>
+                                Protein (g)
+                            </td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:700" id="na-pro-act">—</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-pro-diff">—</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-pro-pct">—</td>
+                        </tr>
+                        {{-- Fat --}}
+                        <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                            <td style="padding:.6rem .75rem;font-weight:700;color:#0f766e">
+                                <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#14b8a6;margin-right:.4rem;vertical-align:.05rem"></span>
+                                Fat (g)
+                            </td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:700" id="na-fat-act">—</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-fat-diff">—</td>
+                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-fat-pct">—</td>
+                        </tr>
+                        {{-- Energy --}}
+                        <tr style="background:#f8fafc;border-top:2px solid var(--border)">
+                            <td style="padding:.65rem .75rem;font-weight:800;color:var(--text-primary)">
+                                Energy (kJ)
+                            </td>
+                            <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-rec">{{ $teeKj ? round($teeKj) : '—' }}</td>
+                            <td style="text-align:right;padding:.65rem .75rem;font-weight:800;color:var(--primary)" id="na-kj-act">—</td>
+                            <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-diff">—</td>
+                            <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-pct">—</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
+            </div>
+        </details>
+        @endif (uses nu values)
+        ═══════════════════════════════════════════ --}}
+        @if($patient->exchangeTemplate)
+        <details class="mt-6" id="meal-plan-details">
+            <summary class="font-semibold cursor-pointer py-2">Meal Plan ▾</summary>
+            <div class="dash-section">
+                <div class="dash-section-header" style="justify-content:space-between;align-items:center">
+                    <span class="dash-section-title">Meal Plan Distribution</span>
+                    <span style="font-size:.75rem;color:var(--text-muted)">Enter serving exchanges per meal — each row must sum to the total (No)</span>
+                </div>
+
+                @if(session('success') && str_contains(session('success'), 'Meal plan'))
+                    <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#dcfce7;color:#15803d;border-radius:6px;font-size:.82rem;font-weight:600">
+                        ✓ {{ session('success') }}
+                    </div>
+                @endif
+                @error('meal_plan')
+                    <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#fee2e2;color:#b91c1c;border-radius:6px;font-size:.82rem">
+                        ⚠ {{ $message }}
+                    </div>
+                @enderror
+
+                <form method="POST" action="{{ route('patients.meal-plan.save', $patient) }}" id="meal-plan-form">
+                    @csrf @method('PATCH')
+                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
+                        <table class="exchange-table" id="meal-plan-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>No</th>
+                                    <th>Breakf</th>
+                                    <th>Snack</th>
+                                    <th>Lunch</th>
+                                    <th>Snack</th>
+                                    <th>Supper</th>
+                                    <th>Snack</th>
+                                    <th>Sum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($patient->exchangeTemplate->items as $item)
+                                <tr data-nu="{{ $item->nu }}" data-item-id="{{ $item->id }}">
+                                    <td style="font-weight:600">{{ $item->name }}</td>
+                                    <td style="font-weight:700">{{ $item->nu }}</td>
+                                    @foreach(['breakfast','snack1','lunch','snack2','supper','snack3'] as $slot)
+                                    <td>
+                                        <input
+                                            type="number"
+                                            name="items[{{ $item->id }}][{{ $slot }}]"
+                                            value="{{ $item->{'slot_'.$slot} > 0 ? $item->{'slot_'.$slot} + 0 : '' }}"
+                                            min="0"
+                                            step="0.5"
+                                            placeholder="—"
+                                            class="meal-slot-input"
+                                            data-row="{{ $item->id }}"
+                                        >
+                                    </td>
+                                    @endforeach
+                                    <td>
+                                        <span class="row-sum" data-row="{{ $item->id }}"
+                                            style="font-weight:700;font-size:.85rem;display:block">0</span>
+                                        <span class="row-status" data-row="{{ $item->id }}"
+                                            style="display:block;font-size:.65rem;font-weight:700"></span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="padding:.75rem 1.25rem 1.25rem;display:flex;align-items:center;gap:1rem">
+                        <button type="submit" id="meal-plan-save"
+                            style="padding:.5rem 1.5rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer">
+                            Save Meal Plan
+                        </button>
+                        <span id="meal-plan-status" style="font-size:.8rem;color:var(--text-muted)"></span>
+                    </div>
+                </form>
+            </div>
+        </details>
         @endif
 
     </div>
@@ -524,6 +710,71 @@
             document.getElementById('tot-kj-fmin').textContent = kjFmin || '—';
             document.getElementById('tot-kj-fmax').textContent = kjFmax || '—';
             document.getElementById('tot-kj-total').textContent = kjTotalMacros || '—';
+
+            // ── Nutrient Analysis Summary ──────────────────────────────
+            const teeKjVal  = {{ $teeKj ?: 0 }};
+            const recChoG   = {{ $recCho_g  ?? 'null' }};
+            const recProG   = {{ $recPro_g  ?? 'null' }};
+            const recFatG   = {{ $recFat_g  ?? 'null' }};
+
+            // actual grams: use midpoint of min/max for protein & fat
+            const actChoG  = sums.cho;
+            const actProG  = sums.pmin && sums.pmax ? Math.round((sums.pmin + sums.pmax) / 2) : (sums.pmin || sums.pmax || 0);
+            const actFatG  = sums.fmin && sums.fmax ? Math.round((sums.fmin + sums.fmax) / 2) : (sums.fmin || sums.fmax || 0);
+            // actual kJ from exchange template
+            const actKj    = sums.kj;
+            // % of TEE
+            const actChoKj = actChoG * 17;
+            const actProKj = actProG * 17;
+            const actFatKj = actFatG * 37;
+
+            function naSet(id, val, refVal, isKj) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (val === null || val === 0) { el.textContent = '—'; el.style.color = ''; return; }
+                el.textContent = isKj ? Math.round(val) : val;
+                if (refVal !== null) {
+                    el.style.color = Math.abs(val - refVal) < 0.5 ? '#15803d'
+                                   : val < refVal ? '#b91c1c' : '#c2410c';
+                }
+            }
+
+            function naDiff(id, act, rec) {
+                const el = document.getElementById(id);
+                if (!el || rec === null) { if(el) el.textContent = '—'; return; }
+                const d = Math.round(act - rec);
+                const sign = d >= 0 ? '+' : '';
+                const color  = d < -0.5 ? '#b91c1c' : d > 0.5 ? '#c2410c' : '#15803d';
+                const bgColor= d < -0.5 ? '#fee2e2' : d > 0.5 ? '#fff7ed' : '#dcfce7';
+                el.innerHTML = '<span style="display:inline-block;padding:.15rem .5rem;border-radius:999px;font-weight:700;font-size:.8rem;background:'+bgColor+';color:'+color+'">'+sign+d+'</span>';
+            }
+
+            function naPct(id, actKj, tee) {
+                const el = document.getElementById(id);
+                if (!el || !tee) { if(el) el.textContent = '—'; return; }
+                const pct = actKj / tee * 100;
+                const diff = pct - 100;
+                const sign  = diff >= 0 ? '+' : '';
+                const color  = diff < -0.5 ? '#b91c1c' : diff > 0.5 ? '#c2410c' : '#15803d';
+                const bgColor= diff < -0.5 ? '#fee2e2' : diff > 0.5 ? '#fff7ed' : '#dcfce7';
+                el.innerHTML = '<span style="font-weight:700">'+pct.toFixed(1)+'%</span>'
+                             + ' <span style="display:inline-block;padding:.1rem .4rem;border-radius:999px;font-weight:700;font-size:.72rem;background:'+bgColor+';color:'+color+'">'+sign+diff.toFixed(1)+'%</span>';
+            }
+
+            naSet('na-cho-act',  actChoG,  recChoG,  false);
+            naSet('na-pro-act',  actProG,  recProG,  false);
+            naSet('na-fat-act',  actFatG,  recFatG,  false);
+            naSet('na-kj-act',   actKj,    teeKjVal, true);
+
+            naDiff('na-cho-diff', actChoG, recChoG);
+            naDiff('na-pro-diff', actProG, recProG);
+            naDiff('na-fat-diff', actFatG, recFatG);
+            naDiff('na-kj-diff',  actKj,   teeKjVal);
+
+            naPct('na-cho-pct', actChoKj, teeKjVal);
+            naPct('na-pro-pct', actProKj, teeKjVal);
+            naPct('na-fat-pct', actFatKj, teeKjVal);
+            naPct('na-kj-pct',  actKj,    teeKjVal);
         }
 
         // handle +/- forms
@@ -584,6 +835,91 @@
             document.querySelectorAll('#exchange-table tbody tr').forEach(recalcRow);
             recalcTotals();
         }
+    })();
+
+    // ═══════════════════════════════════════════
+    //  MEAL PLAN SLOT VALIDATOR
+    // ═══════════════════════════════════════════
+    (function () {
+        const form    = document.getElementById('meal-plan-form');
+        const saveBtn = document.getElementById('meal-plan-save');
+        const statusEl = document.getElementById('meal-plan-status');
+        if (!form) return;
+
+        function rowSum(rowId) {
+            let s = 0;
+            form.querySelectorAll('.meal-slot-input[data-row="' + rowId + '"]').forEach(function(inp) {
+                s += parseFloat(inp.value) || 0;
+            });
+            return Math.round(s * 1000) / 1000; // avoid float dust
+        }
+
+        function updateRow(rowId) {
+            const tr   = form.querySelector('tr[data-item-id="' + rowId + '"]');
+            if (!tr) return;
+            const nu   = parseFloat(tr.dataset.nu) || 0;
+            const sum  = rowSum(rowId);
+            const ok   = Math.abs(sum - nu) < 0.01;
+
+            const sumEl    = form.querySelector('.row-sum[data-row="' + rowId + '"]');
+            const statusEl = form.querySelector('.row-status[data-row="' + rowId + '"]');
+
+            if (sumEl) {
+                sumEl.textContent = sum % 1 === 0 ? sum : sum.toFixed(2);
+                sumEl.style.color = ok ? '#15803d' : '#b91c1c';
+            }
+            if (statusEl) {
+                statusEl.textContent = ok ? '✓' : (sum < nu ? '↑ need ' + (nu - sum).toFixed(2) : '↓ over by ' + (sum - nu).toFixed(2));
+                statusEl.style.color = ok ? '#15803d' : '#b91c1c';
+            }
+
+            // highlight inputs in this row — green when balanced, neutral when incomplete
+            form.querySelectorAll('.meal-slot-input[data-row="' + rowId + '"]').forEach(function(inp) {
+                inp.style.borderColor = ok ? '#86efac' : '';
+                inp.style.background  = ok ? '#f0fdf4' : '';
+            });
+        }
+
+        function allRowsValid() {
+            let valid = true;
+            form.querySelectorAll('tr[data-item-id]').forEach(function(tr) {
+                const nu  = parseFloat(tr.dataset.nu) || 0;
+                const sum = rowSum(tr.dataset.itemId);
+                if (Math.abs(sum - nu) >= 0.01) valid = false;
+            });
+            return valid;
+        }
+
+        function updateSaveButton() {
+            const valid = allRowsValid();
+            if (statusEl) {
+                statusEl.textContent = valid ? 'All rows balance.' : 'Some rows don\'t sum to their total yet.';
+                statusEl.style.color = valid ? '#15803d' : '#92400e';
+            }
+        }
+
+        // initialise on load
+        form.querySelectorAll('tr[data-item-id]').forEach(function(tr) {
+            updateRow(tr.dataset.itemId);
+        });
+        updateSaveButton();
+
+        // live update on any input change
+        form.addEventListener('input', function(e) {
+            if (!e.target.classList.contains('meal-slot-input')) return;
+            updateRow(e.target.dataset.row);
+            updateSaveButton();
+        });
+
+        // prevent negative values
+        form.addEventListener('change', function(e) {
+            if (!e.target.classList.contains('meal-slot-input')) return;
+            if (parseFloat(e.target.value) < 0) e.target.value = 0;
+            updateRow(e.target.dataset.row);
+            updateSaveButton();
+        });
+
+        // submit always allowed — partial saves are permitted
     })();
     </script>
 
