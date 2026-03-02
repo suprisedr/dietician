@@ -24,6 +24,6 @@ Route::middleware('auth')->group(function () {
 // public pricing page
 Route::get('/pricing', function () {
     return view('pricing');
-});
+})->name('pricing');
 
 require __DIR__.'/auth.php';
