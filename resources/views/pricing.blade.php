@@ -211,7 +211,7 @@
             @auth
                 <a href="{{ route('subscription.checkout', 'package_1') }}" class="pc-cta solid-green">Subscribe &mdash; R 499/mo</a>
             @else
-                <a href="{{ route('register') }}" class="pc-cta solid-green">Get Package 1</a>
+                <a href="{{ route('register') }}?plan=package_1" class="pc-cta solid-green">Get Package 1</a>
             @endauth
         </div>
 
@@ -231,7 +231,7 @@
             @auth
                 <a href="{{ route('subscription.checkout', 'package_2') }}" class="pc-cta outline">Subscribe &mdash; R 699/mo</a>
             @else
-                <a href="{{ route('register') }}" class="pc-cta outline">Get Package 2</a>
+                <a href="{{ route('register') }}?plan=package_2" class="pc-cta outline">Get Package 2</a>
             @endauth
         </div>
 
@@ -252,7 +252,7 @@
             @auth
                 <a href="{{ route('subscription.checkout', 'package_3') }}" class="pc-cta outline">Subscribe &mdash; R 899/mo</a>
             @else
-                <a href="{{ route('register') }}" class="pc-cta outline">Get Package 3</a>
+                <a href="{{ route('register') }}?plan=package_3" class="pc-cta outline">Get Package 3</a>
             @endauth
         </div>
 

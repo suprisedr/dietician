@@ -17,8 +17,18 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(\Illuminate\Http\Request $request): View
     {
+        if ($request->filled('plan')) {
+            $slug = $request->input('plan');
+            $allowed = ['package_1', 'package_2', 'package_3'];
+            if (in_array($slug, $allowed)) {
+                session(['pending_plan' => $slug]);
+                // Also set intended so login redirects correctly if user logs in instead
+                session()->put('url.intended', route('subscription.checkout', $slug));
+            }
+        }
+
         return view('auth.register');
     }
 
@@ -46,6 +56,10 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        if ($pendingPlan = session()->pull('pending_plan')) {
+            return redirect()->route('subscription.checkout', $pendingPlan);
+        }
 
         return redirect(route('dashboard', absolute: false));
     }
