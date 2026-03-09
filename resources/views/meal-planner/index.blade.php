@@ -51,9 +51,9 @@
                             </div>
                         </div>
                         <div style="display:flex;gap:.5rem">
-                            <a href="{{ route('meal-planner.show', $week) }}"
+                            <a href="{{ route('meal-planner.show', [$week->patient_id ?? 0, $week]) }}"
                                style="padding:.4rem .9rem;background:var(--primary);color:#fff;font-size:.8rem;font-weight:700;border-radius:6px;text-decoration:none">Open</a>
-                            <form method="POST" action="{{ route('meal-planner.destroy', $week) }}" onsubmit="return confirm('Delete this plan?')">
+                            <form method="POST" action="{{ route('meal-planner.destroy', [$week->patient_id ?? 0, $week]) }}" onsubmit="return confirm('Delete this plan?')"
                                 @csrf @method('DELETE')
                                 <button type="submit" style="padding:.4rem .9rem;background:#fee2e2;color:#b91c1c;font-size:.8rem;font-weight:700;border-radius:6px;border:none;cursor:pointer">Delete</button>
                             </form>

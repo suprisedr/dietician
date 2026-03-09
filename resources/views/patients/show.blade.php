@@ -54,9 +54,9 @@
             </a>
 
             {{-- Patient identity --}}
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
                 <div class="patient-avatar-lg {{ $patient->gender }}">{{ $initials }}</div>
-                <div>
+                <div style="flex:1;min-width:0">
                     <h1 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-.03em;line-height:1.1">
                         {{ $patient->name }}
                     </h1>
@@ -64,6 +64,12 @@
                         {{ ucfirst($patient->gender) }} · {{ $patient->age }} years · Registered {{ $patient->created_at->format('M d, Y') }}
                     </p>
                 </div>
+                <a href="{{ route('patients.report', $patient->id) }}" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
+                   onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 0 0 2-2V9.414a1 1 0 0 0-.293-.707l-5.414-5.414A1 1 0 0 0 12.586 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/></svg>
+                    Patient Report
+                </a>
             </div>
         </div>
     </div>
@@ -221,6 +227,7 @@
 
             </div>
 
+            <x-plan-gate min="package_1">
             {{-- ── RIGHT: Macronutrients ──────────────────── --}}
             <div class="lg:col-span-2">
                 <div class="dash-section">
@@ -344,8 +351,10 @@
                 @endif
 
             </div>
+            </x-plan-gate>
         </div>
 
+        <x-plan-gate min="package_1">
         {{-- ═══════════════════════════════════════════
              EXCHANGE TEMPLATE — full width
         ═══════════════════════════════════════════ --}}
@@ -366,10 +375,8 @@
                             <th style="min-width:160px">Item</th>
                             <th style="text-align:center;min-width:110px">nu</th>
                             <th style="text-align:right">CHO (g)</th>
-                            <th style="text-align:right">Protein min (g)</th>
-                            <th style="text-align:right">Protein max (g)</th>
-                            <th style="text-align:right">Fat min (g)</th>
-                            <th style="text-align:right">Fat max (g)</th>
+                            <th style="text-align:right">Protein (g)</th>
+                            <th style="text-align:right">Fat (g)</th>
                             <th style="text-align:right">kJ</th>
                         </tr>
                     </thead>
@@ -380,9 +387,7 @@
                             data-nu="{{ $nu }}"
                             data-cho="{{ $item->cho_g }}"
                             data-pro-min="{{ $item->protein_min_g }}"
-                            data-pro-max="{{ $item->protein_max_g }}"
                             data-fat-min="{{ $item->fat_min_g }}"
-                            data-fat-max="{{ $item->fat_max_g }}"
                             data-kj="{{ $item->kj }}">
                             <td class="font-semibold">{{ $item->name }}</td>
                             <td style="text-align:center">
@@ -406,9 +411,7 @@
                             </td>
                             <td class="et-cho"  style="text-align:right">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
                             <td class="et-pmin" style="text-align:right">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
-                            <td class="et-pmax" style="text-align:right">{{ $item->protein_max_g  !== null ? $nu * $item->protein_max_g  : '—' }}</td>
                             <td class="et-fmin" style="text-align:right">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
-                            <td class="et-fmax" style="text-align:right">{{ $item->fat_max_g      !== null ? $nu * $item->fat_max_g      : '—' }}</td>
                             <td class="et-kj"   style="text-align:right;font-weight:600">{{ $item->kj !== null ? $nu * $item->kj : '—' }}</td>
                         </tr>
                         @endforeach
@@ -419,9 +422,7 @@
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(g)</td>
                             <td id="tot-cho"  style="text-align:right;font-weight:700;color:var(--text)">—</td>
                             <td id="tot-pmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-pmax" style="text-align:right;font-weight:700;color:var(--text)">—</td>
                             <td id="tot-fmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-fmax" style="text-align:right;font-weight:700;color:var(--text)">—</td>
                             <td id="tot-kj"   style="text-align:right;font-weight:700;color:var(--primary)">—</td>
                         </tr>
                         <!-- kJ conversion row -->
@@ -429,9 +430,7 @@
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(kJ)</td>
                             <td id="tot-kj-cho"  style="text-align:right;font-weight:700;color:var(--text)">—</td>
                             <td id="tot-kj-pmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-kj-pmax" style="text-align:right;font-weight:700;color:var(--text)">—</td>
                             <td id="tot-kj-fmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-kj-fmax" style="text-align:right;font-weight:700;color:var(--text)">—</td>
                             <td id="tot-kj-total"   style="text-align:right;font-weight:700;color:var(--primary)">—</td>
                         </tr>
                     </tfoot>
@@ -529,7 +528,8 @@
             </div>
         </details>
         @endif (uses nu values)
-        ═══════════════════════════════════════════ --}}
+        </x-plan-gate>
+        <x-plan-gate min="package_1">
         @if($patient->exchangeTemplate)
         <details class="mt-6" id="meal-plan-details">
             <summary class="font-semibold cursor-pointer py-2">Meal Plan ▾</summary>
@@ -608,6 +608,7 @@
             </div>
         </details>
         @endif
+        </x-plan-gate>
 
     </div>
 
@@ -664,51 +665,39 @@
             const nu = Number(row.dataset.nu) || 0;
             const cho  = Number(row.dataset.cho)  || 0;
             const pmin = Number(row.dataset.proMin)  || 0;
-            const pmax = Number(row.dataset.proMax)  || 0;
             const fmin = Number(row.dataset.fatMin)  || 0;
-            const fmax = Number(row.dataset.fatMax)  || 0;
             const kj   = Number(row.dataset.kj)   || 0;
 
             row.querySelector('.et-cho').textContent  = cho  ? (cho*nu)  : '—';
             row.querySelector('.et-pmin').textContent = pmin ? (pmin*nu) : '—';
-            row.querySelector('.et-pmax').textContent = pmax ? (pmax*nu) : '—';
             row.querySelector('.et-fmin').textContent = fmin ? (fmin*nu) : '—';
-            row.querySelector('.et-fmax').textContent = fmax ? (fmax*nu) : '—';
             row.querySelector('.et-kj').textContent   = kj   ? (kj*nu)   : '—';
         }
 
         function recalcTotals() {
             const rows = Array.from(document.querySelectorAll('#exchange-table tbody tr'));
-            const sums = {cho:0,pmin:0,pmax:0,fmin:0,fmax:0,kj:0};
+            const sums = {cho:0,pmin:0,fmin:0,kj:0};
             rows.forEach(r=>{
                 const nu = Number(r.dataset.nu)||0;
                 sums.cho  += (Number(r.dataset.cho)  ||0) * nu;
                 sums.pmin += (Number(r.dataset.proMin)||0) * nu;
-                sums.pmax += (Number(r.dataset.proMax)||0) * nu;
                 sums.fmin += (Number(r.dataset.fatMin)||0) * nu;
-                sums.fmax += (Number(r.dataset.fatMax)||0) * nu;
                 sums.kj   += (Number(r.dataset.kj)   ||0) * nu;
             });
             document.getElementById('tot-cho').textContent  = sums.cho  || '—';
             document.getElementById('tot-pmin').textContent = sums.pmin || '—';
-            document.getElementById('tot-pmax').textContent = sums.pmax || '—';
             document.getElementById('tot-fmin').textContent = sums.fmin || '—';
-            document.getElementById('tot-fmax').textContent = sums.fmax || '—';
             document.getElementById('tot-kj').textContent   = sums.kj   || '—';
 
             // now compute kJ conversions for grams totals
-            const factor = {cho:17, pmin:17, pmax:17, fmin:19, fmax:19};
+            const factor = {cho:17, pmin:17, fmin:19};
             const kjCho  = Math.round((sums.cho  || 0) * factor.cho);
             const kjPmin = Math.round((sums.pmin || 0) * factor.pmin);
-            const kjPmax = Math.round((sums.pmax || 0) * factor.pmax);
             const kjFmin = Math.round((sums.fmin || 0) * factor.fmin);
-            const kjFmax = Math.round((sums.fmax || 0) * factor.fmax);
-            const kjTotalMacros = kjCho + kjPmin + kjPmax + kjFmin + kjFmax;
+            const kjTotalMacros = kjCho + kjPmin + kjFmin;
             document.getElementById('tot-kj-cho').textContent  = kjCho || '—';
             document.getElementById('tot-kj-pmin').textContent = kjPmin || '—';
-            document.getElementById('tot-kj-pmax').textContent = kjPmax || '—';
             document.getElementById('tot-kj-fmin').textContent = kjFmin || '—';
-            document.getElementById('tot-kj-fmax').textContent = kjFmax || '—';
             document.getElementById('tot-kj-total').textContent = kjTotalMacros || '—';
 
             // ── Nutrient Analysis Summary ──────────────────────────────
@@ -719,8 +708,8 @@
 
             // actual grams: use midpoint of min/max for protein & fat
             const actChoG  = sums.cho;
-            const actProG  = sums.pmin && sums.pmax ? Math.round((sums.pmin + sums.pmax) / 2) : (sums.pmin || sums.pmax || 0);
-            const actFatG  = sums.fmin && sums.fmax ? Math.round((sums.fmin + sums.fmax) / 2) : (sums.fmin || sums.fmax || 0);
+            const actProG  = sums.pmin || 0;
+            const actFatG  = sums.fmin || 0;
             // actual kJ from exchange template
             const actKj    = sums.kj;
             // % of TEE

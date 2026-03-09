@@ -50,10 +50,10 @@
             <div style="margin-bottom:1.75rem">
                 <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);margin-bottom:.35rem">Step 3 of 5</p>
                 <h1 class="auth-card-title">Professional ID 🪪</h1>
-                <p class="auth-card-sub">Enter your registered dietician number.</p>
+                <p class="auth-card-sub">Enter your registered dietitian number.</p>
             </div>
             <div class="auth-field">
-                <label class="auth-label" for="dietician_number">Dietician Number</label>
+                <label class="auth-label" for="dietician_number">Dietitian Number</label>
                 <div class="auth-input-wrap">
                     <input id="dietician_number" type="text" name="dietician_number" value="{{ old('dietician_number') }}" class="auth-input" required autocomplete="off" placeholder="e.g. DC-00123"/>
                     <svg xmlns="http://www.w3.org/2000/svg" class="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1m-4 0h4"/></svg>

@@ -8,7 +8,7 @@
     {{-- Heading --}}
     <div style="margin-bottom:2rem">
         <h1 class="auth-card-title">Welcome back 👋</h1>
-        <p class="auth-card-sub">Sign in to your dietician account</p>
+        <p class="auth-card-sub">Sign in to your dietitian account</p>
     </div>
 
     <form method="POST" action="{{ route('login') }}" style="width:100%">
@@ -16,7 +16,7 @@
 
         {{-- Dietician Number --}}
         <div class="auth-field">
-            <label class="auth-label" for="dietician_number">Dietician Number</label>
+            <label class="auth-label" for="dietician_number">Dietitian Number</label>
             <div class="auth-input-wrap">
                 <input
                     id="dietician_number"

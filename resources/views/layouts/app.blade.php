@@ -5,7 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'MindfulNutrico') }}</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="{{ asset('images/mindful-nutrico.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,7 +19,7 @@
         <!-- optional overrides for Soft UI / Bootstrap palette -->
         <link href="{{ asset('css/soft-ui-overrides.css') }}" rel="stylesheet">
         <link rel="manifest" href="{{ asset('manifest.json') }}">
-        <meta name="theme-color" content="#0d6efd">
+        <meta name="theme-color" content="#679F5F">
         <script>
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {

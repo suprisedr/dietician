@@ -69,14 +69,17 @@ class MealPlannerController extends Controller
             ['label' => $data['label'] ?? null]
         );
 
-        return redirect()->route('meal-planner.show', $week)
+        return redirect()->route('meal-planner.show', [$week->patient_id ?? 0, $week])
             ->with('success', 'Meal planner week created.');
     }
 
     // ── Show / edit a weekly planner ──────────────────────────────────────────
-    public function show(MealPlannerWeek $mealPlanner)
+    public function show(string $patient, MealPlannerWeek $mealPlanner)
     {
         abort_if($mealPlanner->user_id !== auth()->id(), 403);
+        // $patient segment is the patient id, or 0 for plans with no patient
+        $expectedPatient = $mealPlanner->patient_id ?? 0;
+        abort_if((int) $patient !== (int) $expectedPatient, 404);
 
         $mealPlanner->load(['entries.mealItem', 'patient']);
 
@@ -87,13 +90,52 @@ class MealPlannerController extends Controller
             ->get(['id', 'category', 'name'])
             ->groupBy('category');
 
-        return view('meal-planner.show', compact('mealPlanner', 'grid', 'mealItemsByCategory'));
+        // ── Meal plan distribution from the patient's exchange template ──────
+        // slotDistribution['breakfast'] = [['name'=>'Starchy Foods','qty'=>2,'item_id'=>5], ...]
+        // The 'supper' slot in the DB maps to 'dinner' in the planner
+        $slotDistribution = array_fill_keys(
+            \App\Models\MealPlannerWeek::MEAL_SLOTS, []
+        );
+
+        if ($mealPlanner->patient_id) {
+            $patientModel = $mealPlanner->patient;
+            if ($patientModel && $patientModel->exchange_template_id) {
+                $patientModel->load('exchangeTemplate.items');
+                $slotMap = [
+                    'breakfast' => 'slot_breakfast',
+                    'snack1'    => 'slot_snack1',
+                    'lunch'     => 'slot_lunch',
+                    'snack2'    => 'slot_snack2',
+                    'dinner'    => 'slot_supper',   // supper in DB = dinner in planner
+                    'snack3'    => 'slot_snack3',
+                ];
+                foreach ($patientModel->exchangeTemplate->items as $item) {
+                    foreach ($slotMap as $plannerSlot => $dbCol) {
+                        $qty = (float) ($item->{$dbCol} ?? 0);
+                        if ($qty > 0) {
+                            for ($i = 0; $i < $qty; $i++) {
+                                $slotDistribution[$plannerSlot][] = [
+                                    'name'    => $item->name,
+                                    'item_id' => $item->id,
+                                    'row_idx' => count($slotDistribution[$plannerSlot]),
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return view('meal-planner.show', compact(
+            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution'
+        ));
     }
 
     // ── Save all entries for a week (mass-save from the grid form) ────────────
-    public function saveEntries(Request $request, MealPlannerWeek $mealPlanner)
+    public function saveEntries(Request $request, string $patient, MealPlannerWeek $mealPlanner)
     {
         abort_if($mealPlanner->user_id !== auth()->id(), 403);
+        abort_if((int) $patient !== (int) ($mealPlanner->patient_id ?? 0), 404);
 
         // cells[day][slot] = array of {item_id, text} objects (JSON-encoded per cell)
         $cells = $request->input('cells', []);
@@ -136,9 +178,10 @@ class MealPlannerController extends Controller
     }
 
     // ── Delete a week ─────────────────────────────────────────────────────────
-    public function destroy(MealPlannerWeek $mealPlanner)
+    public function destroy(string $patient, MealPlannerWeek $mealPlanner)
     {
         abort_if($mealPlanner->user_id !== auth()->id(), 403);
+        abort_if((int) $patient !== (int) ($mealPlanner->patient_id ?? 0), 404);
         $mealPlanner->delete();
         return redirect()->route('meal-planner.index')
             ->with('success', 'Planner week deleted.');

@@ -239,7 +239,7 @@
                             </div>
                             Profile
                         </a>
-                        <a href="#" class="quick-action">
+                        <a href="{{ route('reports.index') }}" class="quick-action">
                             <div class="qa-icon" style="background:linear-gradient(135deg,#fdf4ff,#e9d5ff)">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" style="color:#a855f7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
@@ -294,7 +294,7 @@
                         <div style="position:absolute;top:-1rem;right:-1rem;width:6rem;height:6rem;background:rgba(255,255,255,.08);border-radius:50%"></div>
                         <div style="position:absolute;bottom:-2rem;left:-1rem;width:8rem;height:8rem;background:rgba(255,255,255,.06);border-radius:50%"></div>
                         <div style="position:relative;z-index:1">
-                            <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;opacity:.65">Dietician ID</div>
+                            <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;opacity:.65">Dietitian ID</div>
                             <div style="font-size:1.2rem;font-weight:800;letter-spacing:.05em;margin-top:.2rem">{{ Auth::user()->dietician_number }}</div>
                             <div style="margin-top:.75rem;font-size:.95rem;font-weight:700">{{ Auth::user()->name }}</div>
                             <div style="margin-top:.25rem;opacity:.65;font-size:.8rem">{{ $total }} patient{{ $total !== 1 ? 's' : '' }} registered</div>

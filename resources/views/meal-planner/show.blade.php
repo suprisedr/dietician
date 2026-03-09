@@ -21,8 +21,6 @@
     }
 @endphp
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
-
 <style>
 /* ─── Page wrapper ───────────────────────────────────────────── */
 .mp-page { max-width:1280px; margin:0 auto; padding:1.75rem 1.25rem 3rem; }
@@ -69,7 +67,7 @@
 .mp-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
 /* ─── Table ──────────────────────────────────────────────────── */
-#mp-grid { width:100%; border-collapse:collapse; min-width:900px; table-layout:fixed; }
+#mp-grid { width:100%; border-collapse:collapse; min-width:800px; table-layout:fixed; }
 
 /* Header row */
 #mp-grid thead th {
@@ -96,98 +94,134 @@
     margin-right:.4rem; vertical-align:middle; flex-shrink:0;
 }
 
-/* Data cells */
+/* ─── Data cells ─────────────────────────────────────────────── */
 #mp-grid td.cell {
-    padding:.25rem .2rem;
+    padding:.25rem;
     border-bottom:1px solid var(--border);
     border-left:1px solid #f0f0f0;
     vertical-align:top;
-    min-width:120px;
+    cursor:pointer;
 }
 #mp-grid tbody tr:last-child td { border-bottom:none; }
-#mp-grid tbody tr:hover td.cell { background-color:rgba(0,0,0,.018) !important; }
+#mp-grid tbody tr:hover td.cell { background-color:rgba(0,0,0,.018); }
 
-/* ─── Tom Select – multi tag mode ───────────────────────────── */
-.ts-wrapper.multi { min-height:0 !important; }
+/* ─── Cell tag display ───────────────────────────────────────── */
+.cell-tags { display:flex; flex-wrap:wrap; gap:3px; min-height:30px; align-items:flex-start; align-content:flex-start; }
+.cell-tag {
+    display:inline-flex; align-items:center; gap:4px;
+    border-radius:5px; padding:.1rem .4rem;
+    font-size:.67rem; font-weight:600; line-height:1.5;
+    border:1px solid transparent;
+    max-width:100%; box-sizing:border-box;
+}
+.cell-tag-remove {
+    cursor:pointer; opacity:.55; font-size:.8rem; font-weight:700;
+    line-height:1; border:none; background:none; padding:0; color:inherit;
+}
+.cell-tag-remove:hover { opacity:1; }
+.cell-add-btn {
+    display:inline-flex; align-items:center; gap:3px;
+    font-size:.67rem; color:var(--text-muted); cursor:pointer;
+    background:none; border:none; padding:.1rem .2rem;
+    border-radius:4px; opacity:.65;
+    transition:opacity .15s;
+}
+.cell-add-btn:hover { opacity:1; color:var(--primary); }
 
-.ts-wrapper.multi .ts-control {
-    border:1px solid transparent !important;
-    border-radius:6px !important;
-    padding:.22rem .3rem .22rem .3rem !important;
-    font-size:.72rem !important;
-    min-height:30px !important;
-    background:transparent !important;
-    box-shadow:none !important;
-    gap:3px !important;
-    cursor:text;
-    flex-wrap:wrap;
-    transition:border-color .15s, background .15s;
+/* ─── Item picker modal ──────────────────────────────────────── */
+#item-modal-overlay {
+    display:none; position:fixed; inset:0; z-index:10000;
+    background:rgba(0,0,0,.45); backdrop-filter:blur(2px);
+    align-items:center; justify-content:center;
 }
-.ts-wrapper.multi.focus .ts-control,
-.ts-wrapper.multi .ts-control:hover {
-    border-color:rgba(0,0,0,.15) !important;
-    background:#fff !important;
-    box-shadow:0 0 0 3px rgba(249,115,22,.12) !important;
-}
-
-/* Tags */
-.ts-control .item {
-    border-radius:5px !important;
-    padding:.12rem .4rem !important;
-    font-size:.68rem !important;
-    font-weight:600 !important;
-    line-height:1.45 !important;
-    margin:2px 1px !important;
-    display:inline-flex !important;
-    align-items:center !important;
-    gap:3px !important;
-    max-width:140px !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-}
-/* Remove (×) button inside tag */
-.ts-control .item .remove {
-    opacity:.55; font-size:.75rem !important;
-    padding:0 !important; border-left:none !important;
-    margin-left:2px !important;
-}
-.ts-control .item .remove:hover { opacity:1; }
-
-/* Search input */
-.ts-control > input {
-    font-size:.72rem !important;
-    min-width:55px !important;
-    color:var(--text-primary);
-}
-.ts-control::after { display:none !important; } /* hide caret arrow */
-
-/* Dropdown */
-.ts-dropdown {
-    font-size:.77rem !important;
-    border-radius:10px !important;
-    border:1px solid var(--border) !important;
-    box-shadow:0 8px 28px rgba(0,0,0,.13) !important;
-    z-index:9999 !important;
-    min-width:230px !important;
+#item-modal-overlay.open { display:flex; }
+#item-modal {
+    background:#fff; border-radius:16px;
+    width:min(520px, 95vw); max-height:82vh;
+    display:flex; flex-direction:column;
+    box-shadow:0 24px 60px rgba(0,0,0,.22);
     overflow:hidden;
+    animation: modalIn .18s ease;
 }
-.ts-dropdown .ts-dropdown-content { max-height:230px !important; overflow-y:auto; }
-.ts-dropdown .optgroup-header {
-    font-size:.66rem !important; font-weight:800 !important;
-    color:var(--primary) !important; background:#fff7ed !important;
-    padding:.32rem .8rem !important; text-transform:uppercase; letter-spacing:.06em;
-    border-top:1px solid #fde8d0;
+@keyframes modalIn {
+    from { transform:translateY(18px) scale(.97); opacity:0; }
+    to   { transform:translateY(0)    scale(1);   opacity:1; }
 }
-.ts-dropdown .optgroup:first-child .optgroup-header { border-top:none; }
-.ts-dropdown .option {
-    padding:.34rem .85rem !important; font-size:.74rem !important;
-    color:var(--text-primary); cursor:pointer;
+#item-modal-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.85rem 1.1rem .6rem;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
 }
-.ts-dropdown .option.active { background:#fff7ed !important; color:var(--text-primary) !important; }
-.ts-dropdown .option:hover  { background:#fef9f5 !important; }
-.ts-dropdown .create        { background:#f0fdf4 !important; color:#15803d !important; font-weight:600; }
-.ts-dropdown .no-results    { font-size:.73rem !important; color:var(--text-muted) !important; }
+#item-modal-title { font-size:.92rem; font-weight:800; color:var(--text-primary); }
+#item-modal-close {
+    background:none; border:none; cursor:pointer; font-size:1.25rem;
+    color:var(--text-muted); line-height:1; padding:.1rem .3rem;
+    border-radius:6px; transition:background .15s;
+}
+#item-modal-close:hover { background:#f1f5f9; }
+#item-modal-search-wrap {
+    padding:.65rem 1.1rem .5rem;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+}
+#item-modal-search {
+    width:100%; padding:.5rem .75rem;
+    border:1.5px solid var(--border); border-radius:9px;
+    font-size:.85rem; outline:none;
+    transition:border-color .15s, box-shadow .15s;
+    box-sizing:border-box;
+}
+#item-modal-search:focus {
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(249,115,22,.12);
+}
+#item-modal-body {
+    flex:1; overflow-y:auto; padding:.5rem 0;
+}
+.im-group-header {
+    font-size:.67rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--primary); background:#fff7ed;
+    padding:.3rem 1.1rem; border-top:1px solid #fde8d0;
+    position:sticky; top:0; z-index:1;
+}
+.im-group:first-child .im-group-header { border-top:none; }
+.im-option {
+    display:flex; align-items:center; gap:.65rem;
+    padding:.42rem 1.1rem; cursor:pointer; font-size:.82rem;
+    color:var(--text-primary); transition:background .1s;
+    user-select:none;
+}
+.im-option:hover { background:#fef9f5; }
+.im-option.selected { background:#fff7ed; }
+.im-option input[type=checkbox] {
+    width:15px; height:15px; flex-shrink:0;
+    accent-color:var(--primary); cursor:pointer;
+}
+.im-no-results {
+    padding:1.5rem 1.1rem; text-align:center;
+    font-size:.82rem; color:var(--text-muted);
+}
+#item-modal-footer {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.7rem 1.1rem; border-top:1px solid var(--border);
+    flex-shrink:0; gap:.6rem;
+    background:#fafafa;
+}
+#item-modal-selected-count { font-size:.78rem; color:var(--text-muted); }
+.im-footer-btns { display:flex; gap:.5rem; }
+#item-modal-cancel {
+    padding:.42rem .9rem; border-radius:8px; font-size:.78rem; font-weight:700;
+    border:1.5px solid var(--border); background:#fff; cursor:pointer;
+    color:var(--text-primary); transition:background .15s;
+}
+#item-modal-cancel:hover { background:#f1f5f9; }
+#item-modal-confirm {
+    padding:.42rem 1rem; border-radius:8px; font-size:.78rem; font-weight:700;
+    border:none; background:var(--primary); color:#fff; cursor:pointer;
+    transition:filter .15s;
+}
+#item-modal-confirm:hover { filter:brightness(.92); }
 
 /* ─── Save bar ───────────────────────────────────────────────── */
 .mp-save-bar {
@@ -261,11 +295,11 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 {{ \App\Models\MealPlannerWeek::SLOT_LABELS[$s] }}
             </span>
         @endforeach
-        <span class="mp-legend-hint">🔍 Search &amp; add multiple items per cell</span>
+        <span class="mp-legend-hint">Click any cell to add food items</span>
     </div>
 
     {{-- Grid Form --}}
-    <form id="mp-form" method="POST" action="{{ route('meal-planner.save-entries', $mealPlanner) }}">
+    <form id="mp-form" method="POST" action="{{ route('meal-planner.save-entries', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}">
         @csrf @method('PATCH')
 
         <div class="mp-card">
@@ -300,22 +334,18 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                             ])->values()->all()
                                         );
                                     @endphp
-                                    <td class="cell">
+                                    <td class="cell"
+                                        data-day="{{ $dayIndex }}"
+                                        data-slot="{{ $slot }}"
+                                        data-tag-bg="{{ $theme['tag_bg'] }}"
+                                        data-tag-border="{{ $theme['tag_border'] }}"
+                                        data-tag-text="{{ $theme['tag_text'] }}"
+                                        onclick="openItemModal(this)">
                                         <input type="hidden"
                                                name="cells[{{ $dayIndex }}][{{ $slot }}]"
                                                id="cell_{{ $dayIndex }}_{{ $slot }}"
                                                value="{{ htmlspecialchars($initialJson, ENT_QUOTES) }}">
-
-                                        <select id="ts_{{ $dayIndex }}_{{ $slot }}"
-                                                class="mp-ts-select"
-                                                data-day="{{ $dayIndex }}"
-                                                data-slot="{{ $slot }}"
-                                                data-initial="{{ htmlspecialchars($initialJson, ENT_QUOTES) }}"
-                                                data-tag-bg="{{ $theme['tag_bg'] }}"
-                                                data-tag-border="{{ $theme['tag_border'] }}"
-                                                data-tag-text="{{ $theme['tag_text'] }}"
-                                                multiple autocomplete="off">
-                                        </select>
+                                        <div class="cell-tags" id="tags_{{ $dayIndex }}_{{ $slot }}"></div>
                                     </td>
                                 @endforeach
                             </tr>
@@ -333,7 +363,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
     </form>
 
     {{-- Monthly Overview --}}
-    <details class="mp-details-card">
+    <details class="mp-details-card" open>
         <summary class="mp-details-summary">
             📅 Monthly Overview
             <span class="chevron">▼</span>
@@ -383,95 +413,303 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+{{-- ─── Item Picker Modal ──────────────────────────────────────────────── --}}
+<div id="item-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="item-modal-title">
+    <div id="item-modal">
+        <div id="item-modal-header">
+            <span id="item-modal-title">Add food items</span>
+            <button id="item-modal-close" aria-label="Close" onclick="closeItemModal()">&times;</button>
+        </div>
+        <div id="item-modal-search-wrap">
+            <input type="text" id="item-modal-search" placeholder="Search food items…" autocomplete="off" spellcheck="false">
+        </div>
+        <div id="item-modal-body"></div>
+        <div id="item-modal-footer">
+            <span id="item-modal-selected-count"></span>
+            <div class="im-footer-btns">
+                <button type="button" id="item-modal-cancel"  onclick="closeItemModal()">Cancel</button>
+                <button type="button" id="item-modal-confirm" onclick="confirmItemModal()">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
-    const libraryItems = @json($jsItems);
 
-    /* Build optgroups */
-    const groupOrder = [], seenGroups = {};
+    /* ── Data ─────────────────────────────────────────────────────────── */
+    const libraryItems = @json($jsItems);   // [{value,text,group}, ...]
+
+    /* Build grouped structure */
+    const groups = {};
     libraryItems.forEach(function (item) {
-        if (!seenGroups[item.group]) { seenGroups[item.group] = 1; groupOrder.push(item.group); }
+        if (!groups[item.group]) groups[item.group] = [];
+        groups[item.group].push(item);
     });
-    const optgroups = groupOrder.map(function (g) { return { value: g, label: g }; });
-    optgroups.push({ value: '_custom', label: '✏  Custom Entry' });
+    const groupNames = Object.keys(groups);
 
     /* id → name map */
     const idToName = {};
     libraryItems.forEach(function (i) { idToName[i.value] = i.text; });
 
-    /* Shared syncHidden */
-    function syncHidden(ts, cellEl) {
-        if (!cellEl) return;
-        const payload = ts.items.map(function (val) {
-            if (val.startsWith('_free_')) {
-                const opt = ts.options[val];
-                return { id: null, text: opt ? opt.text : '' };
-            }
-            return { id: val, text: idToName[val] || '' };
+    /* ── Per-cell state: Map of "day_slot" → [{id, text}, ...] ───────── */
+    const cellState = {};
+
+    /* ── Render tags inside a cell from its state ─────────────────────── */
+    function renderCellTags(day, slot) {
+        const key      = day + '_' + slot;
+        const items    = cellState[key] || [];
+        const td       = document.querySelector('td.cell[data-day="' + day + '"][data-slot="' + slot + '"]');
+        const tagsDiv  = document.getElementById('tags_' + day + '_' + slot);
+        const hiddenEl = document.getElementById('cell_' + day + '_' + slot);
+        if (!tagsDiv || !hiddenEl || !td) return;
+
+        const tagBg     = td.dataset.tagBg     || '#fff7ed';
+        const tagBorder = td.dataset.tagBorder  || '#fed7aa';
+        const tagText   = td.dataset.tagText    || '#c2410c';
+
+        tagsDiv.innerHTML = '';
+
+        items.forEach(function (item, idx) {
+            const displayText = item.text || (item.id ? (idToName[item.id] || item.id) : '');
+            if (!displayText) return;
+            const tag = document.createElement('span');
+            tag.className = 'cell-tag';
+            tag.style.cssText = 'background:' + tagBg + ';color:' + tagText + ';border-color:' + tagBorder;
+            tag.innerHTML = '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px">' + escHtml(displayText) + '</span>'
+                          + '<button class="cell-tag-remove" data-day="' + day + '" data-slot="' + slot + '" data-idx="' + idx + '" title="Remove" onclick="removeItem(this,event)" type="button">×</button>';
+            tagsDiv.appendChild(tag);
         });
-        cellEl.value = JSON.stringify(payload);
+
+        /* + Add button */
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'cell-add-btn';
+        addBtn.textContent = '+ Add';
+        addBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openItemModal(td);
+        });
+        tagsDiv.appendChild(addBtn);
+
+        /* Sync hidden input */
+        hiddenEl.value = JSON.stringify(items);
     }
 
-    document.querySelectorAll('.mp-ts-select').forEach(function (el) {
-        const day     = el.dataset.day;
-        const slot    = el.dataset.slot;
-        const cellEl  = document.getElementById('cell_' + day + '_' + slot);
-        const initial = JSON.parse(el.dataset.initial || '[]');
+    /* ── Remove a single tag ──────────────────────────────────────────── */
+    window.removeItem = function (btn, e) {
+        e.stopPropagation();
+        const day  = btn.dataset.day;
+        const slot = btn.dataset.slot;
+        const idx  = parseInt(btn.dataset.idx, 10);
+        const key  = day + '_' + slot;
+        cellState[key].splice(idx, 1);
+        renderCellTags(day, slot);
+    };
 
-        /* Tag colours from data attributes */
-        const tagBg     = el.dataset.tagBg     || '#fff7ed';
-        const tagBorder = el.dataset.tagBorder  || '#fed7aa';
-        const tagText   = el.dataset.tagText    || '#c2410c';
+    /* ── Modal state ──────────────────────────────────────────────────── */
+    let _activeDay  = null;
+    let _activeSlot = null;
+    let _selected   = {};   // value → {id, text}
 
-        /* Pre-selected values + extra options for free-text entries */
-        const extraOptions = [], initValues = [];
-        initial.forEach(function (entry, idx) {
-            if (entry.id) {
-                initValues.push(entry.id);
-            } else if (entry.text) {
-                const key = '_free_' + idx + '_' + entry.text;
-                extraOptions.push({ value: key, text: entry.text, group: '_custom' });
-                initValues.push(key);
-            }
+    /* ── Open modal ───────────────────────────────────────────────────── */
+    window.openItemModal = function (td) {
+        _activeDay  = td.dataset.day;
+        _activeSlot = td.dataset.slot;
+        const key   = _activeDay + '_' + _activeSlot;
+
+        /* Seed selected from current cell state */
+        _selected = {};
+        (cellState[key] || []).forEach(function (item) {
+            const val = item.id || ('_free_' + item.text);
+            _selected[val] = item;
         });
 
-        const ts = new TomSelect(el, {
-            options:       libraryItems.concat(extraOptions),
-            optgroups:     optgroups,
-            optgroupField: 'group',
-            valueField:    'value',
-            labelField:    'text',
-            searchField:   ['text'],
-            plugins:       ['remove_button'],
-            create: function (input) {
-                return { value: '_free_new_' + Date.now() + '_' + input, text: input, group: '_custom' };
-            },
-            createOnBlur:  true,
-            delimiter:     ',',
-            placeholder:   'Add items…',
-            maxOptions:    null,
-            items:         initValues,
-            onItemAdd:     function () { syncHidden(ts, cellEl); },
-            onItemRemove:  function () { syncHidden(ts, cellEl); },
-            render: {
-                item: function (data, escape) {
-                    return '<div style="background:' + tagBg + ';color:' + tagText + ';border:1px solid ' + tagBorder + '">' + escape(data.text) + '</div>';
-                }
-            }
+        /* Update title */
+        document.getElementById('item-modal-title').textContent =
+            'Add items – ' + (_activeSlot.charAt(0).toUpperCase() + _activeSlot.slice(1))
+            + ' · Day ' + (parseInt(_activeDay, 10) + 1);
+
+        document.getElementById('item-modal-search').value = '';
+        renderModalBody('');
+        updateSelectedCount();
+
+        const overlay = document.getElementById('item-modal-overlay');
+        overlay.classList.add('open');
+        setTimeout(function () { document.getElementById('item-modal-search').focus(); }, 60);
+    };
+
+    /* ── Render modal body with optional filter query ─────────────────── */
+    function renderModalBody(query) {
+        const body = document.getElementById('item-modal-body');
+        body.innerHTML = '';
+        const q = query.toLowerCase().trim();
+        let totalVisible = 0;
+
+        groupNames.forEach(function (groupName) {
+            const filtered = groups[groupName].filter(function (item) {
+                return !q || item.text.toLowerCase().includes(q);
+            });
+            if (filtered.length === 0) return;
+            totalVisible += filtered.length;
+
+            const grpDiv = document.createElement('div');
+            grpDiv.className = 'im-group';
+
+            const hdr = document.createElement('div');
+            hdr.className = 'im-group-header';
+            hdr.textContent = groupName;
+            grpDiv.appendChild(hdr);
+
+            filtered.forEach(function (item) {
+                const isChecked = !!_selected[item.value];
+                const row = document.createElement('label');
+                row.className = 'im-option' + (isChecked ? ' selected' : '');
+                row.innerHTML =
+                    '<input type="checkbox" value="' + escHtml(item.value) + '"'
+                    + (isChecked ? ' checked' : '') + '>' + escHtml(item.text);
+                row.querySelector('input').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        _selected[item.value] = { id: item.value, text: item.text || idToName[item.value] || item.value };
+                        row.classList.add('selected');
+                    } else {
+                        delete _selected[item.value];
+                        row.classList.remove('selected');
+                    }
+                    updateSelectedCount();
+                });
+                grpDiv.appendChild(row);
+            });
+
+            body.appendChild(grpDiv);
         });
 
-        syncHidden(ts, cellEl);
+        /* Custom / free-text items already selected (not in library) */
+        const freeItems = Object.values(_selected).filter(function (it) { return !it.id || it.id.startsWith('_free_'); });
+        if (freeItems.length > 0 && q === '') {
+            const grpDiv = document.createElement('div');
+            grpDiv.className = 'im-group';
+            const hdr = document.createElement('div');
+            hdr.className = 'im-group-header';
+            hdr.textContent = '✏ Custom Entry';
+            grpDiv.appendChild(hdr);
+            freeItems.forEach(function (item) {
+                const val = item.id || ('_free_' + item.text);
+                const row = document.createElement('label');
+                row.className = 'im-option selected';
+                row.innerHTML = '<input type="checkbox" checked>' + escHtml(item.text);
+                row.querySelector('input').addEventListener('change', function (e) {
+                    if (!e.target.checked) {
+                        delete _selected[val];
+                        row.remove();
+                        updateSelectedCount();
+                    }
+                });
+                grpDiv.appendChild(row);
+            });
+            body.appendChild(grpDiv);
+            totalVisible += freeItems.length;
+        }
+
+        if (totalVisible === 0) {
+            /* Show no-results with option to add custom */
+            const noRes = document.createElement('div');
+            noRes.className = 'im-no-results';
+            if (q) {
+                noRes.innerHTML = 'No results for "<strong>' + escHtml(q) + '</strong>"'
+                    + '<br><button type="button" class="mp-btn mp-btn-green" style="margin-top:.65rem;font-size:.75rem" onclick="addCustomFromModal()">+ Add "' + escHtml(q) + '" as custom item</button>';
+            } else {
+                noRes.textContent = 'No food items found.';
+            }
+            body.appendChild(noRes);
+        }
+    }
+
+    /* ── Add custom item from search ──────────────────────────────────── */
+    window.addCustomFromModal = function () {
+        const q = document.getElementById('item-modal-search').value.trim();
+        if (!q) return;
+        const val = '_free_' + Date.now() + '_' + q;
+        _selected[val] = { id: null, text: q };
+        updateSelectedCount();
+        document.getElementById('item-modal-search').value = '';
+        renderModalBody('');
+    };
+
+    /* ── Update selected count label ──────────────────────────────────── */
+    function updateSelectedCount() {
+        const n = Object.keys(_selected).length;
+        document.getElementById('item-modal-selected-count').textContent =
+            n === 0 ? '' : n + ' item' + (n > 1 ? 's' : '') + ' selected';
+    }
+
+    /* ── Confirm selection ────────────────────────────────────────────── */
+    window.confirmItemModal = function () {
+        if (_activeDay === null) return;
+        const key = _activeDay + '_' + _activeSlot;
+        cellState[key] = Object.values(_selected);
+        renderCellTags(_activeDay, _activeSlot);
+        closeItemModal();
+    };
+
+    /* ── Close modal ──────────────────────────────────────────────────── */
+    window.closeItemModal = function () {
+        document.getElementById('item-modal-overlay').classList.remove('open');
+        _activeDay = null; _activeSlot = null; _selected = {};
+    };
+
+    /* Close on overlay click */
+    document.getElementById('item-modal-overlay').addEventListener('click', function (e) {
+        if (e.target === this) closeItemModal();
     });
 
-    /* Safety-net sync on submit */
+    /* Close on Escape */
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeItemModal();
+    });
+
+    /* Live search */
+    document.getElementById('item-modal-search').addEventListener('input', function () {
+        renderModalBody(this.value);
+    });
+
+    /* ── Initialise cells from hidden inputs ──────────────────────────── */
+    document.querySelectorAll('td.cell').forEach(function (td) {
+        const day  = td.dataset.day;
+        const slot = td.dataset.slot;
+        const key  = day + '_' + slot;
+        const hiddenEl = document.getElementById('cell_' + day + '_' + slot);
+        try {
+            const parsed = JSON.parse(hiddenEl ? hiddenEl.value : '[]');
+            cellState[key] = Array.isArray(parsed) ? parsed.map(function (item) {
+                /* Ensure text is always populated — fall back to idToName lookup */
+                return {
+                    id:   item.id   || null,
+                    text: item.text || (item.id ? (idToName[item.id] || '') : '')
+                };
+            }).filter(function (item) { return item.text || item.id; }) : [];
+        } catch (e) {
+            cellState[key] = [];
+        }
+        renderCellTags(day, slot);
+    });
+
+    /* ── Safety-net sync on submit ────────────────────────────────────── */
     document.getElementById('mp-form').addEventListener('submit', function () {
-        document.querySelectorAll('.mp-ts-select').forEach(function (el) {
-            const ts     = el.tomselect;
-            const cellEl = document.getElementById('cell_' + el.dataset.day + '_' + el.dataset.slot);
-            if (ts && cellEl) syncHidden(ts, cellEl);
+        document.querySelectorAll('td.cell').forEach(function (td) {
+            const day  = td.dataset.day;
+            const slot = td.dataset.slot;
+            const key  = day + '_' + slot;
+            const hiddenEl = document.getElementById('cell_' + day + '_' + slot);
+            if (hiddenEl) hiddenEl.value = JSON.stringify(cellState[key] || []);
         });
     });
+
+    /* ── Utility: HTML escape ─────────────────────────────────────────── */
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
 }());
 </script>
 </x-app-layout>

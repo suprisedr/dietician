@@ -27,5 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([\Database\Seeders\ExchangeValuesTableSeeder::class]);
         // seed exchange templates (customer template)
         $this->call([\Database\Seeders\ExchangeTemplateSeeder::class]);
+        // seed pricing packages
+        $this->call([\Database\Seeders\PricingPackageSeeder::class]);
     }
 }

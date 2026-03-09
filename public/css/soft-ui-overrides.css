@@ -1,25 +1,32 @@
 /*
 |--------------------------------------------------------------------------
-| Dietician – Soft UI Creative Dashboard Styles
+| MindfulNutrico – Brand Design System
+| Palette: #679F5F (green) · #429677 (teal-green) · #000000 · #D21E33 (red)
 |--------------------------------------------------------------------------
 */
 
 /* ── Design tokens ─────────────────────────────────────────────────── */
 :root {
-    --primary:        #f97316;
-    --primary-light:  #fdba74;
-    --primary-dark:   #ea580c;
-    --amber:          #eab308;
-    --teal:           #14b8a6;
-    --indigo:         #6366f1;
-    --rose:           #f43f5e;
-    --sky:            #0ea5e9;
+    /* Brand palette */
+    --primary:        #679F5F;   /* leaf green */
+    --primary-light:  #8dc485;
+    --primary-dark:   #4d7d47;
+    --secondary:      #429677;   /* teal green */
+    --secondary-light:#5cb896;
+    --secondary-dark: #2e6e56;
+    --danger:         #D21E33;   /* red accent */
+    --danger-light:   #f87171;
+    --black:          #000000;
+    --amber:          #ca8a04;
+    --indigo:         #429677;   /* map indigo → brand teal-green */
+    --rose:           #D21E33;
 
+    /* Surfaces */
     --surface:        #ffffff;
-    --bg-page:        #f8fafc;
-    --border:         #e2e8f0;
-    --text-primary:   #0f172a;
-    --text-muted:     #64748b;
+    --bg-page:        #f5f8f5;   /* very light green-tinted page */
+    --border:         #d4e6d1;
+    --text-primary:   #0d1f0c;
+    --text-muted:     #52705e;
 
     --radius-lg:      1rem;
     --radius-xl:      1.5rem;
@@ -36,7 +43,7 @@ body {
 
 /* ── Dashboard hero banner ──────────────────────────────────────────── */
 .dash-hero {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #f97316 100%);
+    background: linear-gradient(135deg, #0d1f0c 0%, #2e6e56 45%, #679F5F 100%);
     position: relative;
     overflow: hidden;
     border-radius: 0 0 2rem 2rem;
@@ -49,8 +56,8 @@ body {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 20% 50%, rgba(249,115,22,.35) 0%, transparent 55%),
-        radial-gradient(circle at 80% 20%, rgba(99,102,241,.40) 0%, transparent 50%);
+        radial-gradient(circle at 20% 50%, rgba(103,159,95,.45) 0%, transparent 55%),
+        radial-gradient(circle at 80% 20%, rgba(66,150,119,.40) 0%, transparent 50%);
 }
 
 .dash-hero * { position: relative; z-index: 1; }
@@ -104,10 +111,10 @@ body {
 
 .stat-icon svg { width: 1.4rem; height: 1.4rem; }
 
-.stat-icon.orange { background: linear-gradient(135deg, #f97316, #fb923c); color: #fff; }
-.stat-icon.teal   { background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; }
-.stat-icon.indigo { background: linear-gradient(135deg, #4f46e5, #818cf8); color: #fff; }
-.stat-icon.rose   { background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; }
+.stat-icon.orange { background: linear-gradient(135deg, #679F5F, #8dc485); color: #fff; }
+.stat-icon.teal   { background: linear-gradient(135deg, #2e6e56, #429677); color: #fff; }
+.stat-icon.indigo { background: linear-gradient(135deg, #429677, #5cb896); color: #fff; }
+.stat-icon.rose   { background: linear-gradient(135deg, #D21E33, #f43f5e); color: #fff; }
 
 .stat-value {
     font-size: 1.75rem;

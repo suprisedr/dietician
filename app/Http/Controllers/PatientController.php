@@ -97,6 +97,127 @@ class PatientController extends Controller
     }
 
     /**
+     * Generate a downloadable/printable report for a patient.
+     */
+    public function report(string $id)
+    {
+        $patient = Patient::with(['macronutrients', 'exchangeTemplate.items'])
+            ->where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        if (! $patient->exchangeTemplate) {
+            $default = ExchangeTemplate::where('name', 'Customer Template')->with('items')->first();
+            if ($default) {
+                $patient->setRelation('exchangeTemplate', $default);
+            }
+        }
+
+        $teeKj      = ($patient->tee ?? 0) * 4.184;
+        $teeKcal    = $patient->tee ? round($patient->tee) : null;
+        $bmrKj      = $patient->bmr ? round($patient->bmr * 4.184) : null;
+        $isObese    = ($patient->bmi ?? 0) > 30;
+
+        $macroByType = $patient->macronutrients->keyBy('type');
+        $recCho_g = $recPro_g = $recFat_g = null;
+        $recCho_kj = $recPro_kj = $recFat_kj = null;
+        $choPct = $proPct = $fatPct = null;
+
+        if ($teeKj > 0 && $patient->macronutrients->count()) {
+            $choPct     = $macroByType->get('carbohydrates')?->selected_percentage ?? 0;
+            $proPct     = $macroByType->get('protein')?->selected_percentage       ?? 0;
+            $fatPct     = $macroByType->get('fats')?->selected_percentage          ?? 0;
+            $recCho_kj  = round($teeKj * $choPct / 100);
+            $recPro_kj  = round($teeKj * $proPct / 100);
+            $recFat_kj  = round($teeKj * $fatPct / 100);
+            $recCho_g   = $recCho_kj > 0 ? round($recCho_kj / 17) : 0;
+            $recPro_g   = $recPro_kj > 0 ? round($recPro_kj / 17) : 0;
+            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 37) : 0;
+        }
+
+        // Exchange template totals
+        $etTotCho = $etTotPro = $etTotFat = $etTotKj = 0;
+        if ($patient->exchangeTemplate) {
+            foreach ($patient->exchangeTemplate->items as $item) {
+                $nu = $item->nu;
+                $etTotCho += $item->cho_g          !== null ? $nu * $item->cho_g          : 0;
+                $etTotPro += $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : 0;
+                $etTotFat += $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : 0;
+                $etTotKj  += $item->kj             !== null ? $nu * $item->kj             : 0;
+            }
+        }
+
+        return view('patients.report', compact(
+            'patient', 'teeKj', 'teeKcal', 'bmrKj', 'isObese',
+            'choPct', 'proPct', 'fatPct',
+            'recCho_g', 'recPro_g', 'recFat_g',
+            'recCho_kj', 'recPro_kj', 'recFat_kj',
+            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj'
+        ));
+    }
+
+    /**
+     * Download a PDF version of the patient report.
+     */
+    public function reportPdf(string $id)
+    {
+        $patient = Patient::with(['macronutrients', 'exchangeTemplate.items'])
+            ->where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        if (! $patient->exchangeTemplate) {
+            $default = ExchangeTemplate::where('name', 'Customer Template')->with('items')->first();
+            if ($default) {
+                $patient->setRelation('exchangeTemplate', $default);
+            }
+        }
+
+        $teeKj      = ($patient->tee ?? 0) * 4.184;
+        $teeKcal    = $patient->tee ? round($patient->tee) : null;
+        $bmrKj      = $patient->bmr ? round($patient->bmr * 4.184) : null;
+        $isObese    = ($patient->bmi ?? 0) > 30;
+
+        $macroByType = $patient->macronutrients->keyBy('type');
+        $recCho_g = $recPro_g = $recFat_g = null;
+        $recCho_kj = $recPro_kj = $recFat_kj = null;
+        $choPct = $proPct = $fatPct = null;
+
+        if ($teeKj > 0 && $patient->macronutrients->count()) {
+            $choPct     = $macroByType->get('carbohydrates')?->selected_percentage ?? 0;
+            $proPct     = $macroByType->get('protein')?->selected_percentage       ?? 0;
+            $fatPct     = $macroByType->get('fats')?->selected_percentage          ?? 0;
+            $recCho_kj  = round($teeKj * $choPct / 100);
+            $recPro_kj  = round($teeKj * $proPct / 100);
+            $recFat_kj  = round($teeKj * $fatPct / 100);
+            $recCho_g   = $recCho_kj > 0 ? round($recCho_kj / 17) : 0;
+            $recPro_g   = $recPro_kj > 0 ? round($recPro_kj / 17) : 0;
+            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 37) : 0;
+        }
+
+        $etTotCho = $etTotPro = $etTotFat = $etTotKj = 0;
+        if ($patient->exchangeTemplate) {
+            foreach ($patient->exchangeTemplate->items as $item) {
+                $nu = $item->nu;
+                $etTotCho += $item->cho_g         !== null ? $nu * $item->cho_g         : 0;
+                $etTotPro += $item->protein_min_g !== null ? $nu * $item->protein_min_g : 0;
+                $etTotFat += $item->fat_min_g     !== null ? $nu * $item->fat_min_g     : 0;
+                $etTotKj  += $item->kj            !== null ? $nu * $item->kj            : 0;
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('patients.report-pdf', compact(
+            'patient', 'teeKj', 'teeKcal', 'bmrKj', 'isObese',
+            'choPct', 'proPct', 'fatPct',
+            'recCho_g', 'recPro_g', 'recFat_g',
+            'recCho_kj', 'recPro_kj', 'recFat_kj',
+            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj'
+        ))->setPaper('a4', 'portrait');
+
+        $filename = 'report-' . \Illuminate\Support\Str::slug($patient->name) . '-' . now()->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)

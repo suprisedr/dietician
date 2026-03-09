@@ -11,7 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'device.limit' => \App\Http\Middleware\EnforceDeviceLimit::class,
+            'plan'         => \App\Http\Middleware\RequiresPlan::class,
+        ]);
+
+        // Apply device tracking + enforcement to all auth web routes
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnforceDeviceLimit::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
