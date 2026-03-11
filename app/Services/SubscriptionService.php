@@ -204,8 +204,11 @@ class SubscriptionService
             'last_event_payload' => $data,
         ]);
 
-        // Downgrade user to free
+        // Downgrade owner to free
         $subscription->user->update(['pricing_package_slug' => 'free']);
+
+        // Also downgrade all team members to free
+        $subscription->user->teamMembers()->update(['pricing_package_slug' => 'free']);
     }
 
     // ── Cancel ───────────────────────────────────────────────────────────────

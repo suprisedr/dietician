@@ -175,7 +175,7 @@
                 Built for Registered Dietitians
             </div>
             <h1 class="hero-h1">Simplify your<br><span>nutrition interventions.</span></h1>
-            <p class="hero-sub">Track patients, calculate macronutrients, manage exchange templates and energy targets — all in one secure platform designed for nutrition professionals.</p>
+            <p class="hero-sub">Track patients, calculate macronutrients, manage exchange templates and energy targets. All in one secure platform designed for nutrition professionals.</p>
             <div class="hero-cta">
                 @auth
                     <a href="{{ route('dashboard') }}" class="btn-hero-primary">Go to Dashboard →</a>
@@ -218,7 +218,10 @@
 
 <div style="padding: 0 1.5rem">
     <div class="stats-band">
-        <div class="stat-band-item"><div class="stat-band-val">500+</div><div class="stat-band-label">Exchange food items</div></div>
+        <div class="stat-band-item">
+            <div class="stat-band-val">&nbsp;</div>
+            <div class="stat-band-label">Exchange Food Items Package</div>
+        </div>
         <div class="stat-band-item"><div class="stat-band-val">∞</div><div class="stat-band-label">Patient profiles</div></div>
         <div class="stat-band-item"><div class="stat-band-val">Live</div><div class="stat-band-label">Macro calculations</div></div>
         <div class="stat-band-item"><div class="stat-band-val">100%</div><div class="stat-band-label">Secure & private</div></div>

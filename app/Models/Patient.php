@@ -110,15 +110,19 @@ class Patient extends Model
         return null;
     }
 
-    // Accessor to calculate IBW (Ideal Body Weight) using metric formula
+    // Accessor to calculate IBW (Ideal Body Weight) using the BMI method:
+    // Target a BMI of 22 (midpoint of the healthy 18.5–25 range).
+    // Formula: IBW (kg) = targetBMI × height² (m)
     public function getIbwAttribute()
     {
-        if ($this->gender === 'male') {
-            return 50 + (0.9 * ($this->height - 150));
-        } elseif ($this->gender === 'female') {
-            return 45 + (0.9 * ($this->height - 150));
+        if (! $this->height || $this->height <= 0) {
+            return null;
         }
-        return null;
+
+        $heightM   = $this->height / 100;  // cm → m
+        $targetBMI = 22;                   // midpoint of healthy BMI range
+
+        return round($targetBMI * ($heightM ** 2), 2);
     }
 
     // Accessor to calculate ABW (Adjusted Body Weight)

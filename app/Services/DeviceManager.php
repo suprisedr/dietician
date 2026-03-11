@@ -56,10 +56,20 @@ class DeviceManager
             return false;
         }
 
-        $limit      = $this->deviceLimitForUser($user);
-        $activeCount = UserDevice::where('user_id', $user->id)->count();
+        $limit       = $this->deviceLimitForUser($user);
+        $activeCount = $this->teamDeviceCount($user);
 
         return $activeCount >= $limit;
+    }
+
+    /**
+     * Count all devices belonging to the user and their team (owner + all members).
+     */
+    public function teamDeviceCount(User $user): int
+    {
+        $owner   = $user->subscriptionOwner();
+        $userIds = $owner->teamMembers()->pluck('id')->prepend($owner->id)->all();
+        return UserDevice::whereIn('user_id', $userIds)->count();
     }
 
     /**
@@ -75,8 +85,11 @@ class DeviceManager
      */
     public function revokeDevice(int $deviceId, User $user): bool
     {
+        $owner   = $user->subscriptionOwner();
+        $userIds = $owner->teamMembers()->pluck('id')->prepend($owner->id)->all();
+
         $device = UserDevice::where('id', $deviceId)
-            ->where('user_id', $user->id)
+            ->whereIn('user_id', $userIds)
             ->first();
 
         if (! $device) {
@@ -117,15 +130,16 @@ class DeviceManager
      */
     public function deviceLimitForUser(User $user): int
     {
-        // If the user has a package slug on their record, look it up.
-        if (isset($user->pricing_package_slug)) {
-            $pkg = PricingPackage::where('slug', $user->pricing_package_slug)->first();
+        $owner = $user->subscriptionOwner();
+
+        if (isset($owner->pricing_package_slug)) {
+            $pkg = PricingPackage::where('slug', $owner->pricing_package_slug)->first();
             if ($pkg) {
                 return max(1, $pkg->max_users);
             }
         }
 
-        // Default: Package 1 = 1 device
+        // Default: 1 device
         return 1;
     }
 

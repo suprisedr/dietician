@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\TeamInvitation;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -19,13 +20,22 @@ class RegisteredUserController extends Controller
      */
     public function create(\Illuminate\Http\Request $request): View
     {
+        // Preserve plan intent (pricing CTA → register)
         if ($request->filled('plan')) {
-            $slug = $request->input('plan');
+            $slug    = $request->input('plan');
             $allowed = ['package_1', 'package_2', 'package_3'];
             if (in_array($slug, $allowed)) {
                 session(['pending_plan' => $slug]);
-                // Also set intended so login redirects correctly if user logs in instead
                 session()->put('url.intended', route('subscription.checkout', $slug));
+            }
+        }
+
+        // Preserve invite token (invite email → register)
+        if ($request->filled('token')) {
+            $token      = $request->input('token');
+            $invitation = TeamInvitation::where('token', $token)->whereNull('accepted_at')->first();
+            if ($invitation) {
+                session(['pending_invite_token' => $token]);
             }
         }
 
@@ -40,23 +50,50 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'name'             => ['required', 'string', 'max:255'],
+            'email'            => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'dietician_number' => ['required', 'string', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password'         => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'             => $request->name,
+            'email'            => $request->email,
             'dietician_number' => $request->dietician_number,
-            'password' => Hash::make($request->password),
+            'password'         => Hash::make($request->password),
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
+        // Handle pending team invite
+        if ($inviteToken = session()->pull('pending_invite_token')) {
+            $invitation = TeamInvitation::where('token', $inviteToken)
+                ->whereNull('accepted_at')
+                ->first();
+
+            if ($invitation) {
+                $owner = $invitation->owner;
+
+                // Link this new user to the inviting owner and inherit their package
+                $user->update([
+                    'owner_id'             => $owner->id,
+                    'pricing_package_slug' => $owner->pricing_package_slug,
+                ]);
+
+                // Mark invitation as accepted
+                $invitation->update([
+                    'accepted_by' => $user->id,
+                    'accepted_at' => now(),
+                ]);
+
+                return redirect()->route('dashboard')
+                    ->with('success', "Welcome! You've joined {$owner->name}'s team.");
+            }
+        }
+
+        // Handle pending plan checkout
         if ($pendingPlan = session()->pull('pending_plan')) {
             return redirect()->route('subscription.checkout', $pendingPlan);
         }

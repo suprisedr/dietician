@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PaystackWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,9 @@ Route::get('/', function () {
 Route::get('/pricing', function () {
     return view('pricing');
 })->name('pricing');
+
+// ── Public: Team invite acceptance ───────────────────────────────────────────
+Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('team.accept');
 
 // ── Dashboard (auth, no plan gate – free tier can always access) ──────────────
 
@@ -42,6 +46,12 @@ Route::middleware('auth')->group(function () {
     Route::get('devices', [DeviceController::class, 'index'])->name('devices.index');
     Route::delete('devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
     Route::post('devices/revoke-others', [DeviceController::class, 'revokeOthers'])->name('devices.revoke-others');
+
+    // ── Team / Invitations ────────────────────────────────────────────────────
+    Route::get('team', [InvitationController::class, 'index'])->name('team.index');
+    Route::post('team/invite', [InvitationController::class, 'store'])->name('team.invite');
+    Route::delete('team/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('team.invitations.destroy');
+    Route::delete('team/members/{member}', [InvitationController::class, 'removeMember'])->name('team.members.destroy');
 
     // ── Plan locked page (no plan gate – just auth) ──────────────────────────
     Route::get('plan-locked', function () {

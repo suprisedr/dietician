@@ -22,9 +22,12 @@
         $teeActualKj      = ($bmrActual  && $patient->activity_factor) ? $bmrActual  * $patient->activity_factor * 4.184 : null;
 
         $macroColors = [
-            'carbohydrate' => ['dot'=>'#f97316','bg'=>'rgba(249,115,22,.12)','text'=>'#c2410c'],
-            'protein'      => ['dot'=>'#6366f1','bg'=>'rgba(99,102,241,.12)', 'text'=>'#4338ca'],
-            'fat'          => ['dot'=>'#14b8a6','bg'=>'rgba(20,184,166,.12)',  'text'=>'#0f766e'],
+            'carbohydrate'  => ['dot'=>'#f97316','bg'=>'rgba(249,115,22,.12)','text'=>'#c2410c'],
+            'carbohydrates' => ['dot'=>'#f97316','bg'=>'rgba(249,115,22,.12)','text'=>'#c2410c'],
+            'protein'       => ['dot'=>'#6366f1','bg'=>'rgba(99,102,241,.12)', 'text'=>'#4338ca'],
+            'proteins'      => ['dot'=>'#6366f1','bg'=>'rgba(99,102,241,.12)', 'text'=>'#4338ca'],
+            'fat'           => ['dot'=>'#14b8a6','bg'=>'rgba(20,184,166,.12)',  'text'=>'#0f766e'],
+            'fats'          => ['dot'=>'#14b8a6','bg'=>'rgba(20,184,166,.12)',  'text'=>'#0f766e'],
         ];
 
         // Recommended intakes derived from TEE + macro targets
@@ -33,9 +36,9 @@
         $recCho_g    = null; $recPro_g  = null; $recFat_g  = null;
         $recCho_kj   = null; $recPro_kj = null; $recFat_kj = null;
         if ($teeKj > 0) {
-            $choPct  = optional($macroByType->get('carbohydrate'))->selected_percentage ?? 0;
-            $proPct  = optional($macroByType->get('protein'))->selected_percentage      ?? 0;
-            $fatPct  = optional($macroByType->get('fat'))->selected_percentage          ?? 0;
+            $choPct  = optional($macroByType->get('carbohydrate') ?? $macroByType->get('carbohydrates'))->selected_percentage ?? 0;
+            $proPct  = optional($macroByType->get('protein')      ?? $macroByType->get('proteins'))->selected_percentage      ?? 0;
+            $fatPct  = optional($macroByType->get('fat')          ?? $macroByType->get('fats'))->selected_percentage          ?? 0;
             $recCho_kj  = round($teeKj * $choPct / 100);
             $recPro_kj  = round($teeKj * $proPct / 100);
             $recFat_kj  = round($teeKj * $fatPct / 100);
@@ -45,7 +48,7 @@
         }
     @endphp
 
-    <div class="patient-hero">
+    <div class="dash-hero">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {{-- Back nav --}}
             <a href="{{ route('patients.index') }}" class="btn-back mb-5 inline-flex">
@@ -106,9 +109,9 @@
                 <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
-                <div class="mc-val">{{ $teeKcal ? number_format($teeKcal) : '—' }}</div>
+                <div class="mc-val">{{ $teeKj ? number_format($teeKj) : '—' }}</div>
                 <div class="mc-label">TEE</div>
-                <div class="mc-sub">kcal/day</div>
+                <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
                 <div class="mc-val">{{ $patient->ibw ? number_format($patient->ibw, 1) : '—' }}</div>
@@ -257,7 +260,7 @@
                                 $computedG   = $computedKj > 0 ? round($computedKj / 17) : 0;
                                 $mc          = $macroColors[$macro->type] ?? ['dot'=>'#94a3b8','bg'=>'#f1f5f9','text'=>'#64748b'];
                             @endphp
-                            <div class="macro-row" data-macro-id="{{ $macro->id }}">
+                            <div class="macro-row" data-macro-id="{{ $macro->id }}" style="background:{{ $mc['bg'] }};border-left:3px solid {{ $mc['dot'] }}">
                                 {{-- Label --}}
                                 <div>
                                     <div class="macro-type-badge">
@@ -302,50 +305,70 @@
                     </form>
                 </div>
 
-                {{-- Macro breakdown visual --}}
-                @if($patient->macronutrients->count())
-                @php
-                    $macroTotal = $patient->macronutrients->sum('selected_percentage') ?: 1;
-                @endphp
-                <div class="dash-section mt-6">
+                {{-- Nutrient Analysis (replaces Energy Breakdown) --}}
+                @if($patient->exchangeTemplate && $teeKj > 0)
+                <div class="dash-section mt-6" id="nutrient-analysis">
                     <div class="dash-section-header">
-                        <span class="dash-section-title">Energy Breakdown</span>
+                        <span class="dash-section-title">Nutrient Analysis</span>
+                        <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
                     </div>
-                    <div class="p-5 space-y-4">
-                        {{-- Stacked bar --}}
-                        <div style="display:flex;height:1.25rem;border-radius:999px;overflow:hidden;gap:2px" id="macro-stacked-bar">
-                            @foreach($patient->macronutrients as $macro)
-                                @php
-                                    $mc  = $macroColors[$macro->type] ?? ['dot'=>'#94a3b8'];
-                                    $pct = round($macro->selected_percentage / $macroTotal * 100);
-                                @endphp
-                                <div style="width:{{ $pct }}%;background:{{ $mc['dot'] }};transition:width .4s ease;border-radius:2px" title="{{ ucfirst($macro->type) }} {{ $macro->selected_percentage }}%"></div>
-                            @endforeach
-                        </div>
-                        {{-- Legend --}}
-                        <div class="flex flex-wrap gap-3 mt-3">
-                            @foreach($patient->macronutrients as $macro)
-                                @php $mc = $macroColors[$macro->type] ?? ['dot'=>'#94a3b8','text'=>'#64748b']; @endphp
-                                <div style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:600">
-                                    <span style="width:.6rem;height:.6rem;border-radius:50%;background:{{ $mc['dot'] }};flex-shrink:0"></span>
-                                    <span style="color:{{ $mc['text'] }}">{{ ucfirst($macro->type) }}</span>
-                                    <span style="color:var(--text-muted)">{{ $macro->selected_percentage }}%</span>
-                                </div>
-                            @endforeach
-                        </div>
-                        {{-- kJ summary --}}
-                        <div class="grid grid-cols-3 gap-3 mt-4">
-                            @foreach($patient->macronutrients as $macro)
-                                @php
-                                    $mc  = $macroColors[$macro->type] ?? ['dot'=>'#94a3b8','bg'=>'#f1f5f9','text'=>'#64748b'];
-                                    $kj  = $teeKj * ($macro->selected_percentage / 100);
-                                @endphp
-                                <div style="background:{{ $mc['bg'] }};border-radius:.75rem;padding:.85rem;text-align:center">
-                                    <div style="font-size:1.1rem;font-weight:800;color:{{ $mc['text'] }}">{{ number_format($kj, 0) }}</div>
-                                    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:{{ $mc['text'] }};opacity:.7;margin-top:.15rem">{{ ucfirst($macro->type) }} kJ</div>
-                                </div>
-                            @endforeach
-                        </div>
+                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
+                        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+                            <thead>
+                                <tr style="border-bottom:2px solid var(--border)">
+                                    <th style="text-align:left;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc"></th>
+                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Recommended</th>
+                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Actual</th>
+                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Difference</th>
+                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">% of TEE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{-- Carbohydrates --}}
+                                <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                                    <td style="padding:.6rem .75rem;font-weight:700;color:#c2410c;background:rgba(249,115,22,.12)">
+                                        <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#f97316;margin-right:.4rem;vertical-align:.05rem"></span>
+                                        Carbs (g)
+                                    </td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-act">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-diff">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-pct">—</td>
+                                </tr>
+                                {{-- Protein --}}
+                                <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                                    <td style="padding:.6rem .75rem;font-weight:700;color:#4338ca;background:rgba(99,102,241,.12)">
+                                        <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#6366f1;margin-right:.4rem;vertical-align:.05rem"></span>
+                                        Protein (g)
+                                    </td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-act">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-diff">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-pct">—</td>
+                                </tr>
+                                {{-- Fat --}}
+                                <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                                    <td style="padding:.6rem .75rem;font-weight:700;color:#0f766e;background:rgba(20,184,166,.12)">
+                                        <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#14b8a6;margin-right:.4rem;vertical-align:.05rem"></span>
+                                        Fat (g)
+                                    </td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-act">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-diff">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-pct">—</td>
+                                </tr>
+                                {{-- Energy --}}
+                                <tr style="background:#f8fafc;border-top:2px solid var(--border)">
+                                    <td style="padding:.65rem .75rem;font-weight:800;color:var(--text-primary)">
+                                        Energy (kJ)
+                                    </td>
+                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-rec">{{ $teeKj ? round($teeKj) : '—' }}</td>
+                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:800;color:var(--primary)" id="na-kj-act">—</td>
+                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-diff">—</td>
+                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-pct">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 @endif
@@ -368,15 +391,15 @@
                     {{ $patient->exchangeTemplate->name }}
                 </span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto" style="max-height:420px;overflow-y:auto">
                 <table class="exchange-table" id="exchange-table">
                     <thead>
                         <tr>
                             <th style="min-width:160px">Item</th>
                             <th style="text-align:center;min-width:110px">nu</th>
-                            <th style="text-align:right">CHO (g)</th>
-                            <th style="text-align:right">Protein (g)</th>
-                            <th style="text-align:right">Fat (g)</th>
+                            <th style="text-align:right;color:#c2410c;background:rgba(249,115,22,.12)">CHO (g)</th>
+                            <th style="text-align:right;color:#4338ca;background:rgba(99,102,241,.12)">Protein (g)</th>
+                            <th style="text-align:right;color:#0f766e;background:rgba(20,184,166,.12)">Fat (g)</th>
                             <th style="text-align:right">kJ</th>
                         </tr>
                     </thead>
@@ -409,9 +432,9 @@
                                     </form>
                                 </div>
                             </td>
-                            <td class="et-cho"  style="text-align:right">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
-                            <td class="et-pmin" style="text-align:right">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
-                            <td class="et-fmin" style="text-align:right">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
+                            <td class="et-cho"  style="text-align:right;background:rgba(249,115,22,.12);color:#c2410c;font-weight:600">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
+                            <td class="et-pmin" style="text-align:right;background:rgba(99,102,241,.12);color:#4338ca;font-weight:600">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
+                            <td class="et-fmin" style="text-align:right;background:rgba(20,184,166,.12);color:#0f766e;font-weight:600">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
                             <td class="et-kj"   style="text-align:right;font-weight:600">{{ $item->kj !== null ? $nu * $item->kj : '—' }}</td>
                         </tr>
                         @endforeach
@@ -420,17 +443,17 @@
                         <!-- grams totals row -->
                         <tr style="background:var(--bg-page);border-top:2px solid var(--border)">
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(g)</td>
-                            <td id="tot-cho"  style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-pmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-fmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
+                            <td id="tot-cho"  style="text-align:right;font-weight:800;color:#c2410c;background:rgba(249,115,22,.12)">—</td>
+                            <td id="tot-pmin" style="text-align:right;font-weight:800;color:#4338ca;background:rgba(99,102,241,.12)">—</td>
+                            <td id="tot-fmin" style="text-align:right;font-weight:800;color:#0f766e;background:rgba(20,184,166,.12)">—</td>
                             <td id="tot-kj"   style="text-align:right;font-weight:700;color:var(--primary)">—</td>
                         </tr>
                         <!-- kJ conversion row -->
                         <tr style="background:var(--bg-page);border-top:1px solid var(--border)">
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(kJ)</td>
-                            <td id="tot-kj-cho"  style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-kj-pmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
-                            <td id="tot-kj-fmin" style="text-align:right;font-weight:700;color:var(--text)">—</td>
+                            <td id="tot-kj-cho"  style="text-align:right;font-weight:800;color:#c2410c;background:rgba(249,115,22,.12)">—</td>
+                            <td id="tot-kj-pmin" style="text-align:right;font-weight:800;color:#4338ca;background:rgba(99,102,241,.12)">—</td>
+                            <td id="tot-kj-fmin" style="text-align:right;font-weight:800;color:#0f766e;background:rgba(20,184,166,.12)">—</td>
                             <td id="tot-kj-total"   style="text-align:right;font-weight:700;color:var(--primary)">—</td>
                         </tr>
                     </tfoot>
@@ -456,78 +479,6 @@
         </details>
         @endif
 
-        {{-- ═══════════════════════════════════════════
-             NUTRIENT ANALYSIS SUMMARY
-        ═══════════════════════════════════════════ --}}
-        @if($patient->exchangeTemplate && $teeKj > 0)
-        <details class="mt-4" id="nutrient-analysis-details" open>
-            <summary class="font-semibold cursor-pointer py-2">Nutrient Analysis ▾</summary>
-            <div class="dash-section" id="nutrient-analysis">
-            <div class="dash-section-header">
-                <span class="dash-section-title">Nutrient Analysis</span>
-                <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
-            </div>
-            <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
-                <table style="width:100%;border-collapse:collapse;font-size:.84rem">
-                    <thead>
-                        <tr style="border-bottom:2px solid var(--border)">
-                            <th style="text-align:left;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc"></th>
-                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Recommended</th>
-                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Actual</th>
-                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Difference</th>
-                            <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">% of TEE</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{-- Carbohydrates --}}
-                        <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
-                            <td style="padding:.6rem .75rem;font-weight:700;color:#c2410c">
-                                <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#f97316;margin-right:.4rem;vertical-align:.05rem"></span>
-                                Carbs (g)
-                            </td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:700" id="na-cho-act">—</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-cho-diff">—</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-cho-pct">—</td>
-                        </tr>
-                        {{-- Protein --}}
-                        <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
-                            <td style="padding:.6rem .75rem;font-weight:700;color:#4338ca">
-                                <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#6366f1;margin-right:.4rem;vertical-align:.05rem"></span>
-                                Protein (g)
-                            </td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:700" id="na-pro-act">—</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-pro-diff">—</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-pro-pct">—</td>
-                        </tr>
-                        {{-- Fat --}}
-                        <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
-                            <td style="padding:.6rem .75rem;font-weight:700;color:#0f766e">
-                                <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#14b8a6;margin-right:.4rem;vertical-align:.05rem"></span>
-                                Fat (g)
-                            </td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:700" id="na-fat-act">—</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-fat-diff">—</td>
-                            <td style="text-align:right;padding:.6rem .75rem;font-weight:600" id="na-fat-pct">—</td>
-                        </tr>
-                        {{-- Energy --}}
-                        <tr style="background:#f8fafc;border-top:2px solid var(--border)">
-                            <td style="padding:.65rem .75rem;font-weight:800;color:var(--text-primary)">
-                                Energy (kJ)
-                            </td>
-                            <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-rec">{{ $teeKj ? round($teeKj) : '—' }}</td>
-                            <td style="text-align:right;padding:.65rem .75rem;font-weight:800;color:var(--primary)" id="na-kj-act">—</td>
-                            <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-diff">—</td>
-                            <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-pct">—</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            </div>
-        </details>
-        @endif (uses nu values)
         </x-plan-gate>
         <x-plan-gate min="package_1">
         @if($patient->exchangeTemplate)
@@ -552,7 +503,7 @@
 
                 <form method="POST" action="{{ route('patients.meal-plan.save', $patient) }}" id="meal-plan-form">
                     @csrf @method('PATCH')
-                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
+                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem;max-height:420px;overflow-y:auto">
                         <table class="exchange-table" id="meal-plan-table">
                             <thead>
                                 <tr>

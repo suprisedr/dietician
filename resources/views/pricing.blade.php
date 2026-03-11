@@ -202,7 +202,7 @@
             <ul class="pc-features">
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Everything in Free</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Macronutrient distribution (C &middot; P &middot; F) &amp; fibre/fluid targets</li>
-                <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Exchange food item package (500+ items)</li>
+                <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Exchange Food Items Package</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Meal plan template (downloadable)</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Grocery list generator</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Generate downloadable reports for your client statistics</li>
@@ -240,7 +240,7 @@
             <span class="pc-badge team">Package 3</span>
             <div class="pc-name">Package 3</div>
             <div class="pc-price"><span class="pc-currency">R</span><span class="pc-amount">899</span><span class="pc-period">/ month</span></div>
-            <div class="pc-tagline">Multi-dietitian practice or clinic</div>
+            <div class="pc-tagline">In and Outpatient Clinical Nutrition Toolkit + extras</div>
             <div class="pc-divider"></div>
             <ul class="pc-features">
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Everything in Package 2</li>
@@ -312,7 +312,7 @@
         </div>
         <div class="faq-item">
             <div class="faq-q">What is the 5-user group pricing?</div>
-            <div class="faq-a">Package 3 supports up to 3 users at R 899/month. A group licence for 5 users is available at R 1 800/month &mdash; ideal for larger practices or clinics and a saving compared to 5 individual licences.</div>
+            <div class="faq-a">A group licence for 5 users is available at R 1 800/month &mdash; ideal for larger practices or clinics and a saving compared to 5 individual licences.</div>
         </div>
         <div class="faq-item">
             <div class="faq-q">Is patient data secure?</div>

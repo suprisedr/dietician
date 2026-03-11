@@ -62,7 +62,6 @@
                              style="position:absolute;top:calc(100% + .35rem);left:0;background:#fff;border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 28px rgba(13,31,12,.13);z-index:50;overflow:hidden">
                              <a href="{{ route('meal-planner.index') }}"  class="mn-dd-link">🗓️ Weekly Plans</a>
                             <a href="{{ route('grocery-lists.index') }}" class="mn-dd-link">🛒 Grocery Lists</a>
-                            <a href="{{ route('pantry.index') }}"        class="mn-dd-link">📦 Pantry &amp; Freezer</a>
                         </div>
                     </div>
                 </div>
@@ -107,6 +106,18 @@
                                 Devices
                             </span>
                         </x-dropdown-link>
+                        @if (auth()->user()->isSubscriptionOwner() && (auth()->user()->pricingPackage?->max_users ?? 1) > 1)
+                        <x-dropdown-link :href="route('team.index')">
+                            <span style="display:flex;align-items:center;gap:.45rem">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Team
+                            </span>
+                        </x-dropdown-link>
+                        @endif
                             <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">{{ __('Log Out') }}</x-dropdown-link>
@@ -146,7 +157,6 @@
             <x-responsive-nav-link :href="route('meal-items.index')"   :active="request()->routeIs('meal-items.*')">{{ __('Meal Library') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('meal-planner.index')" :active="request()->routeIs('meal-planner.*')">{{ __('Weekly Plans') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('grocery-lists.index')" :active="request()->routeIs('grocery-lists.*')">{{ __('Grocery Lists') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('pantry.index')"       :active="request()->routeIs('pantry.*')">{{ __('Pantry &amp; Freezer') }}</x-responsive-nav-link>
         </div>
         <div class="pt-4 pb-3 border-t border-gray-200 px-4">
             <div style="font-weight:700;font-size:.9rem;color:var(--text-primary)">{{ Auth::user()->name }}</div>
@@ -154,6 +164,9 @@
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('devices.index')" :active="request()->routeIs('devices.*')">{{ __('Devices') }}</x-responsive-nav-link>
+                    @if (auth()->user()->isSubscriptionOwner() && (auth()->user()->pricingPackage?->max_users ?? 1) > 1)
+                    <x-responsive-nav-link :href="route('team.index')" :active="request()->routeIs('team.*')">{{ __('Team') }}</x-responsive-nav-link>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">{{ __('Log Out') }}</x-responsive-nav-link>

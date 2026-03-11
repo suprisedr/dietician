@@ -278,8 +278,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         </div>
         <div class="mp-actions">
             <a href="{{ route('grocery-lists.create') }}" class="mp-btn mp-btn-indigo">🛒 Grocery List</a>
-            <a href="{{ route('pantry.index') }}"         class="mp-btn mp-btn-green">📦 Pantry</a>
-            <a href="{{ route('recipes.index') }}"        class="mp-btn mp-btn-purple">📋 Recipes</a>
         </div>
     </div>
 

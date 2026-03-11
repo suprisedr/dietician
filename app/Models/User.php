@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -20,6 +21,7 @@ class User extends Authenticatable
         'dietician_number',
         'password',
         'pricing_package_slug',
+        'owner_id',
     ];
 
     protected $hidden = [
@@ -42,7 +44,7 @@ class User extends Authenticatable
         return $this->hasMany(UserDevice::class);
     }
 
-    public function pricingPackage()
+    public function pricingPackage(): BelongsTo
     {
         return $this->belongsTo(PricingPackage::class, 'pricing_package_slug', 'slug');
     }
@@ -58,42 +60,108 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Max devices allowed by the user's current package. */
-    public function deviceLimit(): int
+    /**
+     * The owner who invited this user (null if this user owns their own subscription).
+     */
+    public function owner(): BelongsTo
     {
-        return $this->pricingPackage?->max_users ?? 1;
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
-    /** True when the user has an active or non-renewing paid subscription. */
+    /**
+     * Users that this user has invited (and who accepted).
+     */
+    public function teamMembers(): HasMany
+    {
+        return $this->hasMany(User::class, 'owner_id');
+    }
+
+    /**
+     * Pending and accepted invitations sent by this user.
+     */
+    public function teamInvitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'owner_id');
+    }
+
+    // ── Team helpers ──────────────────────────────────────────────────────────
+
+    /**
+     * True if this user was invited by someone else (not a subscription owner).
+     */
+    public function isTeamMember(): bool
+    {
+        return ! is_null($this->owner_id);
+    }
+
+    /**
+     * True if this user owns their own subscription (not invited).
+     */
+    public function isSubscriptionOwner(): bool
+    {
+        return is_null($this->owner_id);
+    }
+
+    /**
+     * The user whose subscription governs this user's access.
+     * For invited members, that is their owner. For owners, it's themselves.
+     */
+    public function subscriptionOwner(): self
+    {
+        return $this->owner ?? $this;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Max devices allowed by the subscription owner's current package. */
+    public function deviceLimit(): int
+    {
+        return $this->subscriptionOwner()->pricingPackage?->max_users ?? 1;
+    }
+
+    /** True when the subscription owner has an active or non-renewing paid subscription. */
     public function hasActiveSubscription(): bool
     {
-        return $this->subscription?->isActive() ?? false;
+        return $this->subscriptionOwner()->subscription?->isActive() ?? false;
     }
 
     /** True when the user is on the free tier. */
     public function onFreePlan(): bool
     {
-        return $this->pricing_package_slug === 'free' || ! $this->hasActiveSubscription();
+        $owner = $this->subscriptionOwner();
+        return $owner->pricing_package_slug === 'free' || ! $this->hasActiveSubscription();
     }
 
     /**
-     * The sort_order of the user's current package (1=free, 2=package_1, 3=package_2, 4=package_3).
-     * Falls back to 1 so users without a package can never access gated features.
+     * The sort_order of the governing package (1=free … 4=package_3).
+     * Always resolved via the subscription owner.
      */
     public function planTier(): int
     {
-        return $this->pricingPackage?->sort_order ?? 1;
+        return $this->subscriptionOwner()->pricingPackage?->sort_order ?? 1;
     }
 
     /**
-     * Returns true when the user's plan tier is >= the minimum required tier
-     * for the given package slug (e.g. 'package_1', 'package_2', 'package_3').
+     * Returns true when the effective plan tier is >= the minimum required tier.
      */
     public function canAccessPlan(string $minSlug): bool
     {
         $required = PricingPackage::where('slug', $minSlug)->value('sort_order') ?? 999;
         return $this->planTier() >= $required;
+    }
+
+    /**
+     * How many more members this user can still invite (0 if at limit or if they
+     * are themselves a member and therefore cannot invite anyone).
+     */
+    public function remainingInviteSlots(): int
+    {
+        if ($this->isTeamMember()) {
+            return 0;
+        }
+
+        $limit     = $this->pricingPackage?->max_users ?? 1;
+        $usedSlots = $this->teamMembers()->count() + 1; // +1 for the owner
+        return max(0, $limit - $usedSlots);
     }
 }
