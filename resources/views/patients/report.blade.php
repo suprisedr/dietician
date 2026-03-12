@@ -388,7 +388,7 @@
                 <div class="metric-grid">
                     <div class="metric-card">
                         <div class="metric-label">BMI</div>
-                        <div class="metric-value">{{ $patient->bmi ? number_format($patient->bmi, 1) : '—' }}</div>
+                        <div class="metric-value">{{ $patient->bmi ? number_format($patient->bmi, 2) : '—' }}</div>
                         <div class="metric-unit">kg/m²</div>
                         @php $bmiCat = strtolower($patient->bmi_category ?? 'normal'); @endphp
                         <span class="bmi-pill {{ $bmiCat }}">{{ $patient->bmi_category }}</span>
@@ -404,7 +404,7 @@
                         <div class="metric-unit">kg</div>
                     </div>
                     <div class="metric-card highlight">
-                        <div class="metric-label">BMR</div>
+                        <div class="metric-label">RMR</div>
                         <div class="metric-value">{{ $bmrKj ? number_format($bmrKj) : '—' }}</div>
                         <div class="metric-unit">kJ/day</div>
                     </div>
@@ -438,7 +438,7 @@
                 @if($isObese)
                     <div class="obesity-note">
                         <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 1) }} &gt; 30):</strong>
-                        BMR calculated using adjusted body weight (IBW + 0.25 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
+                        RMR calculated using adjusted body weight (IBW + 0.25 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
                     </div>
                 @endif
             </div>
@@ -543,7 +543,7 @@
                     <tr><td>BMI</td><td>{{ $patient->bmi ? number_format($patient->bmi, 1).' kg/m²' : '—' }} — <strong>{{ $patient->bmi_category }}</strong></td></tr>
                     <tr><td>Ideal Body Weight (IBW)</td><td>{{ $patient->ibw ? number_format($patient->ibw, 1).' kg' : '—' }}</td></tr>
                     <tr><td>Adjusted Body Weight (ABW)</td><td>{{ $patient->abw ? number_format($patient->abw, 1).' kg' : '—' }}</td></tr>
-                    <tr><td>BMR (Mifflin-St Jeor)</td><td>{{ $bmrKj ? number_format($bmrKj).' kJ/day' : '—' }}</td></tr>
+                    <tr><td>RMR (Mifflin-St Jeor)</td><td>{{ $bmrKj ? number_format($bmrKj).' kJ/day' : '—' }}</td></tr>
                     <tr><td>TEE</td><td>{{ $teeKj ? number_format(round($teeKj)).' kJ/day' : '—' }}{{ $teeKcal ? ' ('.number_format($teeKcal).' kcal/day)' : '' }}</td></tr>
                 </table>
             </div>

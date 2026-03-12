@@ -281,7 +281,7 @@
             <td>
                 <div class="metric-box">
                     <div class="metric-label">BMI</div>
-                    <div class="metric-value">{{ $patient->bmi ? number_format($patient->bmi, 1) : '—' }}</div>
+                    <div class="metric-value">{{ $patient->bmi ? number_format($patient->bmi, 2) : '—' }}</div>
                     <div class="metric-unit">kg/m&sup2;</div>
                     <span class="bmi-pill bmi-{{ $bmiCat }}">{{ $patient->bmi_category }}</span>
                 </div>
@@ -346,7 +346,7 @@
     </table>
     @if($isObese)
     <div class="obese-note">
-        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 1) }} &gt; 30):</strong>
+        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 2) }} &gt; 30):</strong>
         BMR calculated using adjusted body weight (IBW + 0.25 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
     </div>
     @endif
@@ -438,7 +438,7 @@
         <tr><td>Actual Weight</td><td>{{ $patient->weight }} kg</td></tr>
         <tr><td>Height</td><td>{{ $patient->height }} cm</td></tr>
         <tr><td>Activity Factor</td><td>{{ $patient->activity_factor }}</td></tr>
-        <tr><td>BMI</td><td>{{ $patient->bmi ? number_format($patient->bmi, 1).' kg/m&sup2;' : '—' }} &mdash; {{ $patient->bmi_category }}</td></tr>
+        <tr><td>BMI</td><td>{{ $patient->bmi ? number_format($patient->bmi, 2).' kg/m²' : '—' }} — {{ $patient->bmi_category }}</td></tr>
         <tr><td>Ideal Body Weight (IBW)</td><td>{{ $patient->ibw ? number_format($patient->ibw, 1).' kg' : '—' }}</td></tr>
         <tr><td>Adjusted Body Weight (ABW)</td><td>{{ $patient->abw ? number_format($patient->abw, 1).' kg' : '—' }}</td></tr>
         <tr><td>BMR (Mifflin-St Jeor)</td><td>{{ $bmrKj ? number_format($bmrKj).' kJ/day' : '—' }}</td></tr>

@@ -7,7 +7,7 @@
         $initials = collect(explode(' ', $patient->name))->map(fn($w)=>strtoupper(substr($w,0,1)))->take(2)->implode('');
         $bmiCat   = strtolower($patient->bmi_category ?? 'normal');
         $teeKcal  = $patient->tee ? round($patient->tee / 4.184) : null;
-        $teeKj    = ($patient->tee ?? 0) * 4.184;
+        $teeKj    = $patient->tee ?? 0;
 
         // Obesity BMR adjustments (only relevant when BMI > 30)
         $isObese          = ($patient->bmi ?? 0) > 30;
@@ -31,7 +31,7 @@
         ];
 
         // Recommended intakes derived from TEE + macro targets
-        // kJ factors: CHO=17, Protein=17, Fat=37 (Atwater)
+        // kJ factors: CHO=17, Protein=17, Fat=38
         $macroByType = $patient->macronutrients->keyBy('type');
         $recCho_g    = null; $recPro_g  = null; $recFat_g  = null;
         $recCho_kj   = null; $recPro_kj = null; $recFat_kj = null;
@@ -44,7 +44,7 @@
             $recFat_kj  = round($teeKj * $fatPct / 100);
             $recCho_g   = $recCho_kj > 0 ? round($recCho_kj / 17) : 0;
             $recPro_g   = $recPro_kj > 0 ? round($recPro_kj / 17) : 0;
-            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 37) : 0;
+            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 38) : 0;
         }
     @endphp
 
@@ -100,7 +100,7 @@
             </div>
             <div class="metric-card">
                 @if($patient->bmi)
-                    <div class="mc-val">{{ number_format($patient->bmi, 1) }}</div>
+                    <div class="mc-val">{{ number_format($patient->bmi, 2) }}</div>
                     <div class="mc-label">BMI</div>
                     <div class="mc-sub"><span class="bmi-pill {{ $bmiCat }}">{{ $patient->bmi_category }}</span></div>
                 @else
@@ -110,7 +110,7 @@
             </div>
             <div class="metric-card">
                 <div class="mc-val">{{ $patient->bmr ? number_format($patient->bmr * 4.184, 0) : '—' }}</div>
-                <div class="mc-label">BMR @if($isObese)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#fff7ed;color:#c2410c;border-radius:999px;vertical-align:middle">Adj.</span>@endif</div>
+                <div class="mc-label">RMR @if($isObese)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#fff7ed;color:#c2410c;border-radius:999px;vertical-align:middle">Adj.</span>@endif</div>
                 <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
@@ -119,8 +119,8 @@
                 <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
-                <div class="mc-val">{{ $patient->ibw ? number_format($patient->ibw, 1) : '—' }}</div>
-                <div class="mc-label">IBW</div>
+                <div class="mc-val" id="hero-ibw-val">{{ $patient->ibw ? number_format($patient->ibw, 2) : '—' }}</div>
+                <div class="mc-label">IBW <span style="font-size:.55rem;opacity:.7" id="hero-ibw-label">(BMI {{ $patient->ibw_bmi_target ?? 22 }})</span></div>
                 <div class="mc-sub">kg</div>
             </div>
 
@@ -151,24 +151,77 @@
 
                 {{-- Anthropometrics card --}}
                 <div class="dash-section">
-                    <div class="dash-section-header">
+                    <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('anthro-body','anthro-chevron')">
                         <span class="dash-section-title">Anthropometrics</span>
+                        <svg id="anthro-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </div>
+                    <div id="anthro-body" style="display:none">
                     <dl class="info-grid">
                         <div class="info-item"><dt>Weight</dt><dd>{{ $patient->weight }} kg</dd></div>
                         <div class="info-item"><dt>Height</dt><dd>{{ $patient->height }} cm</dd></div>
-                        <div class="info-item"><dt>IBW</dt><dd>{{ $patient->ibw ? number_format($patient->ibw, 2).' kg' : '—' }}</dd></div>
-                        <div class="info-item"><dt>ABW <span style="font-size:.65rem;color:var(--text-muted);font-weight:500">(0.4 factor)</span></dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
+                        <div class="info-item"><dt>ABW <span style="font-size:.65rem;color:var(--text-muted);font-weight:500">(0.25 factor)</span></dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
+                        {{-- Target / Ideal Weights at three BMI benchmarks --}}
+                        <div class="info-item" style="grid-column:1/-1">
+                            <dt style="margin-bottom:.45rem">Target Weight (IBW) — select active target</dt>
+                            <dd style="padding:0">
+                                <table id="ibw-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
+                                    <thead>
+                                        <tr style="background:#f3f4f6">
+                                            <th style="padding:.3rem .5rem;width:2rem;border-bottom:1px solid #e5e7eb"></th>
+                                            <th style="padding:.3rem .6rem;text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI Target</th>
+                                            <th style="padding:.3rem .6rem;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Meaning</th>
+                                            <th style="padding:.3rem .6rem;text-align:right;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $ibwRows = [
+                                                22 => ['label'=>'BMI 22','meaning'=>'Medical ideal',        'val'=>$patient->ibw22,  'color'=>'var(--text-primary)'],
+                                                25 => ['label'=>'BMI 25','meaning'=>'Healthy upper limit',  'val'=>$patient->ibw25,  'color'=>'var(--text-primary)'],
+                                                30 => ['label'=>'BMI 30','meaning'=>'Obesity threshold',    'val'=>$patient->ibw30,  'color'=>'#c2410c'],
+                                            ];
+                                            $activeTarget = (int) ($patient->ibw_bmi_target ?? 22);
+                                        @endphp
+                                        @foreach($ibwRows as $bmiVal => $row)
+                                            @php $isActive = ($bmiVal === $activeTarget); @endphp
+                                            <tr data-bmi="{{ $bmiVal }}"
+                                                style="{{ $loop->even ? 'background:#f9fafb' : 'background:#fff' }};{{ $isActive ? 'outline:2px solid var(--primary);outline-offset:-2px;' : '' }}cursor:pointer"
+                                                onclick="selectIbwTarget({{ $bmiVal }})">
+                                                <td style="padding:.4rem .5rem;text-align:center;border-bottom:1px solid #f3f4f6">
+                                                    <span id="ibw-radio-{{ $bmiVal }}"
+                                                          style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;border:2px solid {{ $isActive ? 'var(--primary)' : '#9ca3af' }};background:{{ $isActive ? 'var(--primary)' : '#fff' }};vertical-align:middle"></span>
+                                                </td>
+                                                <td style="padding:.35rem .6rem;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6">{{ $row['label'] }}</td>
+                                                <td style="padding:.35rem .6rem;color:var(--text-muted);font-size:.75rem;text-align:center;border-bottom:1px solid #f3f4f6">{{ $row['meaning'] }}</td>
+                                                <td style="padding:.35rem .6rem;text-align:right;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6"
+                                                    id="ibw-weight-{{ $bmiVal }}">
+                                                    {{ $row['val'] ? number_format($row['val'], 2).' kg' : '—' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <p id="ibw-save-msg" style="font-size:.72rem;color:#15803d;margin-top:.35rem;display:none">✓ Target saved</p>
+                            </dd>
+                        </div>
                         <div class="info-item"><dt>Activity Factor</dt><dd>{{ $patient->activity_factor }}</dd></div>
                         <div class="info-item">
-                            <dt>BMR / RMR
+                            <dt>RMR (kcal)
                                 @if($isObese)
                                     <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
                                 @endif
                             </dt>
-                            <dd>{{ $patient->bmr ? number_format($patient->bmr * 4.184, 0).' kJ/day' : '—' }}</dd>
+                            <dd>{{ $patient->bmr ? number_format(round($patient->bmr), 0).' kcal/day' : '—' }}</dd>
                         </div>
-                        <div class="info-item"><dt>TEE</dt><dd>{{ $patient->tee ? number_format($patient->tee, 0).' kJ/day' : '—' }}</dd></div>
+                        <div class="info-item">
+                            <dt>RMR (kJ)
+                                @if($isObese)
+                                    <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
+                                @endif
+                            </dt>
+                            <dd>{{ $patient->bmr ? number_format(round($patient->bmr * 4.184), 0).' kJ/day' : '—' }}</dd>
+                        </div>
+                        <div class="info-item"><dt>TEE</dt><dd>{{ $patient->tee ? number_format(round($patient->tee), 0).' kJ/day' : '—' }}</dd></div>
                         <div class="info-item"><dt>TEE (kcal)</dt><dd>{{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}</dd></div>
                     </dl>
 
@@ -183,7 +236,7 @@
                         </div>
                         <p style="font-size:.75rem;color:#92400e;line-height:1.6;margin-bottom:1rem">
                             Using <strong>actual body weight</strong> in Mifflin-St Jeor overestimates
-                            energy needs in obesity. The primary BMR above uses
+                            energy needs in obesity. The primary RMR above uses
                             <strong>{{ number_format($weightForBmr, 1) }} kg</strong>
                             (IBW&nbsp;+&nbsp;0.25&nbsp;×&nbsp;excess).
                             Two alternative estimates are shown below for comparison.
@@ -194,7 +247,7 @@
                                 <tr style="border-bottom:1px solid #fed7aa">
                                     <th style="text-align:left;font-weight:700;color:#92400e;padding:.35rem .5rem .35rem 0">Method</th>
                                     <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">Weight used</th>
-                                    <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">BMR (kJ)</th>
+                                    <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">RMR (kJ)</th>
                                     <th style="text-align:right;font-weight:700;color:#92400e;padding:.35rem 0">TEE (kJ)</th>
                                 </tr>
                             </thead>
@@ -230,6 +283,7 @@
                         </table>
                     </div>
                     @endif
+                    </div>{{-- /anthro-body --}}
                 </div>
 
 
@@ -239,12 +293,16 @@
             {{-- ── RIGHT: Macronutrients ──────────────────── --}}
             <div class="lg:col-span-2">
                 <div class="dash-section">
-                    <div class="dash-section-header">
+                    <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('macro-body','macro-chevron')">
                         <span class="dash-section-title">Macronutrient Distribution</span>
-                        <span id="total-badge" style="font-size:.75rem;font-weight:700;padding:.25rem .7rem;border-radius:999px;background:#f1f5f9;color:#64748b;transition:all .2s">
-                            Total: <span id="macros-total">{{ number_format($patient->macronutrients->sum('selected_percentage'), 0) }}%</span>
-                        </span>
+                        <div style="display:flex;align-items:center;gap:.5rem">
+                            <span id="total-badge" style="font-size:.75rem;font-weight:700;padding:.25rem .7rem;border-radius:999px;background:#f1f5f9;color:#64748b;transition:all .2s">
+                                Total: <span id="macros-total">{{ number_format($patient->macronutrients->sum('selected_percentage'), 0) }}%</span>
+                            </span>
+                            <svg id="macro-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
                     </div>
+                    <div id="macro-body" style="display:none">
 
                     <form method="POST" action="{{ route('patients.macronutrients.update', $patient->id) }}" id="macro-form">
                         @csrf
@@ -313,10 +371,14 @@
                 {{-- Nutrient Analysis (replaces Energy Breakdown) --}}
                 @if($patient->exchangeTemplate && $teeKj > 0)
                 <div class="dash-section mt-6" id="nutrient-analysis">
-                    <div class="dash-section-header">
+                    <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('na-body','na-chevron')">
                         <span class="dash-section-title">Nutrient Analysis</span>
-                        <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
+                        <div style="display:flex;align-items:center;gap:.5rem">
+                            <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
+                            <svg id="na-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
                     </div>
+                    <div id="na-body" style="display:none">
                     <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
                         <table style="width:100%;border-collapse:collapse;font-size:.84rem">
                             <thead>
@@ -375,27 +437,33 @@
                             </tbody>
                         </table>
                     </div>
+                    </div>{{-- /na-body --}}
                 </div>
                 @endif
 
+                    </div>{{-- /macro-body --}}
+                </div>{{-- /dash-section --}}
             </div>
             </x-plan-gate>
         </div>
 
         <x-plan-gate min="package_1">
+        <div style="max-width:68rem;margin:0 auto">
         {{-- ═══════════════════════════════════════════
-             EXCHANGE TEMPLATE — full width
+             EXCHANGE TEMPLATE
         ═══════════════════════════════════════════ --}}
         @if($patient->exchangeTemplate)
-        <details open class="mt-6"> <!-- exchange template collapsible -->
-            <summary class="font-semibold cursor-pointer py-2">Exchange Template ▾</summary>
-            <div class="dash-section exchange-template-section">
-            <div class="dash-section-header">
+        <div class="dash-section exchange-template-section mt-6">
+            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('et-body','et-chevron')">
                 <span class="dash-section-title">Exchange Template</span>
-                <span style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:999px;background:#fff7ed;color:#c2410c">
-                    {{ $patient->exchangeTemplate->name }}
-                </span>
+                <div style="display:flex;align-items:center;gap:.5rem">
+                    <span style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:999px;background:#fff7ed;color:#c2410c">
+                        {{ $patient->exchangeTemplate->name }}
+                    </span>
+                    <svg id="et-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </div>
             </div>
+            <div id="et-body" style="display:none">
             <div class="overflow-x-auto" style="max-height:420px;overflow-y:auto">
                 <table class="exchange-table" id="exchange-table">
                     <thead>
@@ -464,8 +532,8 @@
                     </tfoot>
                 </table>
             </div>
-            </div>
-        </details>
+            </div>{{-- /et-body --}}
+        </div>{{-- /exchange-template-section --}}
         @else
         <div class="dash-section mt-6 p-5">
             <div style="text-align:center;padding:1.5rem 1rem;color:var(--text-muted)">
@@ -481,19 +549,21 @@
                     </button>
                 </form>
             </div>
-        </details>
+        </div>
         @endif
 
         </x-plan-gate>
         <x-plan-gate min="package_1">
         @if($patient->exchangeTemplate)
-        <details class="mt-6" id="meal-plan-details">
-            <summary class="font-semibold cursor-pointer py-2">Meal Plan ▾</summary>
-            <div class="dash-section">
-                <div class="dash-section-header" style="justify-content:space-between;align-items:center">
-                    <span class="dash-section-title">Meal Plan Distribution</span>
+        <div class="dash-section mt-6" id="meal-plan-details">
+            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('mp-body','mp-chevron')">
+                <span class="dash-section-title">Meal Plan Distribution</span>
+                <div style="display:flex;align-items:center;gap:.5rem">
                     <span style="font-size:.75rem;color:var(--text-muted)">Enter serving exchanges per meal — each row must sum to the total (No)</span>
+                    <svg id="mp-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
+            </div>
+            <div id="mp-body" style="display:none">
 
                 @if(session('success') && str_contains(session('success'), 'Meal plan'))
                     <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#dcfce7;color:#15803d;border-radius:6px;font-size:.82rem;font-weight:600">
@@ -508,7 +578,7 @@
 
                 <form method="POST" action="{{ route('patients.meal-plan.save', $patient) }}" id="meal-plan-form">
                     @csrf @method('PATCH')
-                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem;max-height:420px;overflow-y:auto">
+                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem;max-height:420px;overflow-y:auto;position:relative">
                         <table class="exchange-table" id="meal-plan-table">
                             <thead>
                                 <tr>
@@ -551,6 +621,19 @@
                                 </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr style="border-top:2px solid var(--border);background:#f8fafc">
+                                    <td style="font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);padding:.6rem 1rem">Total</td>
+                                    <td id="mp-tot-no"  style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-bf"  style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-sn1" style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-ln"  style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-sn2" style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-sup" style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-sn3" style="font-weight:700;padding:.6rem 1rem">—</td>
+                                    <td id="mp-tot-sum" style="font-weight:700;padding:.6rem 1rem">—</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                     <div style="padding:.75rem 1.25rem 1.25rem;display:flex;align-items:center;gap:1rem">
@@ -561,9 +644,10 @@
                         <span id="meal-plan-status" style="font-size:.8rem;color:var(--text-muted)"></span>
                     </div>
                 </form>
-            </div>
-        </details>
+            </div>{{-- /mp-body --}}
+        </div>{{-- /meal-plan-details --}}
         @endif
+        </div>{{-- /max-w narrow wrapper --}}
         </x-plan-gate>
 
     </div>
@@ -650,8 +734,7 @@
                 </p>
             @else
                 @php
-                    $visits      = $patient->visits;   // already sorted desc
-                    $heightFall  = $patient->height;    // fallback height
+                    $visits = $patient->visits;   // already sorted desc by visited_at
                 @endphp
                 <div style="max-height:420px;overflow-y:auto;border-radius:8px;border:1px solid #e5e7eb">
                     <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem">
@@ -670,8 +753,7 @@
                                 @php
                                     $prevVisit  = $visits->get($vi + 1);   // next in desc order = previous chronologically
                                     $weightDiff = $prevVisit ? round($visit->weight - $prevVisit->weight, 1) : null;
-                                    $h          = $visit->height ?? $heightFall;
-                                    $bmi        = ($visit->weight && $h) ? round($visit->weight / (($h/100)**2), 1) : null;
+                                    $bmi        = $visit->bmi;   // uses PatientVisit::getBmiAttribute()
                                 @endphp
                                 <tr style="{{ $vi % 2 === 0 ? 'background:#fff' : 'background:#f9fafb' }}">
                                     <td style="padding:.6rem .9rem;font-weight:600;color:var(--text-primary);border-bottom:1px solid #f3f4f6">
@@ -735,6 +817,75 @@
 
         </div>
     </div>
+
+    {{-- ═══════════════════════════════════════════
+         IBW BMI TARGET SELECTOR
+    ═══════════════════════════════════════════ --}}
+    <script>
+    function toggleSection(bodyId, chevronId) {
+        const body    = document.getElementById(bodyId);
+        const chevron = document.getElementById(chevronId);
+        const hidden  = body.style.display === 'none';
+        body.style.display    = hidden ? '' : 'none';
+        chevron.style.transform = hidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+    }
+    </script>
+
+    <script>
+    (function () {
+        const ibwValues = {
+            22: {{ $patient->ibw22 ?? 'null' }},
+            25: {{ $patient->ibw25 ?? 'null' }},
+            30: {{ $patient->ibw30 ?? 'null' }},
+        };
+
+        window.selectIbwTarget = function(bmi) {
+            const token   = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const url     = '{{ route("patients.ibw-target.update", $patient->id) }}';
+            const saveMsg = document.getElementById('ibw-save-msg');
+
+            // Optimistic UI: update radio buttons and row highlight
+            [22, 25, 30].forEach(function(b) {
+                const radio = document.getElementById('ibw-radio-' + b);
+                const row   = document.querySelector('#ibw-table tr[data-bmi="' + b + '"]');
+                if (radio) {
+                    radio.style.background   = (b === bmi) ? 'var(--primary)' : '#fff';
+                    radio.style.borderColor  = (b === bmi) ? 'var(--primary)' : '#9ca3af';
+                }
+                if (row) {
+                    row.style.outline       = (b === bmi) ? '2px solid var(--primary)' : 'none';
+                    row.style.outlineOffset = (b === bmi) ? '-2px' : '0';
+                }
+            });
+
+            // Update hero card
+            const heroVal   = document.getElementById('hero-ibw-val');
+            const heroLabel = document.getElementById('hero-ibw-label');
+            if (heroVal && ibwValues[bmi] !== null) {
+                heroVal.textContent   = ibwValues[bmi].toFixed(2);
+                heroLabel.textContent = '(BMI ' + bmi + ')';
+            }
+
+            // Persist to server
+            fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ ibw_bmi_target: bmi }),
+            }).then(function(res) {
+                if (res.ok) {
+                    if (saveMsg) {
+                        saveMsg.style.display = 'block';
+                        setTimeout(function() { saveMsg.style.display = 'none'; }, 2500);
+                    }
+                }
+            }).catch(function(err) { console.error('IBW target save failed', err); });
+        };
+    })();
+    </script>
 
     {{-- ═══════════════════════════════════════════
          CLIENT-SIDE MACRO CALCULATOR
@@ -839,7 +990,7 @@
             // % of TEE
             const actChoKj = actChoG * 17;
             const actProKj = actProG * 17;
-            const actFatKj = actFatG * 37;
+            const actFatKj = actFatG * 38;
 
             function naSet(id, val, refVal, isKj) {
                 const el = document.getElementById(id);
@@ -862,16 +1013,11 @@
                 el.innerHTML = '<span style="display:inline-block;padding:.15rem .5rem;border-radius:999px;font-weight:700;font-size:.8rem;background:'+bgColor+';color:'+color+'">'+sign+d+'</span>';
             }
 
-            function naPct(id, actKj, tee) {
+            function naPct(id, actMacroKj, totalEtKj) {
                 const el = document.getElementById(id);
-                if (!el || !tee) { if(el) el.textContent = '—'; return; }
-                const pct = actKj / tee * 100;
-                const diff = pct - 100;
-                const sign  = diff >= 0 ? '+' : '';
-                const color  = diff < -0.5 ? '#b91c1c' : diff > 0.5 ? '#c2410c' : '#15803d';
-                const bgColor= diff < -0.5 ? '#fee2e2' : diff > 0.5 ? '#fff7ed' : '#dcfce7';
-                el.innerHTML = '<span style="font-weight:700">'+pct.toFixed(1)+'%</span>'
-                             + ' <span style="display:inline-block;padding:.1rem .4rem;border-radius:999px;font-weight:700;font-size:.72rem;background:'+bgColor+';color:'+color+'">'+sign+diff.toFixed(1)+'%</span>';
+                if (!el || !totalEtKj) { if(el) el.textContent = '—'; return; }
+                const pct = actMacroKj / totalEtKj * 100;
+                el.innerHTML = '<span style="font-weight:700">'+pct.toFixed(1)+'%</span>';
             }
 
             naSet('na-cho-act',  actChoG,  recChoG,  false);
@@ -884,10 +1030,10 @@
             naDiff('na-fat-diff', actFatG, recFatG);
             naDiff('na-kj-diff',  actKj,   teeKjVal);
 
-            naPct('na-cho-pct', actChoKj, teeKjVal);
-            naPct('na-pro-pct', actProKj, teeKjVal);
-            naPct('na-fat-pct', actFatKj, teeKjVal);
-            naPct('na-kj-pct',  actKj,    teeKjVal);
+            naPct('na-cho-pct', actChoKj, actKj);
+            naPct('na-pro-pct', actProKj, actKj);
+            naPct('na-fat-pct', actFatKj, actKj);
+            naPct('na-kj-pct',  actKj,    actKj);
         }
 
         // handle +/- forms
@@ -1021,6 +1167,7 @@
         form.addEventListener('input', function(e) {
             if (!e.target.classList.contains('meal-slot-input')) return;
             updateRow(e.target.dataset.row);
+            updateColTotals();
             updateSaveButton();
         });
 
@@ -1029,8 +1176,36 @@
             if (!e.target.classList.contains('meal-slot-input')) return;
             if (parseFloat(e.target.value) < 0) e.target.value = 0;
             updateRow(e.target.dataset.row);
+            updateColTotals();
             updateSaveButton();
         });
+
+        function updateColTotals() {
+            const slots = ['breakfast','snack1','lunch','snack2','supper','snack3'];
+            const ids   = ['mp-tot-bf','mp-tot-sn1','mp-tot-ln','mp-tot-sn2','mp-tot-sup','mp-tot-sn3'];
+            let grandTotal = 0;
+            slots.forEach(function(slot, i) {
+                let col = 0;
+                form.querySelectorAll('input[name*="[' + slot + ']"]').forEach(function(inp) {
+                    col += parseFloat(inp.value) || 0;
+                });
+                const el = document.getElementById(ids[i]);
+                if (el) el.textContent = col > 0 ? col : '—';
+                grandTotal += col;
+            });
+            // No column — sum of all item nu values
+            let noTotal = 0;
+            form.querySelectorAll('tr[data-nu]').forEach(function(row) {
+                noTotal += parseFloat(row.dataset.nu) || 0;
+            });
+            const noEl = document.getElementById('mp-tot-no');
+            if (noEl) noEl.textContent = noTotal > 0 ? noTotal : '—';
+            // Grand sum column
+            const sumEl = document.getElementById('mp-tot-sum');
+            if (sumEl) sumEl.textContent = grandTotal > 0 ? grandTotal : '—';
+        }
+
+        updateColTotals();
 
         // submit always allowed — partial saves are permitted
     })();

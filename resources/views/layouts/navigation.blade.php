@@ -106,7 +106,7 @@
                                 Devices
                             </span>
                         </x-dropdown-link>
-                        @if (auth()->user()->isSubscriptionOwner() && (auth()->user()->pricingPackage?->max_users ?? 1) > 1)
+                        @if (auth()->user()->isSubscriptionOwner())
                         <x-dropdown-link :href="route('team.index')">
                             <span style="display:flex;align-items:center;gap:.45rem">
                                 <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem" fill="none"
@@ -164,7 +164,7 @@
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('devices.index')" :active="request()->routeIs('devices.*')">{{ __('Devices') }}</x-responsive-nav-link>
-                    @if (auth()->user()->isSubscriptionOwner() && (auth()->user()->pricingPackage?->max_users ?? 1) > 1)
+                    @if (auth()->user()->isSubscriptionOwner())
                     <x-responsive-nav-link :href="route('team.index')" :active="request()->routeIs('team.*')">{{ __('Team') }}</x-responsive-nav-link>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">

@@ -39,7 +39,7 @@
         $males     = isset($patients) ? $patients->where('gender','male')->count() : 0;
         $females   = isset($patients) ? $patients->where('gender','female')->count() : 0;
         $avgBmi    = $total > 0
-            ? round($patients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 1)
+            ? round($patients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 2)
             : null;
     @endphp
 
@@ -164,7 +164,7 @@
                                             <td>
                                                 @if($patient->bmi)
                                                     <span class="bmi-pill {{ $bmiCat }}">
-                                                        {{ number_format($patient->bmi, 1) }}
+                                                        {{ number_format($patient->bmi, 2) }}
                                                     </span>
                                                 @else
                                                     <span class="text-gray-400">—</span>

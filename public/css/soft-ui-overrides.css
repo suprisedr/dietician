@@ -681,6 +681,30 @@ select.edit-input { cursor: pointer; }
 .exchange-table tbody tr:last-child td { border-bottom: none; }
 .exchange-table tbody tr:hover { background: #fef9f5; }
 
+/* Sticky header for the scrollable Meal Plan table */
+#meal-plan-table { border-collapse: separate; border-spacing: 0; }
+#meal-plan-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: 0 1px 0 var(--border);
+}
+
+/* Compact slot input fields */
+.meal-slot-input {
+    width: 3rem;
+    padding: .25rem .3rem;
+    text-align: center;
+    font-size: .8rem;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    background: #fff;
+    outline: none;
+    transition: border-color .15s;
+}
+.meal-slot-input:focus { border-color: var(--primary); }
+#meal-plan-table td { padding: .4rem .5rem; }
+
 /* Back link */
 .btn-back {
     display: inline-flex;

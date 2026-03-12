@@ -200,6 +200,30 @@
                         @enderror
                     </div>
 
+                    {{-- IBW BMI Target --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">
+                            IBW BMI Target
+                        </label>
+                        <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:.55rem">
+                            Choose which BMI value to use when calculating the patient's Ideal Body Weight.
+                        </p>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem">
+                            @foreach([22=>'Medical ideal',25=>'Healthy upper',30=>'Obesity threshold'] as $bmiVal=>$bmiLabel)
+                                <label style="display:flex;flex-direction:column;align-items:center;padding:.6rem .5rem;border:1.5px solid {{ old('ibw_bmi_target',22)==$bmiVal ? 'var(--primary)' : '#d1d5db' }};border-radius:7px;cursor:pointer;transition:border-color .15s;background:{{ old('ibw_bmi_target',22)==$bmiVal ? 'rgba(103,159,95,.07)' : '#fff' }}">
+                                    <input type="radio" name="ibw_bmi_target" value="{{ $bmiVal }}"
+                                           {{ old('ibw_bmi_target',22)==$bmiVal ? 'checked' : '' }}
+                                           style="accent-color:var(--primary);margin-bottom:.25rem">
+                                    <span style="font-size:.82rem;font-weight:700;color:var(--text-primary)">BMI {{ $bmiVal }}</span>
+                                    <span style="font-size:.7rem;color:var(--text-muted);text-align:center">{{ $bmiLabel }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('ibw_bmi_target')
+                            <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- Actions --}}
                     <div style="display:flex;gap:.75rem;align-items:center">
                         <button type="submit"

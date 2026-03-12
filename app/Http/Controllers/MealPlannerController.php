@@ -6,11 +6,70 @@ use App\Models\MealPlannerWeek;
 use App\Models\MealPlannerEntry;
 use App\Models\MealItem;
 use App\Models\Patient;
+use Braunson\FatSecret\FatSecret;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class MealPlannerController extends Controller
 {
+    // ── FatSecret food search (AJAX) ─────────────────────────────────────────
+    public function foodSearch(Request $request)
+    {
+        $q = trim($request->input('q', ''));
+        if ($q === '') {
+            return response()->json([]);
+        }
+
+        try {
+            $fs       = app(FatSecret::class);
+            $raw      = $fs->searchIngredients($q, 0, 25);
+            $foods    = $raw['foods']['food'] ?? [];
+
+            // Single result comes back as an associative array, not a list
+            if (isset($foods['food_id'])) {
+                $foods = [$foods];
+            }
+
+            $results = array_map(function ($food) {
+                $desc    = $food['food_description'] ?? '';
+                // "Per 100g - Calories: 23kcal | Fat: 0.37g | Carbs: 3.63g | Protein: 2.86g"
+                // "Per 1 serving (85g) - Calories: ..."
+                $kcal    = null;
+                $fat     = null;
+                $carbs   = null;
+                $protein = null;
+                $fiber   = null;
+                $serving = null;
+                if (preg_match('/Calories:\s*([\d.]+)kcal/i',  $desc, $m)) $kcal    = (float) $m[1];
+                if (preg_match('/Fat:\s*([\d.]+)g/i',           $desc, $m)) $fat     = (float) $m[1];
+                if (preg_match('/Carbs:\s*([\d.]+)g/i',         $desc, $m)) $carbs   = (float) $m[1];
+                if (preg_match('/Protein:\s*([\d.]+)g/i',       $desc, $m)) $protein = (float) $m[1];
+                if (preg_match('/Fiber:\s*([\d.]+)g/i',         $desc, $m)) $fiber   = (float) $m[1];
+                // Parse "Per 100g", "Per 1 cup (240ml)", "Per 1 serving (85g)" etc.
+                if (preg_match('/^Per\s+(.+?)\s+-/i', $desc, $m)) $serving = trim($m[1]);
+
+                return [
+                    'id'          => 'fs_' . $food['food_id'],
+                    'name'        => $food['food_name'],
+                    'description' => $desc,
+                    'serving'     => $serving,
+                    'kcal'        => $kcal,
+                    'kj'          => $kcal ? round($kcal * 4.184) : null,
+                    'fat'         => $fat,
+                    'carbs'       => $carbs,
+                    'protein'     => $protein,
+                    'fiber'       => $fiber,
+                    'source'      => 'fatsecret',
+                ];
+            }, $foods);
+
+            return response()->json($results);
+        } catch (\Throwable $e) {
+            \Log::error('FatSecret search error: ' . $e->getMessage());
+            return response()->json(['error' => 'Search unavailable'], 500);
+        }
+    }
+
     // ── List all planner weeks for the authenticated user ─────────────────────
     public function index(Request $request)
     {
@@ -96,6 +155,7 @@ class MealPlannerController extends Controller
         $slotDistribution = array_fill_keys(
             \App\Models\MealPlannerWeek::MEAL_SLOTS, []
         );
+        $slotLimits = array_fill_keys(\App\Models\MealPlannerWeek::MEAL_SLOTS, null);
 
         if ($mealPlanner->patient_id) {
             $patientModel = $mealPlanner->patient;
@@ -109,6 +169,19 @@ class MealPlannerController extends Controller
                     'dinner'    => 'slot_supper',   // supper in DB = dinner in planner
                     'snack3'    => 'slot_snack3',
                 ];
+                // First pass: sum raw quantities for the limit (0.5 counts as 1 whole item)
+                $rawSums = array_fill_keys(\App\Models\MealPlannerWeek::MEAL_SLOTS, 0.0);
+                foreach ($patientModel->exchangeTemplate->items as $item) {
+                    foreach ($slotMap as $plannerSlot => $dbCol) {
+                        $rawSums[$plannerSlot] += (float) ($item->{$dbCol} ?? 0);
+                    }
+                }
+                foreach ($rawSums as $plannerSlot => $sum) {
+                    if ($sum > 0) {
+                        $slotLimits[$plannerSlot] = (int) ceil($sum);
+                    }
+                }
+                // Second pass: build distribution entries
                 foreach ($patientModel->exchangeTemplate->items as $item) {
                     foreach ($slotMap as $plannerSlot => $dbCol) {
                         $qty = (float) ($item->{$dbCol} ?? 0);
@@ -127,7 +200,7 @@ class MealPlannerController extends Controller
         }
 
         return view('meal-planner.show', compact(
-            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution'
+            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution', 'slotLimits'
         ));
     }
 
@@ -152,10 +225,51 @@ class MealPlannerController extends Controller
                 if (!is_array($items)) continue;
 
                 foreach ($items as $order => $item) {
-                    $itemId = isset($item['id']) && $item['id'] ? (int) $item['id'] : null;
+                    $rawId  = $item['id'] ?? null;
                     $text   = trim($item['text'] ?? '');
 
-                    if ($itemId) {
+                    $isFreeText   = $rawId && str_starts_with((string) $rawId, '_free_');
+                    $isFatSecret  = $rawId && str_starts_with((string) $rawId, 'fs_');
+
+                    $itemId = null;
+
+                    if ($isFatSecret) {
+                        // Auto-create or reuse a MealItem for this FatSecret food
+                        $existing = MealItem::where('name', $text)
+                            ->where(function ($q) {
+                                $q->where('is_system', true)
+                                  ->orWhere('created_by', auth()->id());
+                            })
+                            ->first();
+
+                        if ($existing) {
+                            $itemId = $existing->id;
+                        } else {
+                            $fsData  = $item['fsData'] ?? [];
+                            $kcal    = isset($fsData['kcal'])    ? (float) $fsData['kcal']    : null;
+                            $fat     = isset($fsData['fat'])     ? (float) $fsData['fat']     : null;
+                            $carbs   = isset($fsData['carbs'])   ? (float) $fsData['carbs']   : null;
+                            $protein = isset($fsData['protein']) ? (float) $fsData['protein'] : null;
+                            $fiber   = isset($fsData['fiber'])   ? (float) $fsData['fiber']   : null;
+                            $serving = $fsData['serving'] ?? null;
+
+                            $newItem = MealItem::create([
+                                'name'         => $text,
+                                'category'     => 'FatSecret',
+                                'serving_size' => $serving,
+                                'energy_kcal'  => $kcal,
+                                'energy_kj'    => $kcal ? round($kcal * 4.184) : null,
+                                'fat_g'        => $fat,
+                                'cho_g'        => $carbs,
+                                'protein_g'    => $protein,
+                                'fiber_g'      => $fiber,
+                                'is_system'    => false,
+                                'created_by'   => auth()->id(),
+                            ]);
+                            $itemId = $newItem->id;
+                        }
+                    } elseif (!$isFreeText && $rawId) {
+                        $itemId = (int) $rawId;
                         $mi   = MealItem::find($itemId);
                         $text = $mi ? $mi->name : $text;
                     }

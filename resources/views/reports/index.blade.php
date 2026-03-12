@@ -16,7 +16,7 @@
         $total   = $patients->count();
         $males   = $patients->where('gender','male')->count();
         $females = $patients->where('gender','female')->count();
-        $avgBmi  = $total > 0 ? round($patients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 1) : null;
+        $avgBmi  = $total > 0 ? round($patients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 2) : null;
     @endphp
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 stat-cards-row">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -93,7 +93,7 @@
                                 <td>{{ $patient->height }} cm</td>
                                 <td>
                                     @if($patient->bmi)
-                                        <span class="bmi-pill {{ $bmiCat }}">{{ number_format($patient->bmi, 1) }}</span>
+                                        <span class="bmi-pill {{ $bmiCat }}">{{ number_format($patient->bmi, 2) }}</span>
                                     @else
                                         <span style="color:var(--text-muted)">—</span>
                                     @endif

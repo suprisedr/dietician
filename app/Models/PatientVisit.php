@@ -36,6 +36,6 @@ class PatientVisit extends Model
             return null;
         }
         $hm = $h / 100;
-        return round($this->weight / ($hm * $hm), 1);
+        return round($this->weight / ($hm * $hm), 2);
     }
 }

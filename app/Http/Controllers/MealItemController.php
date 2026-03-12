@@ -12,16 +12,18 @@ class MealItemController extends Controller
         $category = $request->input('category');
         $search   = $request->input('search');
 
-        $query = MealItem::visibleTo(auth()->id())
+        $items = MealItem::visibleTo(auth()->id())
             ->when($category, fn($q) => $q->where('category', $category))
             ->when($search,   fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->orderBy('category')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->get();
 
-        $items      = $query->paginate(30)->withQueryString();
+        $grouped    = $items->groupBy('category');
         $categories = MealItem::categories();
+        $total      = $items->count();
 
-        return view('meal-items.index', compact('items', 'categories', 'category', 'search'));
+        return view('meal-items.index', compact('grouped', 'categories', 'category', 'search', 'total'));
     }
 
     public function create()
@@ -39,6 +41,7 @@ class MealItemController extends Controller
             'cho_g'              => 'nullable|numeric|min:0',
             'protein_g'          => 'nullable|numeric|min:0',
             'fat_g'              => 'nullable|numeric|min:0',
+            'fiber_g'            => 'nullable|numeric|min:0',
             'energy_kj'          => 'nullable|numeric|min:0',
             'energy_kcal'        => 'nullable|numeric|min:0',
             'fruit_veg_portions' => 'nullable|integer|min:0|max:5',
@@ -66,18 +69,12 @@ class MealItemController extends Controller
 
     public function edit(MealItem $mealItem)
     {
-        abort_if($mealItem->is_system, 403, 'System items cannot be edited.');
-        abort_if($mealItem->created_by !== auth()->id(), 403);
-
         $categories = MealItem::categories();
         return view('meal-items.edit', compact('mealItem', 'categories'));
     }
 
     public function update(Request $request, MealItem $mealItem)
     {
-        abort_if($mealItem->is_system, 403);
-        abort_if($mealItem->created_by !== auth()->id(), 403);
-
         $data = $request->validate([
             'category'           => 'required|string|max:100',
             'name'               => 'required|string|max:200',
@@ -85,6 +82,7 @@ class MealItemController extends Controller
             'cho_g'              => 'nullable|numeric|min:0',
             'protein_g'          => 'nullable|numeric|min:0',
             'fat_g'              => 'nullable|numeric|min:0',
+            'fiber_g'            => 'nullable|numeric|min:0',
             'energy_kj'          => 'nullable|numeric|min:0',
             'energy_kcal'        => 'nullable|numeric|min:0',
             'fruit_veg_portions' => 'nullable|integer|min:0|max:5',
@@ -109,9 +107,6 @@ class MealItemController extends Controller
 
     public function destroy(MealItem $mealItem)
     {
-        abort_if($mealItem->is_system, 403, 'System items cannot be deleted.');
-        abort_if($mealItem->created_by !== auth()->id(), 403);
-
         $name = $mealItem->name;
         $mealItem->delete();
 

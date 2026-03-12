@@ -19,13 +19,15 @@ class Patient extends Model
         'weight',
         'height',
         'activity_factor',
+        'ibw_bmi_target',
         'exchange_template_id',
     ];
 
     protected $casts = [
-        'weight' => 'decimal:2',
-        'height' => 'decimal:2',
+        'weight'          => 'decimal:2',
+        'height'          => 'decimal:2',
         'activity_factor' => 'float',
+        'ibw_bmi_target'  => 'integer',
     ];
 
     /**
@@ -46,9 +48,9 @@ class Patient extends Model
     private function mifflinStJeor(float $weightKg): ?float
     {
         if ($this->gender === 'male') {
-            return (10 * $weightKg) + (6.25 * $this->height) - (5 * $this->age) + 5;
+            return (10 * $weightKg) + (6.25 * $this->height) - (4.92 * $this->age) + 5;
         } elseif ($this->gender === 'female') {
-            return (10 * $weightKg) + (6.25 * $this->height) - (5 * $this->age) - 161;
+            return (10 * $weightKg) + (6.25 * $this->height) - (4.92 * $this->age) - 161;
         }
         return null;
     }
@@ -62,7 +64,7 @@ class Patient extends Model
      *  - BMI > 30 → Obesity-adjusted weight: IBW + 0.25 × (actual − IBW)
      *
      * Note: the 0.25 factor here is specifically for BMR estimation; it differs
-     * from the 0.4 factor used in the general clinical ABW accessor (getAbwAttribute).
+     * from the 0.25 factor used in the general clinical ABW accessor (getAbwAttribute).
      */
     public function getWeightForBmrAttribute(): ?float
     {
@@ -115,29 +117,53 @@ class Patient extends Model
         return $this->mifflinStJeor($weight);
     }
 
-    // Accessor to calculate BMI
-    public function getBmiAttribute()
+    // Accessor to calculate BMI  →  BMI = weight (kg) ÷ height (m)²
+    public function getBmiAttribute(): ?float
     {
-        if ($this->height > 0) {
+        if ($this->height > 0 && $this->weight > 0) {
             $heightInMeters = $this->height / 100;
-            return $this->weight / ($heightInMeters * $heightInMeters);
+            return round($this->weight / ($heightInMeters * $heightInMeters), 2);
         }
         return null;
     }
 
-    // Accessor to calculate IBW (Ideal Body Weight) using the BMI method:
-    // Target a BMI of 22 (midpoint of the healthy 18.5–25 range).
-    // Formula: IBW (kg) = targetBMI × height² (m)
-    public function getIbwAttribute()
+    /**
+     * Generic IBW helper: Target Weight = BMI_target × height(m)²
+     */
+    private function ibwForBmi(float $targetBmi): ?float
     {
         if (! $this->height || $this->height <= 0) {
             return null;
         }
+        $hm = $this->height / 100;
+        return round($targetBmi * ($hm ** 2), 2);
+    }
 
-        $heightM   = $this->height / 100;  // cm → m
-        $targetBMI = 22;                   // midpoint of healthy BMI range
+    /**
+     * IBW using the dietitian's chosen BMI target (22, 25, or 30).
+     * Falls back to 22 when no preference is stored.
+     */
+    public function getIbwAttribute(): ?float
+    {
+        return $this->ibwForBmi((float) ($this->ibw_bmi_target ?? 22));
+    }
 
-        return round($targetBMI * ($heightM ** 2), 2);
+    /** IBW at BMI 22 — always at BMI 22 (for reference display) */
+    public function getIbw22Attribute(): ?float
+    {
+        return $this->ibwForBmi(22);
+    }
+
+    /** IBW at BMI 25 — upper limit of healthy range */
+    public function getIbw25Attribute(): ?float
+    {
+        return $this->ibwForBmi(25);
+    }
+
+    /** IBW at BMI 30 — obesity threshold */
+    public function getIbw30Attribute(): ?float
+    {
+        return $this->ibwForBmi(30);
     }
 
     // Accessor to calculate ABW (Adjusted Body Weight)
@@ -145,7 +171,7 @@ class Patient extends Model
     {
         $ibw = $this->ibw;
         if ($ibw && $this->weight > $ibw) {
-            return $ibw + (0.4 * ($this->weight - $ibw));
+            return $ibw + (0.25 * ($this->weight - $ibw));
         }
         return $this->weight; // If weight <= IBW, ABW = actual weight
     }
@@ -162,10 +188,10 @@ class Patient extends Model
         return 'Obese';
     }
 
-    // Accessor for RMR (Resting Metabolic Rate) - using same as BMR
+    // Accessor for RMR (Resting Metabolic Rate) - kcal/day via Mifflin-St Jeor
     public function getRmrAttribute()
     {
-        return $this->bmr;
+        return $this->bmr; // kcal/day
     }
 
     // Accessor for AF (Activity Factor) - returns stored value
@@ -174,12 +200,21 @@ class Patient extends Model
         return $this->activity_factor;
     }
 
-    // Accessor for TEE (Total Energy Expenditure)
-    public function getTeeAttribute()
+    /**
+     * TEE (Total Energy Expenditure) in kJ/day.
+     *
+     * Male RMR   = 10W + 6.25H − 5A + 5    (kcal)
+     * Female RMR = 10W + 6.25H − 5A − 161  (kcal)
+     * TEE_kJ     = RMR_kcal × Activity Factor × 4.184
+     */
+    public function getTeeAttribute(): ?float
     {
-        $bmr = $this->bmr;
-        $af = $this->activity_factor;
-        return $bmr && $af ? $bmr * $af : null;
+        $rmr = $this->bmr;  // kcal/day (gender-specific Mifflin-St Jeor)
+        $af  = $this->activity_factor;
+        if (! $rmr || ! $af) {
+            return null;
+        }
+        return $rmr * $af * 4.184; // kJ/day
     }
 
     public function user(): BelongsTo

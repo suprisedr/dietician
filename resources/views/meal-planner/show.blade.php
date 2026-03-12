@@ -160,6 +160,20 @@
     border-radius:6px; transition:background .15s;
 }
 #item-modal-close:hover { background:#f1f5f9; }
+/* ─── Tabs ─────────────────────────────────────────── */
+#item-modal-tabs {
+    display:flex; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.im-tab {
+    flex:1; padding:.52rem .5rem; text-align:center; font-size:.78rem;
+    font-weight:700; color:var(--text-muted); cursor:pointer;
+    border-bottom:2.5px solid transparent; background:none; border-top:none;
+    border-left:none; border-right:none; transition:color .15s, border-color .15s;
+    letter-spacing:.01em;
+}
+.im-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+.im-tab:hover:not(.active) { background:#fef9f5; }
+/* ─── Search wrap ──────────────────────────────────── */
 #item-modal-search-wrap {
     padding:.65rem 1.1rem .5rem;
     border-bottom:1px solid var(--border);
@@ -187,7 +201,7 @@
 }
 .im-group:first-child .im-group-header { border-top:none; }
 .im-option {
-    display:flex; align-items:center; gap:.65rem;
+    display:flex; align-items:flex-start; gap:.65rem;
     padding:.42rem 1.1rem; cursor:pointer; font-size:.82rem;
     color:var(--text-primary); transition:background .1s;
     user-select:none;
@@ -195,10 +209,17 @@
 .im-option:hover { background:#fef9f5; }
 .im-option.selected { background:#fff7ed; }
 .im-option input[type=checkbox] {
-    width:15px; height:15px; flex-shrink:0;
+    width:15px; height:15px; flex-shrink:0; margin-top:2px;
     accent-color:var(--primary); cursor:pointer;
 }
+.im-option-label { display:flex; flex-direction:column; gap:1px; }
+.im-option-name { font-weight:600; line-height:1.3; }
+.im-option-desc { font-size:.71rem; color:var(--text-muted); line-height:1.3; }
 .im-no-results {
+    padding:1.5rem 1.1rem; text-align:center;
+    font-size:.82rem; color:var(--text-muted);
+}
+.im-spinner {
     padding:1.5rem 1.1rem; text-align:center;
     font-size:.82rem; color:var(--text-muted);
 }
@@ -249,9 +270,9 @@
 details[open] .mp-details-summary { border-bottom-color:var(--border); }
 .mp-details-summary .chevron { margin-left:auto; font-size:.75rem; color:var(--text-muted); transition:transform .2s; }
 details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
-.mp-monthly-table { width:100%; border-collapse:collapse; min-width:700px; font-size:.74rem; }
+.mp-monthly-table { width:100%; border-collapse:collapse; min-width:760px; font-size:.74rem; }
 .mp-monthly-table th { padding:.45rem .65rem; background:var(--indigo); color:#fff; text-align:center; font-size:.71rem; font-weight:700; }
-.mp-monthly-table th:first-child { text-align:left; }
+.mp-monthly-table th:first-child, .mp-monthly-table th:nth-child(2) { text-align:left; }
 .mp-monthly-table td { padding:.32rem .55rem; border:1px solid #f0f0f0; max-width:110px; vertical-align:top; }
 
 /* Flash */
@@ -342,7 +363,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                         <input type="hidden"
                                                name="cells[{{ $dayIndex }}][{{ $slot }}]"
                                                id="cell_{{ $dayIndex }}_{{ $slot }}"
-                                               value="{{ htmlspecialchars($initialJson, ENT_QUOTES) }}">
+                                               value="{{ $initialJson }}">
                                         <div class="cell-tags" id="tags_{{ $dayIndex }}_{{ $slot }}"></div>
                                     </td>
                                 @endforeach
@@ -376,6 +397,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 <thead>
                     <tr>
                         <th style="text-align:left;width:72px">Week</th>
+                        <th style="text-align:left;width:80px">Meal</th>
                         @foreach(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as $d)
                             <th>{{ $d }}</th>
                         @endforeach
@@ -383,22 +405,52 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 </thead>
                 <tbody>
                     @foreach($monthlyWeeks as $wk)
-                        @php $wkGrid = $wk->grid; @endphp
-                        @foreach(['breakfast','lunch','dinner','snack1'] as $sl)
-                            @php $colors = ['breakfast'=>'#c2410c','lunch'=>'#1d4ed8','dinner'=>'#6d28d9','snack1'=>'#15803d']; @endphp
-                            <tr style="{{ $loop->first ? 'border-top:2px solid var(--primary)' : '' }}">
-                                @if($loop->first)
-                                    <td rowspan="4" style="padding:.4rem .6rem;font-weight:700;vertical-align:top;background:#f8fafc;border-right:1px solid var(--border)">
+                        @php
+                            $wkGrid   = $wk->grid;
+                            $allSlots = ['breakfast','snack1','lunch','snack2','dinner','snack3'];
+                            $slotColors = [
+                                'breakfast' => ['bg'=>'#fff7ed','text'=>'#c2410c','dot'=>'#f97316','label'=>'Breakfast'],
+                                'snack1'    => ['bg'=>'#f0fdf4','text'=>'#15803d','dot'=>'#16a34a','label'=>'Snack 1'],
+                                'lunch'     => ['bg'=>'#eff6ff','text'=>'#1d4ed8','dot'=>'#2563eb','label'=>'Lunch'],
+                                'snack2'    => ['bg'=>'#f0fdf4','text'=>'#15803d','dot'=>'#16a34a','label'=>'Snack 2'],
+                                'dinner'    => ['bg'=>'#faf5ff','text'=>'#6d28d9','dot'=>'#7c3aed','label'=>'Dinner'],
+                                'snack3'    => ['bg'=>'#f0fdf4','text'=>'#15803d','dot'=>'#16a34a','label'=>'Snack 3'],
+                            ];
+                            $weekRowspan = count($allSlots);
+                        @endphp
+                        @foreach($allSlots as $slIdx => $sl)
+                            @php
+                                $sc = $slotColors[$sl];
+                                $hasAnyEntry = false;
+                                foreach(range(0,6) as $d) {
+                                    if (!empty($wkGrid[$d][$sl])) { $hasAnyEntry = true; break; }
+                                }
+                                $isFirstSlot = $slIdx === 0;
+                                $isLastSlot  = $slIdx === count($allSlots) - 1;
+                                $topBorder   = $isFirstSlot ? 'border-top:2px solid var(--primary)' : ($sl === 'breakfast' || $sl === 'snack1' || $sl === 'lunch' || $sl === 'snack2' || $sl === 'dinner' || $sl === 'snack3' ? 'border-top:1px solid #e5e7eb' : '');
+                            @endphp
+                            <tr style="background:{{ $sc['bg'] }};{{ $topBorder }}">
+                                @if($isFirstSlot)
+                                    <td rowspan="{{ $weekRowspan }}" style="padding:.4rem .6rem;font-weight:700;vertical-align:top;background:#f8fafc;border-right:1px solid var(--border);border-top:2px solid var(--primary)">
                                         <span style="display:block;font-size:.65rem;color:var(--text-muted)">Week {{ $loop->parent->iteration }}</span>
                                         {{ $wk->week_start->format('d M') }}
                                     </td>
                                 @endif
+                                {{-- Slot label cell --}}
+                                <td style="padding:.3rem .5rem;white-space:nowrap;border-right:1px solid var(--border);background:{{ $sc['bg'] }}">
+                                    <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;color:{{ $sc['text'] }}">
+                                        <span style="width:6px;height:6px;border-radius:50%;background:{{ $sc['dot'] }};flex-shrink:0;display:inline-block"></span>
+                                        {{ $sc['label'] }}
+                                    </span>
+                                </td>
                                 @foreach(range(0,6) as $d)
-                                    @php $cellArr = $wkGrid[$d][$sl]; @endphp
-                                    <td style="color:{{ $colors[$sl] ?? '#333' }}">
-                                        @foreach($cellArr as $ce)
-                                            <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $ce->meal_text }}</div>
-                                        @endforeach
+                                    @php $cellArr = $wkGrid[$d][$sl] ?? []; @endphp
+                                    <td style="color:{{ $sc['text'] }};padding:.3rem .5rem;{{ !$hasAnyEntry ? 'opacity:.35' : '' }}">
+                                        @forelse($cellArr as $ce)
+                                            <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.72rem">{{ $ce->meal_text }}</div>
+                                        @empty
+                                            <span style="color:#d1d5db;font-size:.68rem">—</span>
+                                        @endforelse
                                     </td>
                                 @endforeach
                             </tr>
@@ -417,6 +469,10 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         <div id="item-modal-header">
             <span id="item-modal-title">Add food items</span>
             <button id="item-modal-close" aria-label="Close" onclick="closeItemModal()">&times;</button>
+        </div>
+        <div id="item-modal-tabs">
+            <button class="im-tab active" id="tab-library" onclick="switchTab('library')">📋 My Library</button>
+            <button class="im-tab" id="tab-fatsecret" onclick="switchTab('fatsecret')">🔍 FatSecret Search</button>
         </div>
         <div id="item-modal-search-wrap">
             <input type="text" id="item-modal-search" placeholder="Search food items…" autocomplete="off" spellcheck="false">
@@ -437,6 +493,8 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 
     /* ── Data ─────────────────────────────────────────────────────────── */
     const libraryItems = @json($jsItems);   // [{value,text,group}, ...]
+    const slotLimits   = @json($slotLimits); // {breakfast: 3, lunch: 4, ...} or null = no limit
+    const fsSearchUrl  = '{{ route("meal-planner.food-search") }}';
 
     /* Build grouped structure */
     const groups = {};
@@ -509,6 +567,21 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
     let _activeDay  = null;
     let _activeSlot = null;
     let _selected   = {};   // value → {id, text}
+    let _activeTab  = 'library'; // 'library' | 'fatsecret'
+    let _fsDebounce = null;
+    let _fsAbort    = null;
+
+    /* ── Tab switching ────────────────────────────────────────────────── */
+    window.switchTab = function (tab) {
+        _activeTab = tab;
+        document.getElementById('tab-library').classList.toggle('active', tab === 'library');
+        document.getElementById('tab-fatsecret').classList.toggle('active', tab === 'fatsecret');
+        const searchEl = document.getElementById('item-modal-search');
+        searchEl.placeholder = tab === 'library' ? 'Search food items…' : 'Search FatSecret database…';
+        searchEl.value = '';
+        renderModalBody('');
+        searchEl.focus();
+    };
 
     /* ── Open modal ───────────────────────────────────────────────────── */
     window.openItemModal = function (td) {
@@ -524,10 +597,17 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         });
 
         /* Update title */
-        document.getElementById('item-modal-title').textContent =
-            'Add items – ' + (_activeSlot.charAt(0).toUpperCase() + _activeSlot.slice(1))
-            + ' · Day ' + (parseInt(_activeDay, 10) + 1);
+        const slotLabel = _activeSlot.charAt(0).toUpperCase() + _activeSlot.slice(1);
+        const limit     = slotLimits[_activeSlot] ?? null;
+        const titleEl   = document.getElementById('item-modal-title');
+        titleEl.textContent = 'Add items – ' + slotLabel + ' · Day ' + (parseInt(_activeDay, 10) + 1)
+            + (limit !== null ? ' (max ' + limit + ')' : '');
 
+        /* Reset to library tab */
+        _activeTab = 'library';
+        document.getElementById('tab-library').classList.add('active');
+        document.getElementById('tab-fatsecret').classList.remove('active');
+        document.getElementById('item-modal-search').placeholder = 'Search food items…';
         document.getElementById('item-modal-search').value = '';
         renderModalBody('');
         updateSelectedCount();
@@ -537,8 +617,17 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         setTimeout(function () { document.getElementById('item-modal-search').focus(); }, 60);
     };
 
-    /* ── Render modal body with optional filter query ─────────────────── */
+    /* ── Render modal body ────────────────────────────────────────────── */
     function renderModalBody(query) {
+        if (_activeTab === 'fatsecret') {
+            renderFatSecretBody(query);
+        } else {
+            renderLibraryBody(query);
+        }
+    }
+
+    /* ── Library tab body ─────────────────────────────────────────────── */
+    function renderLibraryBody(query) {
         const body = document.getElementById('item-modal-body');
         body.innerHTML = '';
         const q = query.toLowerCase().trim();
@@ -560,23 +649,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             grpDiv.appendChild(hdr);
 
             filtered.forEach(function (item) {
-                const isChecked = !!_selected[item.value];
-                const row = document.createElement('label');
-                row.className = 'im-option' + (isChecked ? ' selected' : '');
-                row.innerHTML =
-                    '<input type="checkbox" value="' + escHtml(item.value) + '"'
-                    + (isChecked ? ' checked' : '') + '>' + escHtml(item.text);
-                row.querySelector('input').addEventListener('change', function (e) {
-                    if (e.target.checked) {
-                        _selected[item.value] = { id: item.value, text: item.text || idToName[item.value] || item.value };
-                        row.classList.add('selected');
-                    } else {
-                        delete _selected[item.value];
-                        row.classList.remove('selected');
-                    }
-                    updateSelectedCount();
-                });
-                grpDiv.appendChild(row);
+                grpDiv.appendChild(makeLibraryRow(item));
             });
 
             body.appendChild(grpDiv);
@@ -595,7 +668,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 const val = item.id || ('_free_' + item.text);
                 const row = document.createElement('label');
                 row.className = 'im-option selected';
-                row.innerHTML = '<input type="checkbox" checked>' + escHtml(item.text);
+                row.innerHTML = '<input type="checkbox" checked><div class="im-option-label"><span class="im-option-name">' + escHtml(item.text) + '</span></div>';
                 row.querySelector('input').addEventListener('change', function (e) {
                     if (!e.target.checked) {
                         delete _selected[val];
@@ -610,17 +683,167 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         }
 
         if (totalVisible === 0) {
-            /* Show no-results with option to add custom */
             const noRes = document.createElement('div');
             noRes.className = 'im-no-results';
             if (q) {
                 noRes.innerHTML = 'No results for "<strong>' + escHtml(q) + '</strong>"'
                     + '<br><button type="button" class="mp-btn mp-btn-green" style="margin-top:.65rem;font-size:.75rem" onclick="addCustomFromModal()">+ Add "' + escHtml(q) + '" as custom item</button>';
             } else {
-                noRes.textContent = 'No food items found.';
+                noRes.textContent = 'No food items in library.';
             }
             body.appendChild(noRes);
         }
+    }
+
+    function makeLibraryRow(item) {
+        const isChecked = !!_selected[item.value];
+        const row = document.createElement('label');
+        row.className = 'im-option' + (isChecked ? ' selected' : '');
+        row.innerHTML = '<input type="checkbox" value="' + escHtml(item.value) + '"'
+            + (isChecked ? ' checked' : '') + '>'
+            + '<div class="im-option-label"><span class="im-option-name">' + escHtml(item.text) + '</span></div>';
+        row.querySelector('input').addEventListener('change', function (e) {
+            if (e.target.checked) {
+                const limit = _activeSlot ? (slotLimits[_activeSlot] ?? null) : null;
+                if (limit !== null && Object.keys(_selected).length >= limit) {
+                    e.target.checked = false;
+                    row.classList.remove('selected');
+                    return;
+                }
+                _selected[item.value] = { id: item.value, text: item.text || idToName[item.value] || item.value };
+                row.classList.add('selected');
+            } else {
+                delete _selected[item.value];
+                row.classList.remove('selected');
+            }
+            updateSelectedCount();
+        });
+        return row;
+    }
+
+    /* ── FatSecret tab body ───────────────────────────────────────────── */
+    function renderFatSecretBody(query) {
+        const body = document.getElementById('item-modal-body');
+        body.innerHTML = '';
+        const q = query.trim();
+
+        if (q.length < 2) {
+            const hint = document.createElement('div');
+            hint.className = 'im-no-results';
+            hint.textContent = 'Type at least 2 characters to search the FatSecret database.';
+            body.appendChild(hint);
+            return;
+        }
+
+        /* Show spinner */
+        const spinner = document.createElement('div');
+        spinner.className = 'im-spinner';
+        spinner.textContent = 'Searching…';
+        body.appendChild(spinner);
+
+        /* Abort previous request */
+        if (_fsAbort) _fsAbort.abort();
+        _fsAbort = new AbortController();
+
+        fetch(fsSearchUrl + '?q=' + encodeURIComponent(q), { signal: _fsAbort.signal })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                body.innerHTML = '';
+                if (data.error) {
+                    const err = document.createElement('div');
+                    err.className = 'im-no-results';
+                    err.textContent = 'Search error. Please try again.';
+                    body.appendChild(err);
+                    return;
+                }
+                if (!data.length) {
+                    const noRes = document.createElement('div');
+                    noRes.className = 'im-no-results';
+                    noRes.innerHTML = 'No results for "<strong>' + escHtml(q) + '</strong>"'
+                        + '<br><button type="button" class="mp-btn mp-btn-green" style="margin-top:.65rem;font-size:.75rem" onclick="addCustomFromModal()">+ Add "' + escHtml(q) + '" as custom item</button>';
+                    body.appendChild(noRes);
+                    return;
+                }
+
+                const grpDiv = document.createElement('div');
+                grpDiv.className = 'im-group';
+                const hdr = document.createElement('div');
+                hdr.className = 'im-group-header';
+                hdr.textContent = 'FatSecret Results (' + data.length + ')';
+                grpDiv.appendChild(hdr);
+
+                data.forEach(function (food) {
+                    grpDiv.appendChild(makeFatSecretRow(food));
+                });
+
+                body.appendChild(grpDiv);
+            })
+            .catch(function (err) {
+                if (err.name === 'AbortError') return;
+                body.innerHTML = '';
+                const errDiv = document.createElement('div');
+                errDiv.className = 'im-no-results';
+                errDiv.textContent = 'Search unavailable. Please try again.';
+                body.appendChild(errDiv);
+            });
+    }
+
+    function makeFatSecretRow(food) {
+        const isChecked = !!_selected[food.id];
+        const row = document.createElement('label');
+        row.className = 'im-option' + (isChecked ? ' selected' : '');
+
+        /* Serving unit label */
+        const servingLabel = food.serving ? food.serving : null;
+
+        /* Build nutrient pill string */
+        const parts = [];
+        if (food.kcal    != null) parts.push('⚡ ' + food.kcal + ' kcal');
+        if (food.fat     != null) parts.push('Fat: ' + food.fat + 'g');
+        if (food.carbs   != null) parts.push('Carbs: ' + food.carbs + 'g');
+        if (food.protein != null) parts.push('Prot: ' + food.protein + 'g');
+        if (food.fiber   != null) parts.push('Fiber: ' + food.fiber + 'g');
+        const nutriInfo = parts.join(' · ');
+
+        row.innerHTML = '<input type="checkbox" value="' + escHtml(food.id) + '"'
+            + (isChecked ? ' checked' : '') + '>'
+            + '<div class="im-option-label">'
+            + '<span class="im-option-name">' + escHtml(food.name)
+            + (servingLabel ? '<span style="font-weight:400;color:var(--text-muted);font-size:.75em;margin-left:.35em">per ' + escHtml(servingLabel) + '</span>' : '')
+            + '</span>'
+            + (nutriInfo ? '<span class="im-option-desc">' + escHtml(nutriInfo) + '</span>' : '')
+            + '</div>';
+
+        row.querySelector('input').addEventListener('change', function (e) {
+            if (e.target.checked) {
+                const limit = _activeSlot ? (slotLimits[_activeSlot] ?? null) : null;
+                if (limit !== null && Object.keys(_selected).length >= limit) {
+                    e.target.checked = false;
+                    row.classList.remove('selected');
+                    return;
+                }
+                // Store fsData alongside so saveEntries can auto-create the MealItem
+                _selected[food.id] = {
+                    id: food.id,
+                    text: food.name,
+                    fsData: {
+                        serving: food.serving,
+                        kcal:    food.kcal,
+                        kj:      food.kj,
+                        fat:     food.fat,
+                        carbs:   food.carbs,
+                        protein: food.protein,
+                        fiber:   food.fiber,
+                    }
+                };
+                row.classList.add('selected');
+            } else {
+                delete _selected[food.id];
+                row.classList.remove('selected');
+            }
+            updateSelectedCount();
+        });
+        return row;
     }
 
     /* ── Add custom item from search ──────────────────────────────────── */
@@ -636,9 +859,30 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 
     /* ── Update selected count label ──────────────────────────────────── */
     function updateSelectedCount() {
-        const n = Object.keys(_selected).length;
-        document.getElementById('item-modal-selected-count').textContent =
-            n === 0 ? '' : n + ' item' + (n > 1 ? 's' : '') + ' selected';
+        const n       = Object.keys(_selected).length;
+        const limit   = _activeSlot ? (slotLimits[_activeSlot] ?? null) : null;
+        const countEl = document.getElementById('item-modal-selected-count');
+        const confirmBtn = document.getElementById('item-modal-confirm');
+
+        if (limit !== null) {
+            const remaining = limit - n;
+            if (remaining < 0) {
+                countEl.innerHTML = '<span style="color:#b91c1c;font-weight:700">' + n + ' selected — ' + Math.abs(remaining) + ' over limit of ' + limit + '</span>';
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '.45';
+                confirmBtn.style.cursor  = 'not-allowed';
+            } else {
+                countEl.innerHTML = n + ' selected&nbsp;<span style="color:' + (remaining === 0 ? '#15803d' : 'var(--text-muted)') + ';font-weight:700">' + remaining + ' remaining of ' + limit + '</span>';
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor  = 'pointer';
+            }
+        } else {
+            countEl.textContent = n === 0 ? '' : n + ' item' + (n > 1 ? 's' : '') + ' selected';
+            confirmBtn.disabled = false;
+            confirmBtn.style.opacity = '1';
+            confirmBtn.style.cursor  = 'pointer';
+        }
     }
 
     /* ── Confirm selection ────────────────────────────────────────────── */
@@ -653,6 +897,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
     /* ── Close modal ──────────────────────────────────────────────────── */
     window.closeItemModal = function () {
         document.getElementById('item-modal-overlay').classList.remove('open');
+        if (_fsAbort) { _fsAbort.abort(); _fsAbort = null; }
         _activeDay = null; _activeSlot = null; _selected = {};
     };
 
@@ -666,9 +911,15 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         if (e.key === 'Escape') closeItemModal();
     });
 
-    /* Live search */
+    /* Live search with debounce for FatSecret tab */
     document.getElementById('item-modal-search').addEventListener('input', function () {
-        renderModalBody(this.value);
+        const val = this.value;
+        if (_activeTab === 'fatsecret') {
+            clearTimeout(_fsDebounce);
+            _fsDebounce = setTimeout(function () { renderFatSecretBody(val); }, 350);
+        } else {
+            renderLibraryBody(val);
+        }
     });
 
     /* ── Initialise cells from hidden inputs ──────────────────────────── */

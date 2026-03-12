@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c487d61917e029697bbc321109ad35a9",
+    "content-hash": "27536a640bd41e3e8b25c51b2e4018cc",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -82,6 +82,56 @@
                 }
             ],
             "time": "2025-02-13T15:07:54+00:00"
+        },
+        {
+            "name": "braunson/fatsecret-laravel",
+            "version": "5.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Braunson/fatsecret.git",
+                "reference": "b5f8dc10aaca9252f8f1d354bd0fc6217679e193"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Braunson/fatsecret/zipball/b5f8dc10aaca9252f8f1d354bd0fc6217679e193",
+                "reference": "b5f8dc10aaca9252f8f1d354bd0fc6217679e193",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": ">=4.2",
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Braunson": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Braunson Yager",
+                    "email": "braunson@geekybeaver.ca",
+                    "homepage": "http://geekybeaver.ca"
+                }
+            ],
+            "description": "A PHP FatSecret API library for Laravel",
+            "homepage": "https://github.com/braunson/fatsecret",
+            "keywords": [
+                "braunson",
+                "fat",
+                "fatsecret",
+                "laravel",
+                "secret"
+            ],
+            "support": {
+                "issues": "https://github.com/Braunson/fatsecret/issues",
+                "source": "https://github.com/Braunson/fatsecret/tree/5.0.1"
+            },
+            "time": "2017-08-13T22:20:51+00:00"
         },
         {
             "name": "brick/math",

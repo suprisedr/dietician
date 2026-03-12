@@ -15,7 +15,9 @@ class PatientController extends Controller
      */
     public function index()
     {
-        $patients = Patient::where('user_id', auth()->id())->get();
+        $patients = Patient::where('user_id', auth()->id())
+            ->orderByDesc('created_at')
+            ->paginate(20);
         return view('patients.index', compact('patients'));
     }
 
@@ -42,6 +44,7 @@ class PatientController extends Controller
             'weight' => 'required|numeric|min:0',
             'height' => 'required|numeric|min:0',
             'activity_factor' => 'required|numeric|min:0',
+            'ibw_bmi_target'  => 'nullable|integer|in:22,25,30',
         ]);
 
         $patient = Patient::create([
@@ -55,6 +58,7 @@ class PatientController extends Controller
             'weight' => $request->weight,
             'height' => $request->height,
             'activity_factor' => $request->activity_factor,
+            'ibw_bmi_target' => $request->ibw_bmi_target ?? 22,
         ]);
 
         // Create default macronutrients
@@ -65,10 +69,11 @@ class PatientController extends Controller
         ];
 
         foreach ($macronutrients as $macro) {
-            // compute initial kj/grams from patient's TEE using KJ = selected% * TEE(kJ), grams = KJ / 17
-            $teeKj = ($patient->tee ?? 0) * 4.184;
+            // compute initial kj/grams from patient's TEE using KJ = selected% * TEE(kJ), grams = KJ / 17 (CHO & protein) or KJ / 38 (fat)
+            $teeKj = $patient->tee ?? 0; // TEE already in kJ/day
             $initialKj = ($macro['selected_percentage'] / 100) * $teeKj;
-            $initialGrams = $initialKj > 0 ? ($initialKj / 17) : 0;
+            $divisor = in_array($macro['type'], ['fat', 'fats']) ? 38 : 17;
+            $initialGrams = $initialKj > 0 ? ($initialKj / $divisor) : 0;
 
             Macronutrient::create([
                 'patient_id' => $patient->id,
@@ -118,8 +123,8 @@ class PatientController extends Controller
             }
         }
 
-        $teeKj      = ($patient->tee ?? 0) * 4.184;
-        $teeKcal    = $patient->tee ? round($patient->tee) : null;
+        $teeKj      = $patient->tee ?? 0;
+        $teeKcal    = $patient->tee ? round($patient->tee / 4.184) : null;
         $bmrKj      = $patient->bmr ? round($patient->bmr * 4.184) : null;
         $isObese    = ($patient->bmi ?? 0) > 30;
 
@@ -137,7 +142,7 @@ class PatientController extends Controller
             $recFat_kj  = round($teeKj * $fatPct / 100);
             $recCho_g   = $recCho_kj > 0 ? round($recCho_kj / 17) : 0;
             $recPro_g   = $recPro_kj > 0 ? round($recPro_kj / 17) : 0;
-            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 37) : 0;
+            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 38) : 0;
         }
 
         // Exchange template totals
@@ -177,8 +182,8 @@ class PatientController extends Controller
             }
         }
 
-        $teeKj      = ($patient->tee ?? 0) * 4.184;
-        $teeKcal    = $patient->tee ? round($patient->tee) : null;
+        $teeKj      = $patient->tee ?? 0;
+        $teeKcal    = $patient->tee ? round($patient->tee / 4.184) : null;
         $bmrKj      = $patient->bmr ? round($patient->bmr * 4.184) : null;
         $isObese    = ($patient->bmi ?? 0) > 30;
 
@@ -196,7 +201,7 @@ class PatientController extends Controller
             $recFat_kj  = round($teeKj * $fatPct / 100);
             $recCho_g   = $recCho_kj > 0 ? round($recCho_kj / 17) : 0;
             $recPro_g   = $recPro_kj > 0 ? round($recPro_kj / 17) : 0;
-            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 37) : 0;
+            $recFat_g   = $recFat_kj > 0 ? round($recFat_kj / 38) : 0;
         }
 
         $etTotCho = $etTotPro = $etTotFat = $etTotKj = 0;
@@ -248,9 +253,10 @@ class PatientController extends Controller
             'weight' => 'required|numeric|min:0',
             'height' => 'required|numeric|min:0',
             'activity_factor' => 'required|numeric|min:0',
+            'ibw_bmi_target'  => 'nullable|integer|in:22,25,30',
         ]);
 
-        $patient->update($request->only(['title', 'name', 'surname', 'reason_for_assessment', 'age', 'gender', 'weight', 'height', 'activity_factor']));
+        $patient->update($request->only(['title', 'name', 'surname', 'reason_for_assessment', 'age', 'gender', 'weight', 'height', 'activity_factor', 'ibw_bmi_target']));
 
         return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');
     }
@@ -260,7 +266,32 @@ class PatientController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
+        $patient->delete();
+
+        return redirect()->route('patients.index')->with('success', 'Patient deleted.');
+    }
+
+    /**
+     * PATCH patients/{patient}/ibw-target — save the dietitian's chosen BMI target for IBW.
+     * Returns JSON so the show page can update the hero card live without a full reload.
+     */
+    public function updateIbwTarget(Request $request, string $id)
+    {
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
+
+        $data = $request->validate([
+            'ibw_bmi_target' => 'required|integer|in:22,25,30',
+        ]);
+
+        $patient->update($data);
+        $patient->refresh();
+
+        return response()->json([
+            'ibw_bmi_target' => $patient->ibw_bmi_target,
+            'ibw'            => $patient->ibw,
+            'abw'            => $patient->abw,
+        ]);
     }
 
     /**
@@ -297,10 +328,11 @@ class PatientController extends Controller
 
             // Calculate KJ and grams using requested formulas:
             // - KJ = (selected_percentage / 100) * TEE_in_kJ
-            // - grams = KJ / 17
-            $teeKj = ($patient->tee ?? 0) * 4.184; // convert stored TEE (kcal) to kJ
+            // - grams = KJ / 17 (CHO & protein) or KJ / 38 (fat)
+            $teeKj = $patient->tee ?? 0; // kJ/day
             $kj = ($selected / 100) * $teeKj;
-            $grams = $kj > 0 ? ($kj / 17) : 0;
+            $divisor = in_array($macro->type, ['fat', 'fats']) ? 38 : 17;
+            $grams = $kj > 0 ? ($kj / $divisor) : 0;
 
             $macro->update([
                 'selected_percentage' => $selected,

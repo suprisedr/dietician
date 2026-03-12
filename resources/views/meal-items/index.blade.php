@@ -73,8 +73,9 @@
 .mi-table { width:100%; border-collapse:collapse; font-size:.82rem; }
 .mi-table thead th {
     padding:.58rem .85rem; font-size:.68rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.04em; color:#fff; background:var(--indigo);
+    letter-spacing:.04em; color:var(--text-muted); background:#fff;
     white-space:nowrap; position:sticky; top:0; z-index:2;
+    border-bottom:2px solid var(--border);
 }
 .mi-table tbody td {
     padding:.52rem .85rem; border-bottom:1px solid #f0f0f0;
@@ -82,7 +83,8 @@
 }
 .mi-table tbody tr:last-child td { border-bottom:none; }
 .mi-table tbody tr:hover td { background:#fef9f5; }
-.mi-table .col-num    { text-align:right; color:var(--text-muted); font-size:.79rem; }
+.mi-table .col-num           { text-align:right; font-size:.79rem; }
+.mi-table tbody td.col-num   { color:var(--text-muted); }
 .mi-table .col-center { text-align:center; }
 
 /* ── Badges ── */
@@ -123,11 +125,8 @@
         <div>
             <h1 class="mi-title">Meal Item Library</h1>
             <p class="mi-subtitle">
-                {{ $items->total() }} item{{ $items->total() === 1 ? '' : 's' }}
+                {{ $total }} item{{ $total === 1 ? '' : 's' }}
                 &mdash; system standard + your custom items
-                @if($items->lastPage() > 1)
-                    &middot; page {{ $items->currentPage() }} of {{ $items->lastPage() }}
-                @endif
             </p>
         </div>
         <a href="{{ route('meal-items.create') }}" class="mi-add-btn">
@@ -171,71 +170,59 @@
 
     {{-- Table card --}}
     <div class="mi-card">
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <div style="overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;position:relative">
             <table class="mi-table">
                 <thead>
                     <tr>
                         <th style="min-width:170px">Name</th>
-                        <th style="min-width:140px">Category</th>
                         <th style="min-width:120px">Serving Size</th>
-                        <th class="col-num">CHO (g)</th>
-                        <th class="col-num">Protein (g)</th>
-                        <th class="col-num">Fat (g)</th>
-                        <th class="col-num">kJ</th>
-                        <th class="col-num">kcal</th>
-                        <th class="col-center">F&amp;V</th>
-                        <th class="col-center">Source</th>
-                        <th style="width:100px"></th>
+                        <th class="col-num" style="color:#b45309">kJ</th>
+                        <th class="col-num" style="color:#0f766e">Fat (g)</th>
+                        <th class="col-num" style="color:#c2410c">Carbs (g)</th>
+                        <th class="col-num" style="color:#4338ca">Prot (g)</th>
+                        <th class="col-num" style="color:#15803d">Fiber (g)</th>
+                        <th style="width:90px"></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($items as $item)
-                        @php $col = $catColors[$item->category] ?? ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8']; @endphp
+                    @forelse($grouped as $catName => $catItems)
+                        @php $col = $catColors[$catName] ?? ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8']; @endphp
+                        {{-- Category divider row --}}
                         <tr>
-                            <td style="font-weight:600">{{ $item->name }}</td>
-                            <td>
-                                <span class="cat-badge" style="background:{{ $col['bg'] }};color:{{ $col['text'] }}">
-                                    <span class="cat-badge-dot" style="background:{{ $col['dot'] }}"></span>
-                                    {{ $item->category }}
+                            <td colspan="8" style="padding:.45rem .85rem;background:{{ $col['bg'] }};border-bottom:1px solid {{ $col['dot'] }}20;border-top:2px solid {{ $col['dot'] }}40">
+                                <span style="display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:{{ $col['text'] }}">
+                                    <span style="width:.5rem;height:.5rem;border-radius:50%;background:{{ $col['dot'] }};flex-shrink:0;display:inline-block"></span>
+                                    {{ $catName }}
+                                    <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:.7">({{ $catItems->count() }})</span>
                                 </span>
                             </td>
-                            <td style="color:var(--text-muted);font-size:.79rem">{{ $item->serving_size ?? '—' }}</td>
-                            <td class="col-num">{{ $item->cho_g ?? '—' }}</td>
-                            <td class="col-num">{{ $item->protein_g ?? '—' }}</td>
-                            <td class="col-num">{{ $item->fat_g ?? '—' }}</td>
-                            <td class="col-num">{{ $item->energy_kj ? number_format($item->energy_kj,1) : '—' }}</td>
-                            <td class="col-num">{{ $item->energy_kcal ? number_format($item->energy_kcal,1) : '—' }}</td>
-                            <td class="col-center">
-                                @if($item->fruit_veg_portions > 0)
-                                    <span class="badge-fv">+{{ $item->fruit_veg_portions }}</span>
-                                @else
-                                    <span style="color:#cbd5e1">—</span>
-                                @endif
-                            </td>
-                            <td class="col-center">
-                                @if($item->is_system)
-                                    <span class="badge-system">System</span>
-                                @else
-                                    <span class="badge-custom">Custom</span>
-                                @endif
-                            </td>
-                            <td style="white-space:nowrap">
-                                @if(!$item->is_system && $item->created_by === auth()->id())
+                        </tr>
+                        {{-- Items in this category --}}
+                        @foreach($catItems as $item)
+                            <tr>
+                                <td style="font-weight:700;padding-left:1.4rem;color:var(--text-primary)">{{ $item->name }}</td>
+                                <td style="color:var(--text-muted);font-size:.79rem">{{ $item->serving_size ?? '—' }}</td>
+                                <td class="col-num" style="color:#b45309;font-weight:600">
+                                    {{ $item->energy_kj ? round($item->energy_kj) : ($item->energy_kcal ? round($item->energy_kcal * 4.184) : '—') }}
+                                </td>
+                                <td class="col-num" style="color:#0f766e;font-weight:600">{{ $item->fat_g ?? '—' }}</td>
+                                <td class="col-num" style="color:#c2410c;font-weight:600">{{ $item->cho_g ?? '—' }}</td>
+                                <td class="col-num" style="color:#4338ca;font-weight:600">{{ $item->protein_g ?? '—' }}</td>
+                                <td class="col-num" style="color:#15803d;font-weight:600">{{ $item->fiber_g ?? '—' }}</td>
+                                <td style="white-space:nowrap">
                                     <a href="{{ route('meal-items.edit', $item) }}" class="mi-action-edit">Edit</a>
                                     <form method="POST" action="{{ route('meal-items.destroy', $item) }}"
                                           style="display:inline"
                                           onsubmit="return confirm('Delete {{ addslashes($item->name) }}?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="mi-action-del">Delete</button>
+                                        <button type="submit" class="mi-action-del">Del</button>
                                     </form>
-                                @else
-                                    <span style="color:#e2e8f0;font-size:.72rem">—</span>
-                                @endif
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                        @endforeach
                     @empty
                         <tr>
-                            <td colspan="11">
+                            <td colspan="8">
                                 <div class="mi-empty">
                                     <div class="mi-empty-icon">🍽️</div>
                                     No items found{{ $search ? ' for "'.e($search).'"' : '' }}{{ $category ? ' in '.$category : '' }}.
@@ -249,13 +236,6 @@
                 </tbody>
             </table>
         </div>
-
-        {{-- Pagination --}}
-        @if($items->hasPages())
-            <div class="mi-pagination">
-                {{ $items->links() }}
-            </div>
-        @endif
     </div>
 
 </div>

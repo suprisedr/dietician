@@ -73,6 +73,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('patients/{patient}/visits/{visit}', [\App\Http\Controllers\PatientVisitController::class, 'destroy'])
         ->name('patients.visits.destroy');
 
+    // IBW BMI target selector
+    Route::patch('patients/{patient}/ibw-target', [\App\Http\Controllers\PatientController::class, 'updateIbwTarget'])
+        ->name('patients.ibw-target.update');
+
     Route::get('patients/{patient}/report', [\App\Http\Controllers\PatientController::class, 'report'])
         ->name('patients.report')
         ->middleware('plan:package_1');
@@ -115,6 +119,7 @@ Route::middleware('auth')->group(function () {
         Route::get ('meal-planner',                                         [\App\Http\Controllers\MealPlannerController::class, 'index'])  ->name('meal-planner.index');
         Route::get ('meal-planner/create',                                  [\App\Http\Controllers\MealPlannerController::class, 'create']) ->name('meal-planner.create');
         Route::post('meal-planner',                                         [\App\Http\Controllers\MealPlannerController::class, 'store'])  ->name('meal-planner.store');
+        Route::get ('meal-planner/food-search',                             [\App\Http\Controllers\MealPlannerController::class, 'foodSearch'])->name('meal-planner.food-search');
         Route::get ('meal-planner/{patient}/{mealPlanner}',                 [\App\Http\Controllers\MealPlannerController::class, 'show'])   ->name('meal-planner.show');
         Route::patch('meal-planner/{patient}/{mealPlanner}/entries',        [\App\Http\Controllers\MealPlannerController::class, 'saveEntries']) ->name('meal-planner.save-entries');
         Route::delete('meal-planner/{patient}/{mealPlanner}',               [\App\Http\Controllers\MealPlannerController::class, 'destroy']) ->name('meal-planner.destroy');

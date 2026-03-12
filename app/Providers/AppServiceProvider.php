@@ -12,7 +12,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Override FatSecret singleton to ensure correct credentials are loaded
+        $this->app->singleton(\Braunson\FatSecret\FatSecret::class, function () {
+            return new \Braunson\FatSecret\FatSecret(
+                config('services.fatsecret.key'),
+                config('services.fatsecret.secret')
+            );
+        });
+        $this->app->alias(\Braunson\FatSecret\FatSecret::class, 'fatsecret');
     }
 
     /**
