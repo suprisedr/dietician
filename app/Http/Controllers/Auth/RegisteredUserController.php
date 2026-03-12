@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -53,7 +54,7 @@ class RegisteredUserController extends Controller
             'name'             => ['required', 'string', 'max:255'],
             'email'            => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'dietician_number' => ['required', 'string', 'max:255', 'unique:'.User::class],
-            'password'         => ['required', 'confirmed', Rules\Password::defaults()],
+            'password'         => ['required', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 
         $user = User::create([
@@ -64,6 +65,15 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        // Send welcome email
+        Mail::send('emails.welcome', [
+            'userName'     => $user->name,
+            'dashboardUrl' => route('dashboard'),
+        ], function ($m) use ($user) {
+            $m->to($user->email, $user->name)
+              ->subject('Welcome to mindfulnutrico 🌿');
+        });
 
         Auth::login($user);
 

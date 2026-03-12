@@ -10,7 +10,10 @@ class Patient extends Model
 {
     protected $fillable = [
         'user_id',
+        'title',
         'name',
+        'surname',
+        'reason_for_assessment',
         'age',
         'gender',
         'weight',
@@ -24,6 +27,18 @@ class Patient extends Model
         'height' => 'decimal:2',
         'activity_factor' => 'float',
     ];
+
+    /**
+     * Full display name including title and surname.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->title,
+            $this->name,
+            $this->surname,
+        ])));
+    }
 
     /**
      * Mifflin-St Jeor helper — computes BMR in kcal/day using a given weight (kg).
@@ -180,5 +195,10 @@ class Patient extends Model
     public function exchangeTemplate(): BelongsTo
     {
         return $this->belongsTo(\App\Models\ExchangeTemplate::class, 'exchange_template_id');
+    }
+
+    public function visits(): HasMany
+    {
+        return $this->hasMany(PatientVisit::class)->orderByDesc('visited_at');
     }
 }

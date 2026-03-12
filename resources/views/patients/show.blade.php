@@ -61,11 +61,16 @@
                 <div class="patient-avatar-lg {{ $patient->gender }}">{{ $initials }}</div>
                 <div style="flex:1;min-width:0">
                     <h1 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-.03em;line-height:1.1">
-                        {{ $patient->name }}
+                        {{ $patient->full_name }}
                     </h1>
                     <p style="opacity:.7;font-size:.9rem;margin-top:.2rem">
                         {{ ucfirst($patient->gender) }} · {{ $patient->age }} years · Registered {{ $patient->created_at->format('M d, Y') }}
                     </p>
+                    @if($patient->reason_for_assessment)
+                        <p style="opacity:.85;font-size:.82rem;margin-top:.3rem;font-style:italic">
+                            📋 {{ $patient->reason_for_assessment }}
+                        </p>
+                    @endif
                 </div>
                 <a href="{{ route('patients.report', $patient->id) }}" target="_blank"
                    style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
@@ -561,6 +566,174 @@
         @endif
         </x-plan-gate>
 
+    </div>
+
+    {{-- ═══════════════════════════════════════════
+         VISIT HISTORY / MONITORING
+    ═══════════════════════════════════════════ --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-10">
+        <div class="dash-card" style="padding:1.5rem">
+
+            @if(session('visit_success'))
+                <div style="margin-bottom:1rem;padding:.6rem 1rem;background:#dcfce7;border:1px solid #86efac;border-radius:6px;color:#15803d;font-size:.85rem;font-weight:600">
+                    {{ session('visit_success') }}
+                </div>
+            @endif
+
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem">
+                <span class="dash-section-title">Visit History &amp; Monitoring</span>
+                <button onclick="document.getElementById('add-visit-form').classList.toggle('hidden')"
+                        style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Log Visit
+                </button>
+            </div>
+
+            {{-- Add visit form (hidden by default, shown if validation errors) --}}
+            <div id="add-visit-form" class="{{ $errors->has('visited_at') || $errors->has('weight') || $errors->has('height') || $errors->has('notes') ? '' : 'hidden' }}" style="background:#f8faf8;border:1px solid #d1d5db;border-radius:8px;padding:1.1rem;margin-bottom:1.5rem">
+                <p style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.9rem">New Visit Entry</p>
+                <form method="POST" action="{{ route('patients.visits.store', $patient) }}">
+                    @csrf
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem;margin-bottom:.9rem">
+                        <div>
+                            <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Date *</label>
+                            <input type="date" name="visited_at" required
+                                   value="{{ old('visited_at', date('Y-m-d')) }}"
+                                   style="width:100%;padding:.45rem .7rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;box-sizing:border-box"
+                                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#d1d5db'">
+                            @error('visited_at') <p style="color:#dc2626;font-size:.72rem;margin-top:.2rem">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Weight (kg) *</label>
+                            <input type="number" name="weight" required min="1" max="500" step="0.1"
+                                   value="{{ old('weight') }}"
+                                   placeholder="{{ $patient->weight }}"
+                                   style="width:100%;padding:.45rem .7rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;box-sizing:border-box"
+                                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#d1d5db'">
+                            @error('weight') <p style="color:#dc2626;font-size:.72rem;margin-top:.2rem">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Height (cm)</label>
+                            <input type="number" name="height" min="50" max="250" step="0.1"
+                                   value="{{ old('height') }}"
+                                   placeholder="{{ $patient->height }} (optional)"
+                                   style="width:100%;padding:.45rem .7rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;box-sizing:border-box"
+                                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#d1d5db'">
+                            @error('height') <p style="color:#dc2626;font-size:.72rem;margin-top:.2rem">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div style="margin-bottom:.9rem">
+                        <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Clinical Notes</label>
+                        <textarea name="notes" rows="2" maxlength="1000"
+                                  placeholder="Observations, dietary compliance, clinical notes…"
+                                  style="width:100%;padding:.45rem .7rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#d1d5db'">{{ old('notes') }}</textarea>
+                        @error('notes') <p style="color:#dc2626;font-size:.72rem;margin-top:.2rem">{{ $message }}</p> @enderror
+                    </div>
+                    <div style="display:flex;gap:.6rem">
+                        <button type="submit"
+                                style="padding:.45rem 1.2rem;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer">
+                            Save Visit
+                        </button>
+                        <button type="button" onclick="document.getElementById('add-visit-form').classList.add('hidden')"
+                                style="padding:.45rem 1rem;background:#f3f4f6;color:var(--text-muted);border:1px solid #d1d5db;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Visit history table --}}
+            @if($patient->visits->isEmpty())
+                <p style="text-align:center;color:var(--text-muted);font-size:.85rem;padding:2rem 0">
+                    No visits recorded yet. Click <strong>Log Visit</strong> to start tracking progress.
+                </p>
+            @else
+                @php
+                    $visits      = $patient->visits;   // already sorted desc
+                    $heightFall  = $patient->height;    // fallback height
+                @endphp
+                <div style="max-height:420px;overflow-y:auto;border-radius:8px;border:1px solid #e5e7eb">
+                    <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem">
+                        <thead>
+                            <tr style="background:#f9fafb;position:sticky;top:0;z-index:1">
+                                <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Date</th>
+                                <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight&nbsp;(kg)</th>
+                                <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI</th>
+                                <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Change</th>
+                                <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Notes</th>
+                                <th style="padding:.55rem .9rem;border-bottom:1px solid #e5e7eb"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($visits as $vi => $visit)
+                                @php
+                                    $prevVisit  = $visits->get($vi + 1);   // next in desc order = previous chronologically
+                                    $weightDiff = $prevVisit ? round($visit->weight - $prevVisit->weight, 1) : null;
+                                    $h          = $visit->height ?? $heightFall;
+                                    $bmi        = ($visit->weight && $h) ? round($visit->weight / (($h/100)**2), 1) : null;
+                                @endphp
+                                <tr style="{{ $vi % 2 === 0 ? 'background:#fff' : 'background:#f9fafb' }}">
+                                    <td style="padding:.6rem .9rem;font-weight:600;color:var(--text-primary);border-bottom:1px solid #f3f4f6">
+                                        {{ $visit->visited_at->format('d M Y') }}
+                                    </td>
+                                    <td style="padding:.6rem .9rem;text-align:right;font-weight:700;color:var(--text-primary);border-bottom:1px solid #f3f4f6">
+                                        {{ number_format($visit->weight, 1) }}
+                                    </td>
+                                    <td style="padding:.6rem .9rem;text-align:right;color:var(--text-muted);border-bottom:1px solid #f3f4f6">
+                                        {{ $bmi ?? '—' }}
+                                    </td>
+                                    <td style="padding:.6rem .9rem;text-align:right;border-bottom:1px solid #f3f4f6">
+                                        @if($weightDiff !== null)
+                                            @if($weightDiff < 0)
+                                                <span style="color:#15803d;font-weight:700">{{ $weightDiff }} kg</span>
+                                            @elseif($weightDiff > 0)
+                                                <span style="color:#b91c1c;font-weight:700">+{{ $weightDiff }} kg</span>
+                                            @else
+                                                <span style="color:var(--text-muted)">— no change</span>
+                                            @endif
+                                        @else
+                                            <span style="color:var(--text-muted)">—</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:.6rem .9rem;color:var(--text-muted);max-width:260px;border-bottom:1px solid #f3f4f6">
+                                        <span title="{{ $visit->notes }}">
+                                            {{ $visit->notes ? \Illuminate\Support\Str::limit($visit->notes, 60) : '—' }}
+                                        </span>
+                                    </td>
+                                    <td style="padding:.6rem .9rem;text-align:right;border-bottom:1px solid #f3f4f6">
+                                        <form method="POST" action="{{ route('patients.visits.destroy', [$patient, $visit]) }}"
+                                              onsubmit="return confirm('Delete this visit record?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    style="padding:.25rem .55rem;background:none;border:1px solid #fca5a5;border-radius:5px;color:#dc2626;font-size:.72rem;cursor:pointer"
+                                                    title="Delete visit">✕</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size:.72rem;color:var(--text-muted);margin-top:.5rem">
+                    {{ $patient->visits->count() }} visit{{ $patient->visits->count() === 1 ? '' : 's' }} recorded
+                    &nbsp;·&nbsp; Weight change overall:
+                    @php
+                        $first = $visits->last();
+                        $last  = $visits->first();
+                        $total = ($first && $last) ? round($last->weight - $first->weight, 1) : null;
+                    @endphp
+                    @if($total !== null)
+                        <strong style="color:{{ $total <= 0 ? '#15803d' : '#b91c1c' }}">
+                            {{ $total > 0 ? '+' : '' }}{{ $total }} kg
+                        </strong>
+                        since {{ $first->visited_at->format('d M Y') }}
+                    @endif
+                </p>
+            @endif
+
+        </div>
     </div>
 
     {{-- ═══════════════════════════════════════════

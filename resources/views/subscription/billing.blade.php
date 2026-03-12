@@ -52,7 +52,7 @@
                           align-items: center; justify-content: center; padding: 1rem; }
         .cancel-overlay.open { display: flex; }
         .cancel-modal   { background: #fff; border-radius: 1.1rem; padding: 2rem 2rem 1.75rem;
-                           max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+                           max-width: 500px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.2);
                            animation: modalIn .18s ease; }
         @keyframes modalIn { from { opacity:0; transform:scale(.96) translateY(8px); }
                               to   { opacity:1; transform:scale(1)  translateY(0);     } }
@@ -61,7 +61,18 @@
                               justify-content: center; margin-bottom: 1.1rem; }
         .cancel-modal h3    { font-size: 1.05rem; font-weight: 800; color: #111827;
                               margin: 0 0 .5rem; letter-spacing: -.02em; }
-        .cancel-modal p     { font-size: .875rem; color: #6b7280; line-height: 1.6; margin: 0 0 1.5rem; }
+        .cancel-modal p     { font-size: .875rem; color: #6b7280; line-height: 1.6; margin: 0 0 .75rem; }
+        .cancel-reasons     { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: .85rem; }
+        .cancel-reason-opt  { display: flex; align-items: center; gap: .45rem;
+                              padding: .45rem .65rem; border: 1.5px solid #e5e7eb; border-radius: .5rem;
+                              font-size: .8rem; color: #374151; cursor: pointer; transition: all .15s; }
+        .cancel-reason-opt:has(input:checked) { border-color: #dc2626; background: #fef2f2; color: #b91c1c; font-weight: 600; }
+        .cancel-reason-opt input { accent-color: #dc2626; flex-shrink: 0; }
+        .cancel-other       { width: 100%; padding: .5rem .7rem; font-size: .83rem;
+                              border: 1.5px solid #e5e7eb; border-radius: .5rem; resize: vertical;
+                              min-height: 60px; outline: none; transition: border-color .15s;
+                              box-sizing: border-box; margin-bottom: .85rem; color: #374151; }
+        .cancel-other:focus  { border-color: #dc2626; }
         .cancel-modal-btns  { display: flex; gap: .75rem; justify-content: flex-end; }
         .cancel-modal-btns .btn-keep    { padding: .55rem 1.2rem; border-radius: .6rem; font-size: .85rem;
                                           font-weight: 600; border: 1.5px solid #d1d5db; background: #fff;
@@ -70,7 +81,7 @@
         .cancel-modal-btns .btn-confirm { padding: .55rem 1.2rem; border-radius: .6rem; font-size: .85rem;
                                           font-weight: 700; background: #dc2626; border: none;
                                           color: #fff; cursor: pointer; transition: background .15s; }
-        .cancel-modal-btns .btn-confirm:hover { background: #b91c1c; }        /* ── Package cards ── */
+        .cancel-modal-btns .btn-confirm:hover { background: #b91c1c; }
         .bl-packages  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
         @media (max-width: 700px) { .bl-packages { grid-template-columns: 1fr; } }
 
@@ -299,11 +310,28 @@
                     Keep subscription
                 </button>
 
-                <form method="POST" action="{{ route('subscription.cancel') }}" style="margin:0">
+                <form method="POST" action="{{ route('subscription.cancel') }}" style="margin:0" id="cancel-form">
                     @csrf
-                    <button type="submit" class="btn-confirm">
-                        Yes, cancel
-                    </button>
+                    {{-- Reason radio options --}}
+                    <p style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9ca3af;margin:.85rem 0 .5rem">Why are you cancelling? (optional)</p>
+                    <div class="cancel-reasons">
+                        <label class="cancel-reason-opt"><input type="radio" name="cancel_reason" value="Too expensive"> Too expensive</label>
+                        <label class="cancel-reason-opt"><input type="radio" name="cancel_reason" value="Not using it enough"> Not using it enough</label>
+                        <label class="cancel-reason-opt"><input type="radio" name="cancel_reason" value="Missing features I need"> Missing features</label>
+                        <label class="cancel-reason-opt"><input type="radio" name="cancel_reason" value="Switching to another tool"> Switching tools</label>
+                        <label class="cancel-reason-opt"><input type="radio" name="cancel_reason" value="Technical issues"> Technical issues</label>
+                        <label class="cancel-reason-opt"><input type="radio" name="cancel_reason" value="Other"> Other</label>
+                    </div>
+                    <textarea name="cancel_feedback" class="cancel-other" placeholder="Any additional feedback? (optional)"></textarea>
+                    <div style="display:flex;justify-content:flex-end;gap:.75rem">
+                        <button type="button" class="btn-keep"
+                                onclick="document.getElementById('cancelModal').classList.remove('open')">
+                            Keep subscription
+                        </button>
+                        <button type="submit" class="btn-confirm">
+                            Yes, cancel
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

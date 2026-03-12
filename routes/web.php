@@ -66,6 +66,13 @@ Route::middleware('auth')->group(function () {
     // the Anthropometrics section. Advanced features are locked in the view.
     // ════════════════════════════════════════════════════════════════════════
     Route::resource('patients', \App\Http\Controllers\PatientController::class);
+
+    // Patient visit history (monitoring)
+    Route::post('patients/{patient}/visits', [\App\Http\Controllers\PatientVisitController::class, 'store'])
+        ->name('patients.visits.store');
+    Route::delete('patients/{patient}/visits/{visit}', [\App\Http\Controllers\PatientVisitController::class, 'destroy'])
+        ->name('patients.visits.destroy');
+
     Route::get('patients/{patient}/report', [\App\Http\Controllers\PatientController::class, 'report'])
         ->name('patients.report')
         ->middleware('plan:package_1');

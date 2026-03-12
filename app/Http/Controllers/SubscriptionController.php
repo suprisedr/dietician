@@ -75,6 +75,15 @@ class SubscriptionController extends Controller
         }
 
         try {
+            // Persist optional cancellation feedback on the subscription record
+            $reason = trim(implode(' — ', array_filter([
+                $request->input('cancel_reason'),
+                $request->input('cancel_feedback'),
+            ])));
+            if ($reason) {
+                $subscription->update(['cancel_reason' => $reason]);
+            }
+
             $this->subscriptions->cancel($subscription);
 
             return redirect()->route('billing')

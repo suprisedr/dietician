@@ -33,7 +33,10 @@ class PatientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'title' => 'nullable|string|max:10',
             'name' => 'required|string|max:255',
+            'surname' => 'nullable|string|max:255',
+            'reason_for_assessment' => 'nullable|string|max:1000',
             'age' => 'required|integer|min:0|max:150',
             'gender' => 'required|in:male,female',
             'weight' => 'required|numeric|min:0',
@@ -43,7 +46,10 @@ class PatientController extends Controller
 
         $patient = Patient::create([
             'user_id' => auth()->id(),
+            'title' => $request->title,
             'name' => $request->name,
+            'surname' => $request->surname,
+            'reason_for_assessment' => $request->reason_for_assessment,
             'age' => $request->age,
             'gender' => $request->gender,
             'weight' => $request->weight,
@@ -83,7 +89,7 @@ class PatientController extends Controller
      */
     public function show(string $id)
     {
-        $patient = Patient::with(['macronutrients', 'exchangeTemplate.items'])->where('user_id', auth()->id())->findOrFail($id);
+        $patient = Patient::with(['macronutrients', 'exchangeTemplate.items', 'visits'])->where('user_id', auth()->id())->findOrFail($id);
 
         // if patient has no linked template, fall back to the database "Customer Template"
         if (! $patient->exchangeTemplate) {
@@ -233,7 +239,10 @@ class PatientController extends Controller
         $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
 
         $request->validate([
+            'title' => 'nullable|string|max:10',
             'name' => 'required|string|max:255',
+            'surname' => 'nullable|string|max:255',
+            'reason_for_assessment' => 'nullable|string|max:1000',
             'age' => 'required|integer|min:0|max:150',
             'gender' => 'required|in:male,female',
             'weight' => 'required|numeric|min:0',
@@ -241,7 +250,7 @@ class PatientController extends Controller
             'activity_factor' => 'required|numeric|min:0',
         ]);
 
-        $patient->update($request->only(['name', 'age', 'gender', 'weight', 'height', 'activity_factor']));
+        $patient->update($request->only(['title', 'name', 'surname', 'reason_for_assessment', 'age', 'gender', 'weight', 'height', 'activity_factor']));
 
         return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');
     }

@@ -29,19 +29,52 @@
                 <form method="POST" action="{{ route('patients.store') }}">
                     @csrf
 
-                    {{-- Name + Age --}}
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                    {{-- Title + Name + Surname --}}
+                    <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:1rem;margin-bottom:1rem">
                         <div>
                             <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
-                                Full Name
+                                Title
+                            </label>
+                            <select name="title"
+                                    style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;background:#fff;transition:border-color .15s"
+                                    onfocus="this.style.borderColor='var(--primary)'"
+                                    onblur="this.style.borderColor='#d1d5db'">
+                                <option value="">—</option>
+                                <option value="Mr"   {{ old('title')==='Mr'   ? 'selected' : '' }}>Mr</option>
+                                <option value="Mrs"  {{ old('title')==='Mrs'  ? 'selected' : '' }}>Mrs</option>
+                                <option value="Ms"   {{ old('title')==='Ms'   ? 'selected' : '' }}>Ms</option>
+                                <option value="Miss" {{ old('title')==='Miss' ? 'selected' : '' }}>Miss</option>
+                                <option value="Dr"   {{ old('title')==='Dr'   ? 'selected' : '' }}>Dr</option>
+                                <option value="Prof" {{ old('title')==='Prof' ? 'selected' : '' }}>Prof</option>
+                                <option value="Rev"  {{ old('title')==='Rev'  ? 'selected' : '' }}>Rev</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                                First Name
                             </label>
                             <input type="text" name="name" value="{{ old('name') }}"
-                                   placeholder="e.g. Jane Doe"
+                                   placeholder="e.g. Jane"
                                    style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s"
                                    onfocus="this.style.borderColor='var(--primary)'"
                                    onblur="this.style.borderColor='#d1d5db'"
                                    required>
                             @error('name')
+                                <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                                Surname
+                            </label>
+                            <input type="text" name="surname" value="{{ old('surname') }}"
+                                   placeholder="e.g. Doe"
+                                   style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s"
+                                   onfocus="this.style.borderColor='var(--primary)'"
+                                   onblur="this.style.borderColor='#d1d5db'">
+                            @error('surname')
                                 <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
                             @enderror
                         </div>
@@ -87,6 +120,21 @@
                             </label>
                         </div>
                         @error('gender')
+                            <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Reason for Assessment --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                            Reason for Assessment
+                        </label>
+                        <textarea name="reason_for_assessment" rows="2"
+                                  placeholder="e.g. Weight management, diabetes follow-up, sports nutrition…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('reason_for_assessment') }}</textarea>
+                        @error('reason_for_assessment')
                             <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
                         @enderror
                     </div>

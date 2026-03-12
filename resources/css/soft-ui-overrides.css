@@ -792,6 +792,57 @@ select.edit-input { cursor: pointer; }
     color: var(--primary);
 }
 
+/* Password toggle eye button */
+.auth-input-pw {
+    padding-right: 2.75rem;
+}
+.pw-toggle {
+    position: absolute;
+    right: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: .25rem;
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    transition: color .15s;
+}
+.pw-toggle:hover { color: var(--primary); }
+.pw-toggle svg { width: 1.1rem; height: 1.1rem; }
+
+/* Password strength meter */
+.pw-strength-wrap {
+    margin-top: .5rem;
+}
+.pw-strength-bar {
+    height: .3rem;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: .5rem;
+}
+.pw-strength-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    transition: width .25s, background .25s;
+}
+.pw-reqs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem .75rem;
+}
+.pw-req {
+    font-size: .7rem;
+    font-weight: 600;
+    color: #94a3b8;
+    transition: color .15s;
+}
+.pw-req-ok { color: #22c55e; }
+
 /* Primary submit button */
 .auth-btn {
     width: 100%;

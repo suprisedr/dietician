@@ -22,6 +22,7 @@ class Subscription extends Model
         'cancelled_at',
         'ends_at',
         'last_event_payload',
+        'cancel_reason',
     ];
 
     protected $casts = [

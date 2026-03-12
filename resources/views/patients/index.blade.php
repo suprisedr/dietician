@@ -106,7 +106,7 @@
                                     <div class="flex items-center gap-3">
                                         <div class="pt-avatar {{ $patient->gender }}">{{ $initials }}</div>
                                         <div>
-                                            <div class="display-mode font-semibold" style="color:var(--text-primary)">{{ $patient->name }}</div>
+                                            <div class="display-mode font-semibold" style="color:var(--text-primary)">{{ $patient->full_name }}</div>
                                             <input type="text" name="name" value="{{ $patient->name }}" form="form-{{ $patient->id }}"
                                                    class="edit-mode hidden edit-input" style="max-width:140px">
                                             <div class="text-xs" style="color:var(--text-muted)">{{ ucfirst($patient->gender) }}</div>
