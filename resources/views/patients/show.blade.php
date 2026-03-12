@@ -144,10 +144,7 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {{-- ── LEFT: Body Details ─────────────────────── --}}
-            <div class="space-y-6">
+        <div class="space-y-6">
 
                 {{-- Anthropometrics card --}}
                 <div class="dash-section">
@@ -284,14 +281,10 @@
                     </div>
                     @endif
                     </div>{{-- /anthro-body --}}
-                </div>
-
-
-            </div>
+                </div>{{-- /dash-section anthro --}}
 
             <x-plan-gate min="package_1">
-            {{-- ── RIGHT: Macronutrients ──────────────────── --}}
-            <div class="lg:col-span-2">
+            {{-- ── Macronutrients ──────────────────────────── --}}
                 <div class="dash-section">
                     <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('macro-body','macro-chevron')">
                         <span class="dash-section-title">Macronutrient Distribution</span>
@@ -366,11 +359,12 @@
                             </button>
                         </div>
                     </form>
-                </div>
+                    </div>{{-- /macro-body --}}
+                </div>{{-- /dash-section macros --}}
 
-                {{-- Nutrient Analysis (replaces Energy Breakdown) --}}
+                {{-- Nutrient Analysis --}}
                 @if($patient->exchangeTemplate && $teeKj > 0)
-                <div class="dash-section mt-6" id="nutrient-analysis">
+                <div class="dash-section" id="nutrient-analysis">
                     <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('na-body','na-chevron')">
                         <span class="dash-section-title">Nutrient Analysis</span>
                         <div style="display:flex;align-items:center;gap:.5rem">
@@ -438,17 +432,12 @@
                         </table>
                     </div>
                     </div>{{-- /na-body --}}
-                </div>
+                </div>{{-- /nutrient-analysis dash-section --}}
                 @endif
 
-                    </div>{{-- /macro-body --}}
-                </div>{{-- /dash-section --}}
-            </div>
             </x-plan-gate>
-        </div>
 
         <x-plan-gate min="package_1">
-        <div style="max-width:68rem;margin:0 auto">
         {{-- ═══════════════════════════════════════════
              EXCHANGE TEMPLATE
         ═══════════════════════════════════════════ --}}
@@ -555,8 +544,7 @@
         </x-plan-gate>
         <x-plan-gate min="package_1">
         @if($patient->exchangeTemplate)
-        <div class="dash-section mt-6" id="meal-plan-details">
-            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('mp-body','mp-chevron')">
+        <div class="dash-section mt-6" id="meal-plan-details">            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('mp-body','mp-chevron')">
                 <span class="dash-section-title">Meal Plan Distribution</span>
                 <div style="display:flex;align-items:center;gap:.5rem">
                     <span style="font-size:.75rem;color:var(--text-muted)">Enter serving exchanges per meal — each row must sum to the total (No)</span>
@@ -647,7 +635,6 @@
             </div>{{-- /mp-body --}}
         </div>{{-- /meal-plan-details --}}
         @endif
-        </div>{{-- /max-w narrow wrapper --}}
         </x-plan-gate>
 
     </div>
