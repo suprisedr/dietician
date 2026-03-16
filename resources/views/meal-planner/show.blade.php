@@ -745,18 +745,28 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         if (_fsAbort) _fsAbort.abort();
         _fsAbort = new AbortController();
 
-        fetch(fsSearchUrl + '?q=' + encodeURIComponent(q), { signal: _fsAbort.signal })
-            .then(function (r) { return r.json(); })
+        fetch(fsSearchUrl + '?q=' + encodeURIComponent(q), {
+                signal: _fsAbort.signal,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(function (data) {
                 body.innerHTML = '';
-                if (data.error) {
+
+                /* Controller returned {error: '...'} (HTTP 500) */
+                if (!Array.isArray(data)) {
                     const err = document.createElement('div');
                     err.className = 'im-no-results';
-                    err.textContent = 'Search error. Please try again.';
+                    err.textContent = 'Search error: ' + (data.error || 'Unknown error');
                     body.appendChild(err);
                     return;
                 }
-                if (!data.length) {
+
+                if (data.length === 0) {
                     const noRes = document.createElement('div');
                     noRes.className = 'im-no-results';
                     noRes.innerHTML = 'No results for "<strong>' + escHtml(q) + '</strong>"'
@@ -783,7 +793,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 body.innerHTML = '';
                 const errDiv = document.createElement('div');
                 errDiv.className = 'im-no-results';
-                errDiv.textContent = 'Search unavailable. Please try again.';
+                errDiv.textContent = 'Search failed (' + err.message + '). Please try again.';
                 body.appendChild(errDiv);
             });
     }
