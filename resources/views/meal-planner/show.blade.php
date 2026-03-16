@@ -470,9 +470,8 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             <span id="item-modal-title">Add food items</span>
             <button id="item-modal-close" aria-label="Close" onclick="closeItemModal()">&times;</button>
         </div>
-        <div id="item-modal-tabs">
-            <button class="im-tab active" id="tab-library" onclick="switchTab('library')">📋 My Library</button>
-            <button class="im-tab" id="tab-fatsecret" onclick="switchTab('fatsecret')">🔍 FatSecret Search</button>
+        <div id="item-modal-tabs" style="display:none">
+            <button class="im-tab active" id="tab-library">📋 My Library</button>
         </div>
         <div id="item-modal-search-wrap">
             <input type="text" id="item-modal-search" placeholder="Search food items…" autocomplete="off" spellcheck="false">
@@ -494,7 +493,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
     /* ── Data ─────────────────────────────────────────────────────────── */
     const libraryItems = @json($jsItems);   // [{value,text,group}, ...]
     const slotLimits   = @json($slotLimits); // {breakfast: 3, lunch: 4, ...} or null = no limit
-    const fsSearchUrl  = '{{ route("meal-planner.food-search") }}';
 
     /* Build grouped structure */
     const groups = {};
@@ -567,21 +565,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
     let _activeDay  = null;
     let _activeSlot = null;
     let _selected   = {};   // value → {id, text}
-    let _activeTab  = 'library'; // 'library' | 'fatsecret'
-    let _fsDebounce = null;
-    let _fsAbort    = null;
-
-    /* ── Tab switching ────────────────────────────────────────────────── */
-    window.switchTab = function (tab) {
-        _activeTab = tab;
-        document.getElementById('tab-library').classList.toggle('active', tab === 'library');
-        document.getElementById('tab-fatsecret').classList.toggle('active', tab === 'fatsecret');
-        const searchEl = document.getElementById('item-modal-search');
-        searchEl.placeholder = tab === 'library' ? 'Search food items…' : 'Search FatSecret database…';
-        searchEl.value = '';
-        renderModalBody('');
-        searchEl.focus();
-    };
 
     /* ── Open modal ───────────────────────────────────────────────────── */
     window.openItemModal = function (td) {
@@ -604,9 +587,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             + (limit !== null ? ' (max ' + limit + ')' : '');
 
         /* Reset to library tab */
-        _activeTab = 'library';
-        document.getElementById('tab-library').classList.add('active');
-        document.getElementById('tab-fatsecret').classList.remove('active');
         document.getElementById('item-modal-search').placeholder = 'Search food items…';
         document.getElementById('item-modal-search').value = '';
         renderModalBody('');
@@ -619,11 +599,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 
     /* ── Render modal body ────────────────────────────────────────────── */
     function renderModalBody(query) {
-        if (_activeTab === 'fatsecret') {
-            renderFatSecretBody(query);
-        } else {
-            renderLibraryBody(query);
-        }
+        renderLibraryBody(query);
     }
 
     /* ── Library tab body ─────────────────────────────────────────────── */
@@ -721,141 +697,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         return row;
     }
 
-    /* ── FatSecret tab body ───────────────────────────────────────────── */
-    function renderFatSecretBody(query) {
-        const body = document.getElementById('item-modal-body');
-        body.innerHTML = '';
-        const q = query.trim();
-
-        if (q.length < 2) {
-            const hint = document.createElement('div');
-            hint.className = 'im-no-results';
-            hint.textContent = 'Type at least 2 characters to search the FatSecret database.';
-            body.appendChild(hint);
-            return;
-        }
-
-        /* Show spinner */
-        const spinner = document.createElement('div');
-        spinner.className = 'im-spinner';
-        spinner.textContent = 'Searching…';
-        body.appendChild(spinner);
-
-        /* Abort previous request */
-        if (_fsAbort) _fsAbort.abort();
-        _fsAbort = new AbortController();
-
-        fetch(fsSearchUrl + '?q=' + encodeURIComponent(q), {
-                signal: _fsAbort.signal,
-                credentials: 'same-origin',
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-            })
-            .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            })
-            .then(function (data) {
-                body.innerHTML = '';
-
-                /* Controller returned {error: '...'} (HTTP 500) */
-                if (!Array.isArray(data)) {
-                    const err = document.createElement('div');
-                    err.className = 'im-no-results';
-                    err.textContent = 'Search error: ' + (data.error || 'Unknown error');
-                    body.appendChild(err);
-                    return;
-                }
-
-                if (data.length === 0) {
-                    const noRes = document.createElement('div');
-                    noRes.className = 'im-no-results';
-                    noRes.innerHTML = 'No results for "<strong>' + escHtml(q) + '</strong>"'
-                        + '<br><button type="button" class="mp-btn mp-btn-green" style="margin-top:.65rem;font-size:.75rem" onclick="addCustomFromModal()">+ Add "' + escHtml(q) + '" as custom item</button>';
-                    body.appendChild(noRes);
-                    return;
-                }
-
-                const grpDiv = document.createElement('div');
-                grpDiv.className = 'im-group';
-                const hdr = document.createElement('div');
-                hdr.className = 'im-group-header';
-                hdr.textContent = 'FatSecret Results (' + data.length + ')';
-                grpDiv.appendChild(hdr);
-
-                data.forEach(function (food) {
-                    grpDiv.appendChild(makeFatSecretRow(food));
-                });
-
-                body.appendChild(grpDiv);
-            })
-            .catch(function (err) {
-                if (err.name === 'AbortError') return;
-                body.innerHTML = '';
-                const errDiv = document.createElement('div');
-                errDiv.className = 'im-no-results';
-                errDiv.textContent = 'Search failed (' + err.message + '). Please try again.';
-                body.appendChild(errDiv);
-            });
-    }
-
-    function makeFatSecretRow(food) {
-        const isChecked = !!_selected[food.id];
-        const row = document.createElement('label');
-        row.className = 'im-option' + (isChecked ? ' selected' : '');
-
-        /* Serving unit label */
-        const servingLabel = food.serving ? food.serving : null;
-
-        /* Build nutrient pill string */
-        const parts = [];
-        if (food.kcal    != null) parts.push('⚡ ' + food.kcal + ' kcal');
-        if (food.fat     != null) parts.push('Fat: ' + food.fat + 'g');
-        if (food.carbs   != null) parts.push('Carbs: ' + food.carbs + 'g');
-        if (food.protein != null) parts.push('Prot: ' + food.protein + 'g');
-        if (food.fiber   != null) parts.push('Fiber: ' + food.fiber + 'g');
-        const nutriInfo = parts.join(' · ');
-
-        row.innerHTML = '<input type="checkbox" value="' + escHtml(food.id) + '"'
-            + (isChecked ? ' checked' : '') + '>'
-            + '<div class="im-option-label">'
-            + '<span class="im-option-name">' + escHtml(food.name)
-            + (servingLabel ? '<span style="font-weight:400;color:var(--text-muted);font-size:.75em;margin-left:.35em">per ' + escHtml(servingLabel) + '</span>' : '')
-            + '</span>'
-            + (nutriInfo ? '<span class="im-option-desc">' + escHtml(nutriInfo) + '</span>' : '')
-            + '</div>';
-
-        row.querySelector('input').addEventListener('change', function (e) {
-            if (e.target.checked) {
-                const limit = _activeSlot ? (slotLimits[_activeSlot] ?? null) : null;
-                if (limit !== null && Object.keys(_selected).length >= limit) {
-                    e.target.checked = false;
-                    row.classList.remove('selected');
-                    return;
-                }
-                // Store fsData alongside so saveEntries can auto-create the MealItem
-                _selected[food.id] = {
-                    id: food.id,
-                    text: food.name,
-                    fsData: {
-                        serving: food.serving,
-                        kcal:    food.kcal,
-                        kj:      food.kj,
-                        fat:     food.fat,
-                        carbs:   food.carbs,
-                        protein: food.protein,
-                        fiber:   food.fiber,
-                    }
-                };
-                row.classList.add('selected');
-            } else {
-                delete _selected[food.id];
-                row.classList.remove('selected');
-            }
-            updateSelectedCount();
-        });
-        return row;
-    }
-
     /* ── Add custom item from search ──────────────────────────────────── */
     window.addCustomFromModal = function () {
         const q = document.getElementById('item-modal-search').value.trim();
@@ -907,7 +748,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
     /* ── Close modal ──────────────────────────────────────────────────── */
     window.closeItemModal = function () {
         document.getElementById('item-modal-overlay').classList.remove('open');
-        if (_fsAbort) { _fsAbort.abort(); _fsAbort = null; }
         _activeDay = null; _activeSlot = null; _selected = {};
     };
 
@@ -921,15 +761,9 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         if (e.key === 'Escape') closeItemModal();
     });
 
-    /* Live search with debounce for FatSecret tab */
+    /* Live search */
     document.getElementById('item-modal-search').addEventListener('input', function () {
-        const val = this.value;
-        if (_activeTab === 'fatsecret') {
-            clearTimeout(_fsDebounce);
-            _fsDebounce = setTimeout(function () { renderFatSecretBody(val); }, 350);
-        } else {
-            renderLibraryBody(val);
-        }
+        renderLibraryBody(this.value);
     });
 
     /* ── Initialise cells from hidden inputs ──────────────────────────── */

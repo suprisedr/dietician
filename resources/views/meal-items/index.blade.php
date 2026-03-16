@@ -7,6 +7,7 @@
         'Milk & Dairy'               => ['bg'=>'#e0f2fe','text'=>'#0369a1','dot'=>'#0ea5e9'],
         'Spreading Fat, Oil & Sauce' => ['bg'=>'#ffedd5','text'=>'#c2410c','dot'=>'#f97316'],
     ];
+    $catList = \App\Models\MealItem::categories();
 @endphp
 
 <style>
@@ -35,23 +36,20 @@
     margin-bottom:1.1rem; border:1px solid #86efac;
 }
 
-/* ── Filters ── */
-.mi-filters { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
-.mi-filters input[type=text],
-.mi-filters select {
-    padding:.44rem .75rem; border:1.5px solid var(--border); border-radius:8px;
-    font-size:.83rem; background:#fff; outline:none; transition:border-color .15s;
+/* ── Live search box ── */
+.mi-search-wrap { position:relative; margin-bottom:1.1rem; }
+.mi-search-input {
+    width:100%; padding:.55rem 2.6rem .55rem .85rem;
+    border:1.5px solid var(--border); border-radius:8px;
+    font-size:.9rem; outline:none; transition:border-color .15s;
+    box-sizing:border-box; background:#fff;
 }
-.mi-filters input[type=text] { flex:1; min-width:180px; }
-.mi-filters input[type=text]:focus,
-.mi-filters select:focus { border-color:var(--primary); }
-.mi-filter-btn {
-    padding:.44rem 1.1rem; background:var(--primary); color:#fff;
-    font-weight:700; font-size:.83rem; border:none; border-radius:8px; cursor:pointer; transition:filter .15s;
+.mi-search-input:focus { border-color:var(--primary); }
+.mi-search-clear {
+    position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+    font-size:1rem; color:#94a3b8; cursor:pointer; display:none;
+    background:none; border:none; line-height:1; padding:.15rem;
 }
-.mi-filter-btn:hover { filter:brightness(.92); }
-.mi-clear-link { font-size:.81rem; color:var(--text-muted); text-decoration:none; padding:.44rem .4rem; }
-.mi-clear-link:hover { color:var(--primary); }
 
 /* ── Category pills ── */
 .mi-cat-pills { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem; }
@@ -116,6 +114,85 @@
 
 /* ── Pagination ── */
 .mi-pagination { padding:.9rem 1.25rem; border-top:1px solid var(--border); }
+
+/* ── Search results panel ── */
+#mi-search-panel { display:none; }
+#mi-search-panel.active { display:block; }
+.mis-section-title {
+    font-size:.68rem; font-weight:800; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--text-muted);
+    padding:.45rem .85rem; background:#f8fafc;
+    border-bottom:1px solid var(--border);
+}
+.mis-row {
+    display:grid;
+    grid-template-columns: 1fr 80px repeat(4, 54px) auto;
+    align-items:center; gap:.3rem .6rem;
+    padding:.52rem .85rem; border-bottom:1px solid #f0f0f0;
+    transition:background .12s;
+}
+.mis-row:last-child { border-bottom:none; }
+.mis-row:hover { background:#fef9f5; }
+.mis-name    { font-weight:700; font-size:.83rem; color:var(--text-primary); }
+.mis-serving { font-size:.74rem; color:var(--text-muted); }
+.mis-num     { font-size:.79rem; font-weight:600; text-align:right; }
+.mis-badge   {
+    font-size:.62rem; font-weight:700; padding:.12rem .42rem;
+    border-radius:999px; white-space:nowrap; display:inline-block;
+}
+.mis-badge-db  { background:#dcfce7; color:#15803d; }
+.mis-badge-fs  { background:#e0f2fe; color:#0369a1; }
+.mis-badge-sys { background:#f1f5f9; color:#475569; }
+.mis-import-btn {
+    font-size:.72rem; font-weight:700; padding:.26rem .7rem;
+    background:var(--primary); color:#fff; border:none; border-radius:6px;
+    cursor:pointer; white-space:nowrap; transition:filter .15s;
+}
+.mis-import-btn:hover    { filter:brightness(.9); }
+.mis-import-btn:disabled { opacity:.55; cursor:default; filter:none; }
+.mis-import-btn.saved    { background:#64748b; }
+
+/* ── Category selector modal ── */
+#mi-cat-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+    z-index:9000; align-items:center; justify-content:center;
+}
+#mi-cat-overlay.open { display:flex; }
+#mi-cat-box {
+    background:#fff; border-radius:14px; padding:1.5rem 1.75rem;
+    min-width:280px; max-width:360px; box-shadow:0 8px 40px rgba(0,0,0,.18);
+}
+#mi-cat-box h3   { margin:0 0 .2rem; font-size:1rem; font-weight:800; color:var(--text-primary); }
+#mi-cat-box p    { margin:0 0 .8rem; font-size:.79rem; color:var(--text-muted); }
+#mi-cat-food-name{ margin:0 0 .9rem; font-size:.87rem; font-weight:700; color:var(--text-primary); }
+#mi-cat-select {
+    width:100%; padding:.5rem .75rem; border:1.5px solid var(--border);
+    border-radius:8px; font-size:.88rem; margin-bottom:1rem; outline:none;
+}
+#mi-cat-select:focus { border-color:var(--primary); }
+.mi-cat-btns { display:flex; gap:.6rem; justify-content:flex-end; }
+.mi-cat-cancel {
+    padding:.42rem 1rem; border:1.5px solid var(--border); background:#fff;
+    border-radius:7px; font-size:.83rem; font-weight:600; cursor:pointer;
+}
+.mi-cat-confirm {
+    padding:.42rem 1rem; background:var(--primary); color:#fff;
+    border:none; border-radius:7px; font-size:.83rem; font-weight:700;
+    cursor:pointer; transition:filter .15s;
+}
+.mi-cat-confirm:hover { filter:brightness(.9); }
+
+/* ── Spinner ── */
+.mis-spinner {
+    padding:1.6rem; text-align:center; font-size:.82rem; color:var(--text-muted);
+}
+.mis-spinner::before {
+    content:''; display:inline-block; width:.8rem; height:.8rem;
+    border:2px solid var(--border); border-top-color:var(--primary);
+    border-radius:50%; animation:mis-spin .6s linear infinite;
+    margin-right:.45rem; vertical-align:middle;
+}
+@keyframes mis-spin { to { transform:rotate(360deg); } }
 </style>
 
 <div class="mi-page">
@@ -125,8 +202,7 @@
         <div>
             <h1 class="mi-title">Meal Item Library</h1>
             <p class="mi-subtitle">
-                {{ $total }} item{{ $total === 1 ? '' : 's' }}
-                &mdash; system standard + your custom items
+                {{ $total }} item{{ $total === 1 ? '' : 's' }} in your library &mdash; search to find more from FatSecret
             </p>
         </div>
         <a href="{{ route('meal-items.create') }}" class="mi-add-btn">
@@ -140,17 +216,23 @@
         <div class="mi-flash">✓ {{ session('success') }}</div>
     @endif
 
-    {{-- Category quick-filter pills --}}
-    <div class="mi-cat-pills">
-        <a href="{{ route('meal-items.index', array_filter(['search'=>$search])) }}"
-           class="mi-cat-pill"
+    {{-- Live search box --}}
+    <div class="mi-search-wrap">
+        <input type="text" id="mi-search-input" class="mi-search-input"
+               placeholder="Search items… (checks your library first, then FatSecret automatically)"
+               autocomplete="off" spellcheck="false">
+        <button type="button" class="mi-search-clear" id="mi-search-clear" title="Clear">✕</button>
+    </div>
+
+    {{-- Category pills (hidden while searching) --}}
+    <div class="mi-cat-pills" id="mi-cat-pills">
+        <a href="{{ route('meal-items.index') }}" class="mi-cat-pill"
            style="background:{{ $category ? '#f1f5f9' : 'var(--primary)' }};color:{{ $category ? '#475569' : '#fff' }}">
             All
         </a>
         @foreach($categories as $cat)
             @php $col = $catColors[$cat] ?? ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8']; @endphp
-            <a href="{{ route('meal-items.index', array_filter(['category'=>$cat, 'search'=>$search])) }}"
-               class="mi-cat-pill"
+            <a href="{{ route('meal-items.index', ['category'=>$cat]) }}" class="mi-cat-pill"
                style="background:{{ $col['bg'] }};color:{{ $col['text'] }};{{ $category===$cat ? 'outline:2px solid '.$col['dot'].';outline-offset:1px' : '' }}">
                 <span class="mi-cat-pill-dot" style="background:{{ $col['dot'] }}"></span>
                 {{ $cat }}
@@ -158,17 +240,11 @@
         @endforeach
     </div>
 
-    {{-- Search filter --}}
-    <form method="GET" action="{{ route('meal-items.index') }}" class="mi-filters">
-        <input type="hidden" name="category" value="{{ $category }}">
-        <input type="text"   name="search"   value="{{ $search }}" placeholder="Search by name…">
-        <button type="submit" class="mi-filter-btn">Search</button>
-        @if($search || $category)
-            <a href="{{ route('meal-items.index') }}" class="mi-clear-link">✕ Clear filters</a>
-        @endif
-    </form>
+    {{-- Live search results panel (shown while typing) --}}
+    <div id="mi-search-panel" class="mi-card"></div>
 
-    {{-- Table card --}}
+    {{-- Static library table (hidden while searching) --}}
+    <div id="mi-library-table">
     <div class="mi-card">
         <div style="overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;position:relative">
             <table class="mi-table">
@@ -237,6 +313,200 @@
             </table>
         </div>
     </div>
+    </div>{{-- /mi-library-table --}}
 
 </div>
+
+{{-- ── Category picker modal (FatSecret import) ────────────────────── --}}
+<div id="mi-cat-overlay">
+    <div id="mi-cat-box">
+        <h3>Save to Library</h3>
+        <p>Choose a category for this item:</p>
+        <div id="mi-cat-food-name"></div>
+        <select id="mi-cat-select">
+            @foreach($catList as $cat)
+                <option value="{{ $cat }}">{{ $cat }}</option>
+            @endforeach
+        </select>
+        <div class="mi-cat-btns">
+            <button type="button" class="mi-cat-cancel" id="mi-cat-cancel">Cancel</button>
+            <button type="button" class="mi-cat-confirm" id="mi-cat-confirm">Save to Library</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const searchUrl = '{{ route("meal-items.search") }}';
+    const importUrl = '{{ route("meal-items.import-fatsecret") }}';
+    const csrfToken = '{{ csrf_token() }}';
+
+    const inputEl  = document.getElementById('mi-search-input');
+    const clearBtn = document.getElementById('mi-search-clear');
+    const panel    = document.getElementById('mi-search-panel');
+    const table    = document.getElementById('mi-library-table');
+    const pills    = document.getElementById('mi-cat-pills');
+
+    let _debounce = null;
+    let _abort    = null;
+    let _pending  = null; /* food awaiting category selection */
+
+    function esc(s) {
+        return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ── Search mode helpers ── */
+    function enterSearch() {
+        panel.classList.add('active');
+        table.style.display  = 'none';
+        pills.style.display  = 'none';
+        clearBtn.style.display = 'block';
+    }
+    function exitSearch() {
+        panel.classList.remove('active');
+        panel.innerHTML = '';
+        table.style.display  = '';
+        pills.style.display  = '';
+        clearBtn.style.display = 'none';
+    }
+
+    /* ── Build a result row ── */
+    function makeRow(food) {
+        let badge, action;
+        if (food.source === 'system') {
+            badge  = '<span class="mis-badge mis-badge-sys">System</span>';
+            action = '<a href="/meal-items/' + food.id + '/edit" class="mi-action-edit" style="margin:0">Edit</a>';
+        } else if (food.source === 'custom') {
+            badge  = '<span class="mis-badge mis-badge-db">My Item</span>';
+            action = '<a href="/meal-items/' + food.id + '/edit" class="mi-action-edit" style="margin:0">Edit</a>';
+        } else {
+            badge  = '<span class="mis-badge mis-badge-fs">FatSecret</span>';
+            action = '<button class="mis-import-btn" id="ib-' + esc(food.id) + '" '
+                   + 'onclick="startImport(this)">+ Save</button>';
+        }
+        return '<div class="mis-row" '
+            + 'data-food="' + esc(JSON.stringify(food)) + '">'
+            + '<div><div class="mis-name">' + esc(food.name) + '</div>'
+            + '<div class="mis-serving">' + esc(food.serving ?? '') + '</div></div>'
+            + '<div>' + badge + '</div>'
+            + '<div class="mis-num" style="color:#b45309">' + (food.kj    ?? '—') + '</div>'
+            + '<div class="mis-num" style="color:#0f766e">' + (food.fat   ?? '—') + '</div>'
+            + '<div class="mis-num" style="color:#c2410c">' + (food.carbs ?? '—') + '</div>'
+            + '<div class="mis-num" style="color:#4338ca">' + (food.protein ?? '—') + '</div>'
+            + '<div>' + action + '</div>'
+            + '</div>';
+    }
+
+    /* ── Render results ── */
+    function renderResults(q, db, fs) {
+        panel.innerHTML = '';
+        if (!db.length && !fs.length) {
+            panel.innerHTML = '<div class="mi-empty"><div class="mi-empty-icon">🔍</div>'
+                + 'No results for &ldquo;<strong>' + esc(q) + '</strong>&rdquo;<br>'
+                + '<a href="{{ route("meal-items.create") }}" style="color:var(--primary);font-weight:600;text-decoration:none">+ Add manually</a></div>';
+            return;
+        }
+        if (db.length) {
+            panel.insertAdjacentHTML('beforeend',
+                '<div class="mis-section-title">📋 Your Library (' + db.length + ')</div>');
+            db.forEach(function(f) { panel.insertAdjacentHTML('beforeend', makeRow(f)); });
+        }
+        if (fs.length) {
+            panel.insertAdjacentHTML('beforeend',
+                '<div class="mis-section-title">🔍 FatSecret (' + fs.length + ') — click Save to add to your library</div>');
+            fs.forEach(function(f) { panel.insertAdjacentHTML('beforeend', makeRow(f)); });
+        }
+    }
+
+    /* ── Run the search ── */
+    function doSearch(q) {
+        if (q.length < 2) { exitSearch(); return; }
+        enterSearch();
+        panel.innerHTML = '<div class="mis-spinner">Searching…</div>';
+        if (_abort) _abort.abort();
+        _abort = new AbortController();
+        fetch(searchUrl + '?q=' + encodeURIComponent(q), {
+            signal: _abort.signal,
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(d)  { renderResults(q, d.db || [], d.fs || []); })
+        .catch(function(e) {
+            if (e.name === 'AbortError') return;
+            panel.innerHTML = '<div class="mi-empty" style="color:#b91c1c">Search failed. Please try again.</div>';
+        });
+    }
+
+    /* ── Input + clear ── */
+    inputEl.addEventListener('input', function() {
+        const v = this.value;
+        clearTimeout(_debounce);
+        if (!v) { exitSearch(); return; }
+        _debounce = setTimeout(function() { doSearch(v.trim()); }, 320);
+    });
+    clearBtn.addEventListener('click', function() {
+        inputEl.value = ''; exitSearch(); inputEl.focus();
+    });
+
+    /* ── FatSecret import flow ── */
+    window.startImport = function(btn) {
+        const row  = btn.closest('.mis-row');
+        _pending   = JSON.parse(row.dataset.food);
+        document.getElementById('mi-cat-food-name').textContent = _pending.name;
+        document.getElementById('mi-cat-overlay').classList.add('open');
+    };
+
+    function closeCatModal() {
+        _pending = null;
+        document.getElementById('mi-cat-overlay').classList.remove('open');
+    }
+
+    document.getElementById('mi-cat-cancel').addEventListener('click', closeCatModal);
+    document.getElementById('mi-cat-overlay').addEventListener('click', function(e) {
+        if (e.target === this) closeCatModal();
+    });
+
+    document.getElementById('mi-cat-confirm').addEventListener('click', function() {
+        if (!_pending) return;
+        const food     = _pending;
+        const category = document.getElementById('mi-cat-select').value;
+        const btn      = document.getElementById('ib-' + food.id);
+        closeCatModal();
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+        fetch(importUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                name: food.name, serving: food.serving,
+                kcal: food.kcal, kj: food.kj,
+                fat: food.fat, carbs: food.carbs,
+                protein: food.protein, fiber: food.fiber,
+                category: category
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (btn) {
+                btn.textContent = d.already_existed ? '✓ Already saved' : '✓ Saved!';
+                btn.classList.add('saved');
+                btn.disabled = true;
+            }
+        })
+        .catch(function() {
+            if (btn) { btn.disabled = false; btn.textContent = '+ Save'; }
+            alert('Failed to save. Please try again.');
+        });
+    });
+
+})();
+</script>
+
 </x-app-layout>

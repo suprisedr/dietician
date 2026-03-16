@@ -112,6 +112,8 @@ Route::middleware('auth')->group(function () {
             ->name('patients.meal-plan.save');
 
         // Meal Items library
+        Route::get ('meal-items/search',           [\App\Http\Controllers\MealItemController::class, 'search'])          ->name('meal-items.search');
+        Route::post('meal-items/import-fatsecret', [\App\Http\Controllers\MealItemController::class, 'importFatSecret'])->name('meal-items.import-fatsecret');
         Route::resource('meal-items', \App\Http\Controllers\MealItemController::class)
             ->except(['show']);
 
