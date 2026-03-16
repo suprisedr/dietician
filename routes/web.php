@@ -107,6 +107,14 @@ Route::middleware('auth')->group(function () {
             [\App\Http\Controllers\PatientController::class, 'createExchangeTemplate'])
             ->name('patients.exchange-template.create');
 
+        Route::post('patients/{patient}/apply-preset',
+            [\App\Http\Controllers\PatientController::class, 'applyPreset'])
+            ->name('patients.apply-preset');
+
+        Route::get('diet-presets/{preset}',
+            [\App\Http\Controllers\PatientController::class, 'getPreset'])
+            ->name('diet-presets.show');
+
         Route::patch('patients/{patient}/meal-plan',
             [\App\Http\Controllers\PatientController::class, 'saveMealPlan'])
             ->name('patients.meal-plan.save');
@@ -114,6 +122,7 @@ Route::middleware('auth')->group(function () {
         // Meal Items library
         Route::get ('meal-items/search',           [\App\Http\Controllers\MealItemController::class, 'search'])          ->name('meal-items.search');
         Route::post('meal-items/import-fatsecret', [\App\Http\Controllers\MealItemController::class, 'importFatSecret'])->name('meal-items.import-fatsecret');
+        Route::post('meal-items/bulk',             [\App\Http\Controllers\MealItemController::class, 'bulkAction'])     ->name('meal-items.bulk');
         Route::resource('meal-items', \App\Http\Controllers\MealItemController::class)
             ->except(['show']);
 

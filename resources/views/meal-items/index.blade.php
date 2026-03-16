@@ -193,6 +193,61 @@
     margin-right:.45rem; vertical-align:middle;
 }
 @keyframes mis-spin { to { transform:rotate(360deg); } }
+
+/* ── Row checkbox ── */
+.mi-row-cb { width:1rem; height:1rem; cursor:pointer; accent-color:var(--primary); flex-shrink:0; }
+.mi-table tbody tr.cb-selected td { background:#f0fdf4; }
+
+/* ── Bulk action bar ── */
+#mi-bulk-bar {
+    display:none; position:sticky; bottom:1.2rem; z-index:100;
+    margin:0 0 .6rem;
+    background:var(--primary); color:#fff;
+    border-radius:10px; padding:.65rem 1rem;
+    align-items:center; gap:.75rem; flex-wrap:wrap;
+    box-shadow:0 4px 18px rgba(103,159,95,.35);
+}
+#mi-bulk-bar.visible { display:flex; }
+#mi-bulk-count { font-weight:700; font-size:.85rem; flex:1; white-space:nowrap; }
+.mi-bulk-btn {
+    padding:.38rem .95rem; border-radius:7px; font-size:.8rem; font-weight:700;
+    cursor:pointer; border:none; transition:filter .15s; white-space:nowrap;
+}
+.mi-bulk-btn-del   { background:#fee2e2; color:#b91c1c; }
+.mi-bulk-btn-del:hover   { filter:brightness(.95); }
+.mi-bulk-btn-cat   { background:#fff; color:var(--primary); }
+.mi-bulk-btn-cat:hover   { filter:brightness(.95); }
+.mi-bulk-btn-clear { background:rgba(255,255,255,.18); color:#fff; }
+.mi-bulk-btn-clear:hover { filter:brightness(.85); }
+
+/* ── Recategorise modal ── */
+#mi-recat-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+    z-index:9100; align-items:center; justify-content:center;
+}
+#mi-recat-overlay.open { display:flex; }
+#mi-recat-box {
+    background:#fff; border-radius:14px; padding:1.5rem 1.75rem;
+    min-width:280px; max-width:360px; box-shadow:0 8px 40px rgba(0,0,0,.18);
+}
+#mi-recat-box h3 { margin:0 0 .2rem; font-size:1rem; font-weight:800; color:var(--text-primary); }
+#mi-recat-box p  { margin:0 0 .9rem; font-size:.8rem; color:var(--text-muted); }
+#mi-recat-select {
+    width:100%; padding:.5rem .75rem; border:1.5px solid var(--border);
+    border-radius:8px; font-size:.88rem; margin-bottom:1rem; outline:none;
+}
+#mi-recat-select:focus { border-color:var(--primary); }
+.mi-recat-btns { display:flex; gap:.6rem; justify-content:flex-end; }
+.mi-recat-cancel {
+    padding:.42rem 1rem; border:1.5px solid var(--border); background:#fff;
+    border-radius:7px; font-size:.83rem; font-weight:600; cursor:pointer;
+}
+.mi-recat-confirm {
+    padding:.42rem 1rem; background:var(--primary); color:#fff;
+    border:none; border-radius:7px; font-size:.83rem; font-weight:700;
+    cursor:pointer; transition:filter .15s;
+}
+.mi-recat-confirm:hover { filter:brightness(.9); }
 </style>
 
 <div class="mi-page">
@@ -243,6 +298,14 @@
     {{-- Live search results panel (shown while typing) --}}
     <div id="mi-search-panel" class="mi-card"></div>
 
+    {{-- Bulk action bar --}}
+    <div id="mi-bulk-bar">
+        <span id="mi-bulk-count"></span>
+        <button type="button" class="mi-bulk-btn mi-bulk-btn-cat" id="mi-bulk-recat-btn">⇄ Change Category</button>
+        <button type="button" class="mi-bulk-btn mi-bulk-btn-del" id="mi-bulk-del-btn">🗑 Delete Selected</button>
+        <button type="button" class="mi-bulk-btn mi-bulk-btn-clear" id="mi-bulk-clear-btn">✕ Clear</button>
+    </div>
+
     {{-- Static library table (hidden while searching) --}}
     <div id="mi-library-table">
     <div class="mi-card">
@@ -250,6 +313,9 @@
             <table class="mi-table">
                 <thead>
                     <tr>
+                        <th style="width:2.2rem;padding-left:.85rem">
+                            <input type="checkbox" class="mi-row-cb" id="cb-all" title="Select all">
+                        </th>
                         <th style="min-width:170px">Name</th>
                         <th style="min-width:120px">Serving Size</th>
                         <th class="col-num" style="color:#b45309">kJ</th>
@@ -265,7 +331,7 @@
                         @php $col = $catColors[$catName] ?? ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8']; @endphp
                         {{-- Category divider row --}}
                         <tr>
-                            <td colspan="8" style="padding:.45rem .85rem;background:{{ $col['bg'] }};border-bottom:1px solid {{ $col['dot'] }}20;border-top:2px solid {{ $col['dot'] }}40">
+                            <td colspan="9" style="padding:.45rem .85rem;background:{{ $col['bg'] }};border-bottom:1px solid {{ $col['dot'] }}20;border-top:2px solid {{ $col['dot'] }}40">
                                 <span style="display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:{{ $col['text'] }}">
                                     <span style="width:.5rem;height:.5rem;border-radius:50%;background:{{ $col['dot'] }};flex-shrink:0;display:inline-block"></span>
                                     {{ $catName }}
@@ -275,8 +341,11 @@
                         </tr>
                         {{-- Items in this category --}}
                         @foreach($catItems as $item)
-                            <tr>
-                                <td style="font-weight:700;padding-left:1.4rem;color:var(--text-primary)">{{ $item->name }}</td>
+                            <tr data-id="{{ $item->id }}">
+                                <td style="padding-left:.85rem">
+                                    <input type="checkbox" class="mi-row-cb mi-cb-item" value="{{ $item->id }}">
+                                </td>
+                                <td style="font-weight:700;color:var(--text-primary)">{{ $item->name }}</td>
                                 <td style="color:var(--text-muted);font-size:.79rem">{{ $item->serving_size ?? '—' }}</td>
                                 <td class="col-num" style="color:#b45309;font-weight:600">
                                     {{ $item->energy_kj ? round($item->energy_kj) : ($item->energy_kcal ? round($item->energy_kcal * 4.184) : '—') }}
@@ -298,7 +367,7 @@
                         @endforeach
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="mi-empty">
                                     <div class="mi-empty-icon">🍽️</div>
                                     No items found{{ $search ? ' for "'.e($search).'"' : '' }}{{ $category ? ' in '.$category : '' }}.
@@ -335,7 +404,30 @@
     </div>
 </div>
 
-<script>
+{{-- ── Recategorise modal ───────────────────────────────── --}}
+<div id="mi-recat-overlay">
+    <div id="mi-recat-box">
+        <h3>Change Category</h3>
+        <p id="mi-recat-desc">Move selected items to:</p>
+        <select id="mi-recat-select">
+            @foreach($catList as $cat)
+                <option value="{{ $cat }}">{{ $cat }}</option>
+            @endforeach
+        </select>
+        <div class="mi-recat-btns">
+            <button type="button" class="mi-recat-cancel" id="mi-recat-cancel">Cancel</button>
+            <button type="button" class="mi-recat-confirm" id="mi-recat-confirm">Move Items</button>
+        </div>
+    </div>
+</div>
+
+{{-- ── Hidden bulk form ───────────────────────────────────────── --}}
+<form id="mi-bulk-form" method="POST" action="{{ route('meal-items.bulk') }}" style="display:none">
+    @csrf
+    <input type="hidden" name="action"   id="mi-bulk-action">
+    <input type="hidden" name="category" id="mi-bulk-category">
+    <div id="mi-bulk-ids"></div>
+</form>
 (function () {
     const searchUrl = '{{ route("meal-items.search") }}';
     const importUrl = '{{ route("meal-items.import-fatsecret") }}';
@@ -467,6 +559,106 @@
         if (e.target === this) closeCatModal();
     });
 
+    /* ──────────────────────────────────────────────────────
+     * Bulk selection
+     * ───────────────────────────────────────────────────── */
+    const bulkBar    = document.getElementById('mi-bulk-bar');
+    const bulkCount  = document.getElementById('mi-bulk-count');
+    const cbAll      = document.getElementById('cb-all');
+    const bulkForm   = document.getElementById('mi-bulk-form');
+    const bulkAction = document.getElementById('mi-bulk-action');
+    const bulkCatEl  = document.getElementById('mi-bulk-category');
+    const bulkIdsEl  = document.getElementById('mi-bulk-ids');
+
+    function getChecked() {
+        return Array.from(document.querySelectorAll('.mi-cb-item:checked'));
+    }
+
+    function updateBulkBar() {
+        const checked = getChecked();
+        const n = checked.length;
+        if (n > 0) {
+            bulkBar.classList.add('visible');
+            bulkCount.textContent = n + ' item' + (n === 1 ? '' : 's') + ' selected';
+        } else {
+            bulkBar.classList.remove('visible');
+        }
+        /* Update select-all state */
+        const all = document.querySelectorAll('.mi-cb-item');
+        cbAll.indeterminate = n > 0 && n < all.length;
+        cbAll.checked = n > 0 && n === all.length;
+        /* Highlight rows */
+        document.querySelectorAll('.mi-cb-item').forEach(function(cb) {
+            cb.closest('tr').classList.toggle('cb-selected', cb.checked);
+        });
+    }
+
+    /* Select-all toggle */
+    if (cbAll) {
+        cbAll.addEventListener('change', function() {
+            document.querySelectorAll('.mi-cb-item').forEach(function(cb) {
+                cb.checked = cbAll.checked;
+            });
+            updateBulkBar();
+        });
+    }
+
+    /* Individual row checkboxes (delegated) */
+    document.getElementById('mi-library-table').addEventListener('change', function(e) {
+        if (e.target.classList.contains('mi-cb-item')) updateBulkBar();
+    });
+
+    /* Clear selection */
+    document.getElementById('mi-bulk-clear-btn').addEventListener('click', function() {
+        document.querySelectorAll('.mi-cb-item').forEach(function(cb) { cb.checked = false; });
+        if (cbAll) cbAll.checked = false;
+        updateBulkBar();
+    });
+
+    /* Submit bulk form helper */
+    function submitBulk(action, category) {
+        const ids = getChecked().map(function(cb) { return cb.value; });
+        if (!ids.length) return;
+        bulkAction.value   = action;
+        bulkCatEl.value    = category || '';
+        bulkIdsEl.innerHTML = ids.map(function(id) {
+            return '<input type="hidden" name="ids[]" value="' + id + '">';
+        }).join('');
+        bulkForm.submit();
+    }
+
+    /* Delete selected */
+    document.getElementById('mi-bulk-del-btn').addEventListener('click', function() {
+        const n = getChecked().length;
+        if (!n) return;
+        if (!confirm('Delete ' + n + ' selected item' + (n === 1 ? '' : 's') + '? This cannot be undone.')) return;
+        submitBulk('delete');
+    });
+
+    /* Recategorise — open modal */
+    document.getElementById('mi-bulk-recat-btn').addEventListener('click', function() {
+        const n = getChecked().length;
+        if (!n) return;
+        document.getElementById('mi-recat-desc').textContent =
+            'Move ' + n + ' selected item' + (n === 1 ? '' : 's') + ' to:';
+        document.getElementById('mi-recat-overlay').classList.add('open');
+    });
+
+    document.getElementById('mi-recat-cancel').addEventListener('click', function() {
+        document.getElementById('mi-recat-overlay').classList.remove('open');
+    });
+    document.getElementById('mi-recat-overlay').addEventListener('click', function(e) {
+        if (e.target === this) document.getElementById('mi-recat-overlay').classList.remove('open');
+    });
+    document.getElementById('mi-recat-confirm').addEventListener('click', function() {
+        const cat = document.getElementById('mi-recat-select').value;
+        document.getElementById('mi-recat-overlay').classList.remove('open');
+        submitBulk('recategorise', cat);
+    });
+
+    /* ──────────────────────────────────────────────────────
+     * FatSecret import flow
+     * ───────────────────────────────────────────────────── */
     document.getElementById('mi-cat-confirm').addEventListener('click', function() {
         if (!_pending) return;
         const food     = _pending;

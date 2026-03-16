@@ -234,4 +234,40 @@ class MealItemController extends Controller
         return redirect()->route('meal-items.index')
             ->with('success', '"' . $name . '" deleted.');
     }
+
+    /**
+     * Bulk action: delete or re-categorise selected items.
+     * Only items owned by the authenticated user may be modified.
+     */
+    public function bulkAction(Request $request)
+    {
+        $data = $request->validate([
+            'action'   => 'required|in:delete,recategorise',
+            'ids'      => 'required|array|min:1',
+            'ids.*'    => 'integer',
+            'category' => 'required_if:action,recategorise|nullable|string|max:100',
+        ]);
+
+        // Scope to items the user can actually modify
+        $items = MealItem::visibleTo(auth()->id())
+            ->whereIn('id', $data['ids'])
+            ->get();
+
+        $count = $items->count();
+
+        if ($data['action'] === 'delete') {
+            foreach ($items as $item) {
+                $item->delete();
+            }
+            return redirect()->route('meal-items.index')
+                ->with('success', $count . ' item' . ($count === 1 ? '' : 's') . ' deleted.');
+        }
+
+        // recategorise
+        foreach ($items as $item) {
+            $item->update(['category' => $data['category']]);
+        }
+        return redirect()->route('meal-items.index')
+            ->with('success', $count . ' item' . ($count === 1 ? '' : 's') . ' moved to "' . $data['category'] . '".');
+    }
 }

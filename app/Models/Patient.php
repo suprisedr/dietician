@@ -21,6 +21,7 @@ class Patient extends Model
         'activity_factor',
         'ibw_bmi_target',
         'exchange_template_id',
+        'diet_preset_id',
     ];
 
     protected $casts = [

@@ -146,6 +146,212 @@
 
         <div class="space-y-6">
 
+        {{-- ═══════════════════════════════════════════
+             DIET PRESETS
+        ═══════════════════════════════════════════ --}}
+        <x-plan-gate min="package_1">
+        <div class="dash-section" id="diet-preset-section">
+            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('preset-body','preset-chevron')">
+                <span class="dash-section-title">Diet Presets</span>
+                <svg id="preset-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+            <div id="preset-body" style="display:block;padding:1.25rem">
+                <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:1rem">
+                    Select a standard diet template — the exchange items &amp; meal plan slots will be previewed below.
+                    Click <strong>Apply Preset</strong> to save it to this patient.
+                </p>
+
+                {{-- Preset selector cards --}}
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.75rem;margin-bottom:1.25rem">
+                    @php $dbPresets = \App\Models\DietPreset::all(); @endphp
+                    @foreach($dbPresets as $dp)
+                    <label class="preset-card {{ $patient->diet_preset_id === $dp->id ? 'selected' : '' }}" data-preset="{{ $dp->key }}" for="preset-{{ $dp->key }}"
+                        style="cursor:pointer;border:2px solid var(--border);border-radius:.75rem;padding:.9rem 1rem;background:#fff;transition:border-color .15s,background .15s;display:block">
+                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
+                            <input type="radio" id="preset-{{ $dp->key }}" name="diet_preset" value="{{ $dp->key }}"
+                                {{ $patient->diet_preset_id === $dp->id ? 'checked' : '' }}
+                                style="accent-color:var(--primary)">
+                            <span style="font-weight:700;font-size:.88rem;color:var(--text-primary)">{{ $dp->name }}</span>
+                        </div>
+                        <p style="font-size:.75rem;color:var(--text-muted);margin:0 0 .4rem 1.4rem;line-height:1.4">{{ $dp->description }}</p>
+                        <span style="display:inline-block;margin-left:1.4rem;font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:#f0fdf4;color:var(--primary);border:1px solid #bbf7d0">
+                            ~{{ $dp->kcal_target }} kcal
+                        </span>
+                    </label>
+                    @endforeach
+                </div>
+
+                {{-- Live preview panel (populated via JS fetch) --}}
+                <div id="preset-preview" style="display:none;margin-bottom:1.25rem">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+                        <span id="preset-preview-title" style="font-size:.82rem;font-weight:700;color:var(--text-primary)"></span>
+                        <span style="font-size:.75rem;color:var(--text-muted)">Preview — not saved yet</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                            <thead>
+                                <tr style="background:#f0fdf4;color:var(--primary)">
+                                    <th style="text-align:left;padding:.4rem .7rem;font-weight:700">Item</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Nu</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Breakf</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Lunch</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Supper</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
+                                    <th style="text-align:right;padding:.4rem .7rem;color:#c2410c">CHO</th>
+                                    <th style="text-align:right;padding:.4rem .7rem;color:#4338ca">Prot</th>
+                                    <th style="text-align:right;padding:.4rem .7rem;color:#0f766e">Fat</th>
+                                    <th style="text-align:right;padding:.4rem .7rem">kJ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preset-preview-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:1rem">
+                    <button id="apply-preset-btn" onclick="applyPreset()"
+                        style="padding:.5rem 1.4rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer;opacity:.5;pointer-events:none">
+                        Apply Preset
+                    </button>
+                    <span id="preset-status" style="font-size:.82rem"></span>
+                </div>
+            </div>
+        </div>
+
+        <style>
+        .preset-card.selected { border-color:var(--primary)!important; background:#f0fdf4!important; }
+        #preset-preview-body tr:nth-child(even) { background:#f8fafc; }
+        #preset-preview-body td { padding:.35rem .7rem; border-bottom:1px solid #e5e7eb; }
+        </style>
+
+        <script>
+        (function () {
+            var _selectedPreset = null;
+            var _previewCache   = {};
+
+            var previewGetUrl = '{{ url('diet-presets') }}/';
+            var applyUrl      = '{{ route('patients.apply-preset', $patient->id) }}';
+            var csrfToken     = document.querySelector('meta[name="csrf-token"]').content;
+
+            /* Initialise from any already-checked radio (preset previously applied) */
+            var _checkedRadio = document.querySelector('input[name="diet_preset"]:checked');
+            if (_checkedRadio) {
+                _selectedPreset = _checkedRadio.value;
+                var _btn = document.getElementById('apply-preset-btn');
+                _btn.style.opacity = '1';
+                _btn.style.pointerEvents = 'auto';
+            }
+
+            function fmt(v) { return (v !== null && v !== undefined && v !== '') ? v : '—'; }
+
+            function renderPreview(data) {
+                var panel   = document.getElementById('preset-preview');
+                var title   = document.getElementById('preset-preview-title');
+                var tbody   = document.getElementById('preset-preview-body');
+                title.textContent = data.name + '  (~' + data.kcal_target + ' kcal)';
+                tbody.innerHTML   = '';
+                data.items.forEach(function (i) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td style="font-weight:600">' + i.name + '</td>' +
+                        '<td style="text-align:center;font-weight:700">' + i.nu + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_breakfast) + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_snack1)    + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_lunch)     + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_snack2)    + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_supper)    + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_snack3)    + '</td>' +
+                        '<td style="text-align:right;color:#c2410c">' + (i.cho_g        !== null ? i.nu * i.cho_g        : '—') + '</td>' +
+                        '<td style="text-align:right;color:#4338ca">' + (i.protein_min_g !== null ? i.nu * i.protein_min_g : '—') + '</td>' +
+                        '<td style="text-align:right;color:#0f766e">' + (i.fat_min_g    !== null ? i.nu * i.fat_min_g    : '—') + '</td>' +
+                        '<td style="text-align:right">'               + (i.kj           !== null ? i.nu * i.kj           : '—') + '</td>';
+                    tbody.appendChild(tr);
+                });
+                panel.style.display = 'block';
+            }
+
+            /* Listen to radio changes — fetch preset from DB and show preview */
+            document.querySelectorAll('input[name="diet_preset"]').forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    _selectedPreset = this.value;
+                    document.querySelectorAll('.preset-card').forEach(function (c) {
+                        c.classList.toggle('selected', c.dataset.preset === _selectedPreset);
+                    });
+                    document.getElementById('apply-preset-btn').style.opacity      = '1';
+                    document.getElementById('apply-preset-btn').style.pointerEvents = 'auto';
+                    document.getElementById('preset-status').textContent = '';
+
+                    /* Use cache to avoid repeated fetches */
+                    if (_previewCache[_selectedPreset]) {
+                        renderPreview(_previewCache[_selectedPreset]);
+                        return;
+                    }
+
+                    fetch(previewGetUrl + _selectedPreset, {
+                        credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json' },
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        _previewCache[_selectedPreset] = data;
+                        renderPreview(data);
+                    })
+                    .catch(function () {
+                        document.getElementById('preset-preview').style.display = 'none';
+                    });
+                });
+            });
+
+            /* Apply: POST to patient, save to DB, then reload so all sections reflect new values */
+            window.applyPreset = function () {
+                if (!_selectedPreset) return;
+                var btn    = document.getElementById('apply-preset-btn');
+                var status = document.getElementById('preset-status');
+                btn.disabled = true;
+                btn.textContent = 'Applying…';
+                status.textContent = '';
+
+                fetch(applyUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ preset: _selectedPreset }),
+                })
+                .then(function (r) {
+                    if (!r.ok) {
+                        return r.json().then(function (e) { throw new Error(e.error || ('HTTP ' + r.status)); });
+                    }
+                    return r.json();
+                })
+                .then(function (data) {
+                    if (data.error) throw new Error(data.error);
+
+                    /* Show success status then reload the page so every section
+                       (exchange template, meal plan) reflects the saved preset. */
+                    status.style.color = '#15803d';
+                    status.textContent = '✓ ' + data.preset_name + ' applied — reloading…';
+
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 900);
+                })
+                .catch(function (err) {
+                    status.style.color = '#b91c1c';
+                    status.textContent = '⚠ ' + (err.message || 'Something went wrong');
+                    btn.textContent = 'Apply Preset';
+                    btn.disabled = false;
+                });
+            };
+        })();
+        </script>
+        </x-plan-gate>
+
                 {{-- Anthropometrics card --}}
                 <div class="dash-section">
                     <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('anthro-body','anthro-chevron')">
@@ -449,10 +655,10 @@
                     <span style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:999px;background:#fff7ed;color:#c2410c">
                         {{ $patient->exchangeTemplate->name }}
                     </span>
-                    <svg id="et-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    <svg id="et-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
             </div>
-            <div id="et-body" style="display:none">
+            <div id="et-body" style="display:block">
             <div class="overflow-x-auto" style="max-height:420px;overflow-y:auto">
                 <table class="exchange-table" id="exchange-table">
                     <thead>
@@ -548,10 +754,10 @@
                 <span class="dash-section-title">Meal Plan Distribution</span>
                 <div style="display:flex;align-items:center;gap:.5rem">
                     <span style="font-size:.75rem;color:var(--text-muted)">Enter serving exchanges per meal — each row must sum to the total (No)</span>
-                    <svg id="mp-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    <svg id="mp-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
             </div>
-            <div id="mp-body" style="display:none">
+            <div id="mp-body" style="display:block">
 
                 @if(session('success') && str_contains(session('success'), 'Meal plan'))
                     <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#dcfce7;color:#15803d;border-radius:6px;font-size:.82rem;font-weight:600">
@@ -632,6 +838,62 @@
                         <span id="meal-plan-status" style="font-size:.8rem;color:var(--text-muted)"></span>
                     </div>
                 </form>
+
+{{-- ── Meal plan save: AJAX + 3-second redirect toast ── --}}
+<div id="mp-save-toast" style="display:none;position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);
+    background:#0d1f0c;color:#fff;padding:.9rem 1.6rem;border-radius:12px;
+    box-shadow:0 6px 32px rgba(0,0,0,.22);z-index:9999;
+    font-size:.88rem;font-weight:600;min-width:280px;text-align:center;line-height:1.5">
+    ✓ Meal plan saved!<br>
+    <span style="font-weight:400;opacity:.85">Redirecting to meal planner in <strong id="mp-countdown">3</strong>s…</span>
+</div>
+<script>
+(function () {
+    var form   = document.getElementById('meal-plan-form');
+    var toast  = document.getElementById('mp-save-toast');
+    var cdEl   = document.getElementById('mp-countdown');
+    var saveBtn = document.getElementById('meal-plan-save');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving…';
+
+        var fd = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function (data) {
+            /* Show toast + countdown */
+            toast.style.display = 'block';
+            var secs = 3;
+            cdEl.textContent = secs;
+            var iv = setInterval(function () {
+                secs--;
+                cdEl.textContent = secs;
+                if (secs <= 0) {
+                    clearInterval(iv);
+                    window.location.href = data.redirect_url;
+                }
+            }, 1000);
+        })
+        .catch(function (err) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Meal Plan';
+            alert('Save failed: ' + err.message + '. Please try again.');
+        });
+    });
+})();
+</script>
             </div>{{-- /mp-body --}}
         </div>{{-- /meal-plan-details --}}
         @endif

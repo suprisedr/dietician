@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\ExchangeTemplateItem;
 use App\Models\Macronutrient;
+use App\Models\MealPlannerWeek;
 use App\Models\Patient;
 use App\Models\ExchangeTemplate;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PatientController extends Controller
@@ -347,6 +349,165 @@ class PatientController extends Controller
     /**
      * Create a new exchange template (with default items) and attach it to the patient.
      */
+    /**
+     * Apply a standard dietary preset to the patient's exchange template + meal plan slots.
+     * Creates a fresh exchange template if one doesn't exist yet.
+     * Returns JSON with the updated items so the page can refresh without a full reload.
+     */
+    public function applyPreset(Request $request, string $patientId)
+    {
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($patientId);
+
+        $presetKey = $request->input('preset');
+        $dbPreset  = \App\Models\DietPreset::with('items')
+                        ->where('key', $presetKey)
+                        ->first();
+
+        if (! $dbPreset) {
+            return response()->json(['error' => 'Unknown preset'], 422);
+        }
+
+        // Ensure the patient has an exchange template
+        if (! $patient->exchange_template_id) {
+            $template = ExchangeTemplate::create(['name' => "Template for patient {$patient->id}"]);
+            $patient->update(['exchange_template_id' => $template->id]);
+            $patient->refresh();
+        }
+
+        // Record which preset is active on this patient
+        $patient->update(['diet_preset_id' => $dbPreset->id]);
+
+        $template = $patient->exchangeTemplate;
+
+        // Ensure all 13 standard items exist on the template (fill gaps with defaults)
+        $standardRows = [
+            ['name' => 'Milk, full cream',    'nu' => 0, 'cho_g' => 12,   'protein_min_g' => 8,    'protein_max_g' => 8,    'fat_min_g' => 8,    'fat_max_g' => 8,    'kj' => 670],
+            ['name' => 'Milk, low fat',       'nu' => 0, 'cho_g' => 12,   'protein_min_g' => 8,    'protein_max_g' => 8,    'fat_min_g' => 5,    'fat_max_g' => 5,    'kj' => 500],
+            ['name' => 'Milk, fat free',      'nu' => 0, 'cho_g' => 12,   'protein_min_g' => 8,    'protein_max_g' => 8,    'fat_min_g' => 0,    'fat_max_g' => 3,    'kj' => 420],
+            ['name' => 'Fruit',               'nu' => 0, 'cho_g' => 15,   'protein_min_g' => null, 'protein_max_g' => null, 'fat_min_g' => null, 'fat_max_g' => null, 'kj' => 250],
+            ['name' => 'Veg, free veg',       'nu' => 0, 'cho_g' => 5,    'protein_min_g' => 2,    'protein_max_g' => 2,    'fat_min_g' => null, 'fat_max_g' => null, 'kj' => 105],
+            ['name' => 'Starch',              'nu' => 0, 'cho_g' => 15,   'protein_min_g' => 0,    'protein_max_g' => 3,    'fat_min_g' => 0,    'fat_max_g' => 1,    'kj' => 335],
+            ['name' => 'Sugar/sweets',        'nu' => 0, 'cho_g' => 5,    'protein_min_g' => null, 'protein_max_g' => null, 'fat_min_g' => null, 'fat_max_g' => null, 'kj' => 84],
+            ['name' => 'Meat, lean fat',      'nu' => 0, 'cho_g' => null, 'protein_min_g' => 7,    'protein_max_g' => 7,    'fat_min_g' => 0,    'fat_max_g' => 3,    'kj' => 190],
+            ['name' => 'Meat, medium fat',    'nu' => 0, 'cho_g' => null, 'protein_min_g' => 7,    'protein_max_g' => 7,    'fat_min_g' => 4,    'fat_max_g' => 7,    'kj' => 315],
+            ['name' => 'Meat, high fat',      'nu' => 0, 'cho_g' => null, 'protein_min_g' => 7,    'protein_max_g' => 7,    'fat_min_g' => 8,    'fat_max_g' => 8,    'kj' => 420],
+            ['name' => 'Plant-based protein', 'nu' => 0, 'cho_g' => 15,   'protein_min_g' => 7,    'protein_max_g' => 7,    'fat_min_g' => 0,    'fat_max_g' => 1,    'kj' => 380],
+            ['name' => 'Fat',                 'nu' => 0, 'cho_g' => null, 'protein_min_g' => null, 'protein_max_g' => null, 'fat_min_g' => 5,    'fat_max_g' => 5,    'kj' => 190],
+            ['name' => 'Alcohol',             'nu' => 0, 'cho_g' => 15,   'protein_min_g' => 0,    'protein_max_g' => 3,    'fat_min_g' => 0,    'fat_max_g' => 1,    'kj' => 420],
+        ];
+
+        $template->load('items');
+        $existingNames = $template->items->map(fn($i) => strtolower(trim($i->name)))->flip();
+
+        foreach ($standardRows as $row) {
+            if (! $existingNames->has(strtolower($row['name']))) {
+                ExchangeTemplateItem::create(array_merge($row, ['exchange_template_id' => $template->id]));
+            }
+        }
+
+        // Reload items after ensuring all standard items exist
+        $template->load('items');
+
+        // Index existing items by name for quick lookup
+        $existingByName = $template->items->keyBy(fn($i) => strtolower(trim($i->name)));
+
+        $resultItems = [];
+
+        foreach ($dbPreset->items as $def) {
+            $key  = strtolower(trim($def->name));
+            $item = $existingByName->get($key);
+
+            $slotFields = [
+                'slot_breakfast' => $def->slot_breakfast,
+                'slot_snack1'    => $def->slot_snack1,
+                'slot_lunch'     => $def->slot_lunch,
+                'slot_snack2'    => $def->slot_snack2,
+                'slot_supper'    => $def->slot_supper,
+                'slot_snack3'    => $def->slot_snack3,
+            ];
+
+            if ($item) {
+                // Update nu, slots, and nutrient values from the preset
+                $item->update(array_merge([
+                    'nu'            => $def->nu,
+                    'cho_g'         => $def->cho_g,
+                    'protein_min_g' => $def->protein_min_g,
+                    'protein_max_g' => $def->protein_max_g,
+                    'fat_min_g'     => $def->fat_min_g,
+                    'fat_max_g'     => $def->fat_max_g,
+                    'kj'            => $def->kj,
+                ], $slotFields));
+            } else {
+                // Create brand-new item from preset data
+                $item = ExchangeTemplateItem::create(array_merge([
+                    'exchange_template_id' => $template->id,
+                    'name'                 => $def->name,
+                    'nu'                   => $def->nu,
+                    'cho_g'                => $def->cho_g,
+                    'protein_min_g'        => $def->protein_min_g,
+                    'protein_max_g'        => $def->protein_max_g,
+                    'fat_min_g'            => $def->fat_min_g,
+                    'fat_max_g'            => $def->fat_max_g,
+                    'kj'                   => $def->kj,
+                ], $slotFields));
+            }
+
+            $resultItems[] = [
+                'id'             => $item->id,
+                'name'           => $item->name,
+                'nu'             => $item->nu,
+                'cho_g'          => $item->cho_g,
+                'protein_min_g'  => $item->protein_min_g,
+                'fat_min_g'      => $item->fat_min_g,
+                'kj'             => $item->kj,
+                'slot_breakfast' => $item->slot_breakfast,
+                'slot_snack1'    => $item->slot_snack1,
+                'slot_lunch'     => $item->slot_lunch,
+                'slot_snack2'    => $item->slot_snack2,
+                'slot_supper'    => $item->slot_supper,
+                'slot_snack3'    => $item->slot_snack3,
+            ];
+        }
+
+        return response()->json([
+            'preset_name' => $dbPreset->name,
+            'kcal_target' => $dbPreset->kcal_target,
+            'items'       => $resultItems,
+            'template_id' => $template->id,
+        ]);
+    }
+
+    /**
+     * Return a preset's items from the DB (for live preview before applying).
+     */
+    public function getPreset(string $presetKey)
+    {
+        $preset = \App\Models\DietPreset::with('items')
+                    ->where('key', $presetKey)
+                    ->firstOrFail();
+
+        return response()->json([
+            'key'         => $preset->key,
+            'name'        => $preset->name,
+            'description' => $preset->description,
+            'kcal_target' => $preset->kcal_target,
+            'items'       => $preset->items->map(fn($i) => [
+                'name'           => $i->name,
+                'nu'             => $i->nu,
+                'cho_g'          => $i->cho_g,
+                'protein_min_g'  => $i->protein_min_g,
+                'fat_min_g'      => $i->fat_min_g,
+                'kj'             => $i->kj,
+                'slot_breakfast' => $i->slot_breakfast,
+                'slot_snack1'    => $i->slot_snack1,
+                'slot_lunch'     => $i->slot_lunch,
+                'slot_snack2'    => $i->slot_snack2,
+                'slot_supper'    => $i->slot_supper,
+                'slot_snack3'    => $i->slot_snack3,
+            ]),
+        ]);
+    }
+
     public function createExchangeTemplate(string $patientId)
     {
         $patient = Patient::where('user_id', auth()->id())->findOrFail($patientId);
@@ -394,20 +555,6 @@ class PatientController extends Controller
         // items is an array keyed by item id: ['123' => ['breakfast'=>1,'snack1'=>0.5,...]]
         $allItems = $request->input('items', []);
 
-        $errors = [];
-        // Validation is informational only — partial saves are allowed.
-        // Uncomment below to enforce strict totals:
-        // foreach ($allItems as $itemId => $slots) {
-        //     $item = ExchangeTemplateItem::findOrFail($itemId);
-        //     $sum  = array_sum(array_map('floatval', $slots));
-        //     if (abs($sum - $item->nu) > 0.01) {
-        //         $errors[] = "\"{$item->name}\": slots sum to {$sum}, expected {$item->nu}";
-        //     }
-        // }
-        // if (!empty($errors)) {
-        //     return back()->withErrors(['meal_plan' => implode('; ', $errors)])->withInput();
-        // }
-
         foreach ($allItems as $itemId => $slots) {
             $item = ExchangeTemplateItem::findOrFail($itemId);
             $item->update([
@@ -420,7 +567,30 @@ class PatientController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Meal plan saved.');
+        // Auto-create (or find) a MealPlannerWeek for this patient starting this Monday
+        $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+
+        $week = MealPlannerWeek::firstOrCreate(
+            [
+                'user_id'    => auth()->id(),
+                'patient_id' => $patient->id,
+                'week_start' => $weekStart,
+            ],
+            ['label' => null]
+        );
+
+        $redirectUrl = route('meal-planner.show', [$patient->id, $week->id]);
+
+        // AJAX request from the JS fetch → return JSON
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message'      => 'Meal plan saved.',
+                'redirect_url' => $redirectUrl,
+            ]);
+        }
+
+        // Fallback for non-JS submit
+        return redirect($redirectUrl)->with('success', 'Meal plan saved.');
     }
 
     /**
