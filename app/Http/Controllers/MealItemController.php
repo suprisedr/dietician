@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MealItem;
-use Braunson\FatSecret\FatSecret;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class MealItemController extends Controller
 {
@@ -63,10 +63,7 @@ class MealItemController extends Controller
         $fsItems = [];
         if (count($dbItems) < 3) {
             try {
-                $fs   = app(FatSecret::class);
-                $raw  = $fs->searchIngredients($q, 0, 20);
-                $foods = $raw['foods']['food'] ?? [];
-                if (isset($foods['food_id'])) $foods = [$foods];
+                $foods = $this->fatSecretSearch($q, 20);
 
                 // Collect names already in DB (case-insensitive) to avoid duplicates
                 $existingNames = array_map('strtolower', array_column($dbItems, 'name'));
@@ -269,5 +266,76 @@ class MealItemController extends Controller
         }
         return redirect()->route('meal-items.index')
             ->with('success', $count . ' item' . ($count === 1 ? '' : 's') . ' moved to "' . $data['category'] . '".');
+    }
+
+    /**
+     * Search FatSecret using a direct OAuth 1.0 signed HTTPS request via Laravel's
+     * HTTP client (Guzzle). Works identically on local and Heroku — no curl
+     * dependency on the old vendor package.
+     */
+    private function fatSecretSearch(string $query, int $maxResults = 20): array
+    {
+        $key    = config('services.fatsecret.key');
+        $secret = config('services.fatsecret.secret');
+
+        if (!$key || !$secret) {
+            return [];
+        }
+
+        $endpoint = 'https://platform.fatsecret.com/rest/server.api';
+
+        // OAuth 1.0 parameters
+        $oauthParams = [
+            'oauth_consumer_key'     => $key,
+            'oauth_nonce'            => md5(uniqid((string)mt_rand(), true)),
+            'oauth_signature_method' => 'HMAC-SHA1',
+            'oauth_timestamp'        => (string)time(),
+            'oauth_version'          => '1.0',
+        ];
+
+        // All request parameters (OAuth + method params) merged for signing
+        $allParams = array_merge($oauthParams, [
+            'format'            => 'json',
+            'max_results'       => (string)$maxResults,
+            'method'            => 'foods.search',
+            'page_number'       => '0',
+            'search_expression' => $query,
+        ]);
+
+        // Build the OAuth signature base string
+        ksort($allParams);
+        $paramString = http_build_query($allParams, '', '&', PHP_QUERY_RFC3986);
+        $baseString  = 'POST'
+            . '&' . rawurlencode($endpoint)
+            . '&' . rawurlencode($paramString);
+
+        // Sign with HMAC-SHA1
+        $signingKey = rawurlencode($secret) . '&'; // no token secret
+        $oauthParams['oauth_signature'] = base64_encode(
+            hash_hmac('sha1', $baseString, $signingKey, true)
+        );
+
+        // POST with all params in body (OAuth params + method params)
+        $postBody = array_merge($oauthParams, [
+            'format'            => 'json',
+            'max_results'       => $maxResults,
+            'method'            => 'foods.search',
+            'page_number'       => 0,
+            'search_expression' => $query,
+        ]);
+
+        $response = Http::asForm()
+            ->withOptions(['verify' => true])
+            ->post($endpoint, $postBody);
+
+        $data  = $response->json();
+        $foods = $data['foods']['food'] ?? [];
+
+        // FatSecret returns a single object (not array) when only 1 result
+        if (isset($foods['food_id'])) {
+            $foods = [$foods];
+        }
+
+        return is_array($foods) ? $foods : [];
     }
 }
