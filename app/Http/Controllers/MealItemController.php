@@ -124,7 +124,12 @@ class MealItemController extends Controller
             ->first();
 
         if ($existing) {
-            return response()->json(['id' => $existing->id, 'already_existed' => true]);
+            return response()->json([
+                'id'             => $existing->id,
+                'name'           => $existing->name,
+                'category'       => $existing->category,
+                'already_existed'=> true,
+            ]);
         }
 
         $item = MealItem::create([
@@ -141,7 +146,12 @@ class MealItemController extends Controller
             'created_by'   => auth()->id(),
         ]);
 
-        return response()->json(['id' => $item->id, 'already_existed' => false]);
+        return response()->json([
+            'id'             => $item->id,
+            'name'           => $item->name,
+            'category'       => $item->category,
+            'already_existed'=> false,
+        ]);
     }
 
     public function create()

@@ -178,6 +178,7 @@
     padding:.65rem 1.1rem .5rem;
     border-bottom:1px solid var(--border);
     flex-shrink:0;
+    position:relative;
 }
 #item-modal-search {
     width:100%; padding:.5rem .75rem;
@@ -482,7 +483,8 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             <button class="im-tab active" id="tab-library">📋 My Library</button>
         </div>
         <div id="item-modal-search-wrap">
-            <input type="text" id="item-modal-search" placeholder="Search food items…" autocomplete="off" spellcheck="false">
+            <input type="text" id="item-modal-search" placeholder="Search library or food database…" autocomplete="off" spellcheck="false">
+            <span id="item-modal-search-spinner" style="display:none;position:absolute;right:.75rem;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--text-muted)">⏳</span>
         </div>
         <div id="item-modal-body"></div>
         <div id="item-modal-footer">
@@ -595,8 +597,11 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             + (limit !== null ? ' (max ' + limit + ')' : '');
 
         /* Reset to library tab */
-        document.getElementById('item-modal-search').placeholder = 'Search food items…';
+        document.getElementById('item-modal-search').placeholder = 'Search library or food database…';
         document.getElementById('item-modal-search').value = '';
+        _fsResults = [];
+        clearTimeout(_fsDebounce);
+        setSpinner(false);
         renderModalBody('');
         updateSelectedCount();
 
@@ -677,6 +682,9 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             }
             body.appendChild(noRes);
         }
+
+        // Append FatSecret results below library results
+        appendFatSecretResults(body, q);
     }
 
     function makeLibraryRow(item) {
@@ -769,10 +777,142 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         if (e.key === 'Escape') closeItemModal();
     });
 
-    /* Live search */
+    /* ── FatSecret search state ──────────────────────────────────────── */
+    let _fsDebounce  = null;
+    let _fsResults   = [];   // latest FatSecret results
+    let _fsSearching = false;
+
+    const SEARCH_URL = '{{ route("meal-items.search") }}';
+    const IMPORT_URL = '{{ route("meal-items.import-fatsecret") }}';
+    const CSRF       = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    /* ── Live search: DB instantly + FatSecret debounced ─────────────── */
     document.getElementById('item-modal-search').addEventListener('input', function () {
-        renderLibraryBody(this.value);
+        const q = this.value.trim();
+        clearTimeout(_fsDebounce);
+        _fsResults = [];
+
+        // Always re-render library portion immediately
+        renderLibraryBody(q);
+
+        if (q.length < 2) {
+            setSpinner(false);
+            return;
+        }
+
+        // Debounce the AJAX call by 400ms
+        _fsDebounce = setTimeout(function () {
+            setSpinner(true);
+            fetch(SEARCH_URL + '?q=' + encodeURIComponent(q), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                setSpinner(false);
+                _fsResults = data.fs || [];
+                // Re-render with FatSecret section appended
+                renderLibraryBody(document.getElementById('item-modal-search').value.trim());
+            })
+            .catch(function () { setSpinner(false); });
+        }, 400);
     });
+
+    function setSpinner(on) {
+        const el = document.getElementById('item-modal-search-spinner');
+        if (el) el.style.display = on ? 'inline' : 'none';
+        _fsSearching = on;
+    }
+
+    /* ── Append FatSecret results to modal body ───────────────────────── */
+    function appendFatSecretResults(body, q) {
+        if (_fsResults.length === 0) return;
+
+        const grpDiv = document.createElement('div');
+        grpDiv.className = 'im-group';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'im-group-header';
+        hdr.style.cssText = 'background:#eff6ff;color:#1d4ed8;border-bottom:1px solid #bfdbfe';
+        hdr.innerHTML = '🌐 Food Database results <span style="font-weight:400;font-size:.68rem">(tap to add to library &amp; plan)</span>';
+        grpDiv.appendChild(hdr);
+
+        const alreadyImportedNames = libraryItems.map(function (i) { return i.text.toLowerCase(); });
+
+        _fsResults.forEach(function (food) {
+            if (alreadyImportedNames.includes(food.name.toLowerCase())) return;
+
+            const row = document.createElement('label');
+            row.className = 'im-option';
+            row.style.cursor = 'pointer';
+
+            const kcalStr = food.kcal ? food.kcal + ' kcal' : '';
+            const servStr = food.serving ? ' · ' + food.serving : '';
+            row.innerHTML =
+                '<input type="checkbox" value="' + escHtml(food.id) + '">' +
+                '<div class="im-option-label">' +
+                  '<span class="im-option-name">' + escHtml(food.name) + '</span>' +
+                  (kcalStr || servStr ? '<span style="font-size:.7rem;color:var(--text-muted);margin-left:.4rem">' + escHtml(kcalStr + servStr) + '</span>' : '') +
+                  '<span style="font-size:.65rem;color:#2563eb;margin-left:.4rem;font-weight:600">+ library</span>' +
+                '</div>';
+
+            row.querySelector('input').addEventListener('change', function (e) {
+                if (!e.target.checked) { delete _selected[food.id]; row.classList.remove('selected'); updateSelectedCount(); return; }
+
+                const limit = _activeSlot ? (slotLimits[_activeSlot] ?? null) : null;
+                if (limit !== null && Object.keys(_selected).length >= limit) {
+                    e.target.checked = false; return;
+                }
+
+                // Optimistically select it
+                row.classList.add('selected');
+                e.target.disabled = true;
+
+                // Import into meal library
+                const payload = new URLSearchParams({
+                    _token:  CSRF,
+                    name:    food.name,
+                    serving: food.serving  || '',
+                    kcal:    food.kcal     || '',
+                    kj:      food.kj       || '',
+                    fat:     food.fat      || '',
+                    carbs:   food.carbs    || '',
+                    protein: food.protein  || '',
+                    fiber:   food.fiber    || '',
+                });
+
+                fetch(IMPORT_URL, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                    body: payload.toString()
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (saved) {
+                    // Add to local library so subsequent searches find it
+                    const newItem = { value: String(saved.id), text: saved.name, group: saved.category || 'Online' };
+                    libraryItems.push(newItem);
+                    idToName[newItem.value] = newItem.text;
+                    if (!groups[newItem.group]) { groups[newItem.group] = []; groupNames.push(newItem.group); }
+                    groups[newItem.group].push(newItem);
+
+                    _selected[newItem.value] = { id: newItem.value, text: newItem.text };
+                    // Remove from FatSecret results to avoid duplicate
+                    _fsResults = _fsResults.filter(function (f) { return f.id !== food.id; });
+                    updateSelectedCount();
+                    renderLibraryBody(document.getElementById('item-modal-search').value.trim());
+                })
+                .catch(function () {
+                    // If import fails still allow as free-text
+                    const val = '_free_' + Date.now();
+                    _selected[val] = { id: null, text: food.name };
+                    updateSelectedCount();
+                });
+            });
+
+            grpDiv.appendChild(row);
+        });
+
+        if (grpDiv.children.length > 1) body.appendChild(grpDiv);
+    }
 
     /* ── Initialise cells from hidden inputs ──────────────────────────── */
     document.querySelectorAll('td.cell').forEach(function (td) {
