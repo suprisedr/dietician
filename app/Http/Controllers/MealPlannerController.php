@@ -73,16 +73,47 @@ class MealPlannerController extends Controller
     // ── List all planner weeks for the authenticated user ─────────────────────
     public function index(Request $request)
     {
-        $weeks = MealPlannerWeek::where('user_id', auth()->id())
-            ->with('patient')
-            ->orderByDesc('week_start')
-            ->paginate(20);
+        $search = trim($request->input('q', ''));
 
-        $patients = Patient::where('user_id', auth()->id())
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $query = MealPlannerWeek::where('user_id', auth()->id())
+            ->with(['patient', 'entries'])
+            ->orderByDesc('week_start');
 
-        return view('meal-planner.index', compact('weeks', 'patients'));
+        // Filter by patient name when a search term is given
+        if ($search !== '') {
+            $query->whereHas('patient', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $allWeeks = $query->get();
+
+        // Group by patient name, sorted alphabetically
+        $grouped = $allWeeks->groupBy(function ($w) {
+            return $w->patient ? $w->patient->name : '— No Patient —';
+        })->sortKeys();
+
+        // Paginate the patient groups (10 patients per page)
+        $perPage     = 10;
+        $currentPage = (int) $request->input('page', 1);
+        $patientKeys = $grouped->keys();
+        $pageKeys    = $patientKeys->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $pagedGrouped = $pageKeys->mapWithKeys(fn($k) => [$k => $grouped[$k]]);
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $pagedGrouped,
+            $patientKeys->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('meal-planner.index', [
+            'pagedGrouped' => $pagedGrouped,
+            'paginator'    => $paginator,
+            'search'       => $search,
+            'totalPatients'=> $patientKeys->count(),
+        ]);
     }
 
     // ── Create a new week ─────────────────────────────────────────────────────
@@ -140,7 +171,7 @@ class MealPlannerController extends Controller
         $expectedPatient = $mealPlanner->patient_id ?? 0;
         abort_if((int) $patient !== (int) $expectedPatient, 404);
 
-        $mealPlanner->load(['entries.mealItem', 'patient']);
+        $mealPlanner->load(['entries.mealItem', 'patient', 'groceryList']);
 
         $grid = $mealPlanner->grid; // day x slot matrix
 

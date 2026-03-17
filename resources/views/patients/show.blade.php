@@ -711,10 +711,10 @@
                         <!-- grams totals row -->
                         <tr style="background:var(--bg-page);border-top:2px solid var(--border)">
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(g)</td>
-                            <td id="tot-cho"  style="text-align:right;font-weight:800;color:#c2410c;background:rgba(249,115,22,.12)">—</td>
-                            <td id="tot-pmin" style="text-align:right;font-weight:800;color:#4338ca;background:rgba(99,102,241,.12)">—</td>
-                            <td id="tot-fmin" style="text-align:right;font-weight:800;color:#0f766e;background:rgba(20,184,166,.12)">—</td>
-                            <td id="tot-kj"   style="text-align:right;font-weight:700;color:var(--primary)">—</td>
+                            <td id="tot-cho"     style="text-align:right;font-weight:800;color:#c2410c;background:rgba(249,115,22,.12)">—</td>
+                            <td id="tot-pmin"    style="text-align:right;font-weight:800;color:#4338ca;background:rgba(99,102,241,.12)">—</td>
+                            <td id="tot-fmin"    style="text-align:right;font-weight:800;color:#0f766e;background:rgba(20,184,166,.12)">—</td>
+                            <td id="tot-g-total" style="text-align:right;font-weight:800;color:var(--primary)">—</td>
                         </tr>
                         <!-- kJ conversion row -->
                         <tr style="background:var(--bg-page);border-top:1px solid var(--border)">
@@ -1186,16 +1186,16 @@
         const token = '{{ csrf_token() }}';
 
         function recalcRow(row) {
-            const nu = Number(row.dataset.nu) || 0;
-            const cho  = Number(row.dataset.cho)  || 0;
-            const pmin = Number(row.dataset.proMin)  || 0;
-            const fmin = Number(row.dataset.fatMin)  || 0;
-            const kj   = Number(row.dataset.kj)   || 0;
+            const nu   = Number(row.dataset.nu)     || 0;
+            const cho  = Number(row.dataset.cho)    || 0;
+            const pmin = Number(row.dataset.proMin) || 0;
+            const fmin = Number(row.dataset.fatMin) || 0;
+            const kj   = Number(row.dataset.kj)     || 0;
 
-            row.querySelector('.et-cho').textContent  = cho  ? (cho*nu)  : '—';
-            row.querySelector('.et-pmin').textContent = pmin ? (pmin*nu) : '—';
-            row.querySelector('.et-fmin').textContent = fmin ? (fmin*nu) : '—';
-            row.querySelector('.et-kj').textContent   = kj   ? (kj*nu)   : '—';
+            row.querySelector('.et-cho').textContent  = cho  ? Math.round(cho  * nu * 10) / 10 : '—';
+            row.querySelector('.et-pmin').textContent = pmin ? Math.round(pmin * nu * 10) / 10 : '—';
+            row.querySelector('.et-fmin').textContent = fmin ? Math.round(fmin * nu * 10) / 10 : '—';
+            row.querySelector('.et-kj').textContent   = kj   ? Math.round(kj   * nu)           : '—';
         }
 
         function recalcTotals() {
@@ -1208,21 +1208,25 @@
                 sums.fmin += (Number(r.dataset.fatMin)||0) * nu;
                 sums.kj   += (Number(r.dataset.kj)   ||0) * nu;
             });
-            document.getElementById('tot-cho').textContent  = sums.cho  || '—';
-            document.getElementById('tot-pmin').textContent = sums.pmin || '—';
-            document.getElementById('tot-fmin').textContent = sums.fmin || '—';
-            document.getElementById('tot-kj').textContent   = sums.kj   || '—';
+            const totCho  = Math.round(sums.cho  * 10) / 10;
+            const totPmin = Math.round(sums.pmin * 10) / 10;
+            const totFmin = Math.round(sums.fmin * 10) / 10;
+            const totKj   = Math.round(sums.kj);
+            const totG    = Math.round((totCho + totPmin + totFmin) * 10) / 10;
+            document.getElementById('tot-cho').textContent     = totCho  || '—';
+            document.getElementById('tot-pmin').textContent    = totPmin || '—';
+            document.getElementById('tot-fmin').textContent    = totFmin || '—';
+            document.getElementById('tot-g-total').textContent = totG    || '—';
 
-            // now compute kJ conversions for grams totals
-            const factor = {cho:17, pmin:17, fmin:19};
-            const kjCho  = Math.round((sums.cho  || 0) * factor.cho);
-            const kjPmin = Math.round((sums.pmin || 0) * factor.pmin);
-            const kjFmin = Math.round((sums.fmin || 0) * factor.fmin);
-            const kjTotalMacros = kjCho + kjPmin + kjFmin;
-            document.getElementById('tot-kj-cho').textContent  = kjCho || '—';
+            // kJ row: convert each macro gram total to kJ (CHO=17, Protein=17, Fat=37)
+            const kjCho  = Math.round(totCho  * 17);
+            const kjPmin = Math.round(totPmin * 17);
+            const kjFmin = Math.round(totFmin * 37);
+            document.getElementById('tot-kj-cho').textContent  = kjCho  || '—';
             document.getElementById('tot-kj-pmin').textContent = kjPmin || '—';
             document.getElementById('tot-kj-fmin').textContent = kjFmin || '—';
-            document.getElementById('tot-kj-total').textContent = kjTotalMacros || '—';
+            // last cell of kJ row = actual kJ sum from the items' own kJ values
+            document.getElementById('tot-kj-total').textContent = totKj || '—';
 
             // ── Nutrient Analysis Summary ──────────────────────────────
             const teeKjVal  = {{ $teeKj ?: 0 }};
@@ -1298,6 +1302,7 @@
                 if (input) input.value = nu;
                 recalcRow(row);
                 recalcTotals();
+                syncMealPlanNo(row.dataset.itemId, nu);
 
                 // background PATCH with delta
                 fetch(this.action, {
@@ -1321,6 +1326,7 @@
                 row.dataset.nu = nu;
                 recalcRow(row);
                 recalcTotals();
+                syncMealPlanNo(row.dataset.itemId, nu);
 
                 // send absolute nu to server
                 const action = row.querySelector('.nu-form')?.action; // use first form action
@@ -1337,6 +1343,23 @@
                 }
             });
         });
+
+        // sync a changed NU value into the matching meal-plan row
+        function syncMealPlanNo(itemId, newNu) {
+            var mpForm = document.getElementById('meal-plan-form');
+            if (!mpForm) return;
+            var mpRow = mpForm.querySelector('tr[data-item-id="' + itemId + '"]');
+            if (!mpRow) return;
+            // update the data attribute used by the validator
+            mpRow.dataset.nu = newNu;
+            // update the visible No cell (second <td>)
+            var noCell = mpRow.querySelectorAll('td')[1];
+            if (noCell) noCell.textContent = newNu;
+            // refresh meal plan row validation and totals
+            if (window._mpUpdateRow)        window._mpUpdateRow(itemId);
+            if (window._mpUpdateColTotals)  window._mpUpdateColTotals();
+            if (window._mpUpdateSaveButton) window._mpUpdateSaveButton();
+        }
 
         // initialize totals on page load
         if(document.getElementById('exchange-table')) {
@@ -1405,6 +1428,11 @@
                 statusEl.style.color = valid ? '#15803d' : '#92400e';
             }
         }
+
+        // expose for cross-section sync
+        window._mpUpdateRow          = updateRow;
+        window._mpUpdateColTotals    = updateColTotals;
+        window._mpUpdateSaveButton   = updateSaveButton;
 
         // initialise on load
         form.querySelectorAll('tr[data-item-id]').forEach(function(tr) {

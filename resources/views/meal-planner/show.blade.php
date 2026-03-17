@@ -298,7 +298,15 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             </div>
         </div>
         <div class="mp-actions">
-            <a href="{{ route('grocery-lists.create') }}" class="mp-btn mp-btn-indigo">🛒 Grocery List</a>
+            {{-- Generate grocery list from this plan --}}
+            @if($mealPlanner->groceryList)
+                <a href="{{ route('grocery-lists.show', $mealPlanner->groceryList) }}" class="mp-btn mp-btn-indigo">🛒 View Grocery List</a>
+            @else
+                <form method="POST" action="{{ route('grocery-lists.generate-from-plan', $mealPlanner) }}" style="display:contents">
+                    @csrf
+                    <button type="submit" class="mp-btn mp-btn-indigo">🛒 Generate Grocery List</button>
+                </form>
+            @endif
         </div>
     </div>
 

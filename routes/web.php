@@ -138,6 +138,9 @@ Route::middleware('auth')->group(function () {
         // Grocery Lists
         Route::resource('grocery-lists', \App\Http\Controllers\GroceryListController::class)
             ->except(['edit', 'update']);
+        Route::post('grocery-lists/generate-from-plan/{week}',
+            [\App\Http\Controllers\GroceryListController::class, 'generateFromPlan'])
+            ->name('grocery-lists.generate-from-plan');
         Route::post('grocery-lists/{groceryList}/items',
             [\App\Http\Controllers\GroceryListController::class, 'addItem'])
             ->name('grocery-lists.items.add');

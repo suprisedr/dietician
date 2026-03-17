@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MealPlannerWeek extends Model
 {
@@ -48,6 +49,11 @@ class MealPlannerWeek extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(MealPlannerEntry::class, 'week_id');
+    }
+
+    public function groceryList(): HasOne
+    {
+        return $this->hasOne(GroceryList::class, 'week_id');
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

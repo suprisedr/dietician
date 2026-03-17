@@ -257,7 +257,7 @@
         <div>
             <h1 class="mi-title">Meal Item Library</h1>
             <p class="mi-subtitle">
-                {{ $total }} item{{ $total === 1 ? '' : 's' }} in your library &mdash; search to find more from FatSecret
+                {{ $total }} item{{ $total === 1 ? '' : 's' }} in your library &mdash; search to find more foods online
             </p>
         </div>
         <a href="{{ route('meal-items.create') }}" class="mi-add-btn">
@@ -274,7 +274,7 @@
     {{-- Live search box --}}
     <div class="mi-search-wrap">
         <input type="text" id="mi-search-input" class="mi-search-input"
-               placeholder="Search items… (checks your library first, then FatSecret automatically)"
+               placeholder="Search items… (checks your library first, then searches online)"
                autocomplete="off" spellcheck="false">
         <button type="button" class="mi-search-clear" id="mi-search-clear" title="Clear">✕</button>
     </div>
@@ -428,6 +428,7 @@
     <input type="hidden" name="category" id="mi-bulk-category">
     <div id="mi-bulk-ids"></div>
 </form>
+<script>
 (function () {
     const searchUrl = '{{ route("meal-items.search") }}';
     const importUrl = '{{ route("meal-items.import-fatsecret") }}';
@@ -472,7 +473,7 @@
             badge  = '<span class="mis-badge mis-badge-db">My Item</span>';
             action = '<a href="/meal-items/' + food.id + '/edit" class="mi-action-edit" style="margin:0">Edit</a>';
         } else {
-            badge  = '<span class="mis-badge mis-badge-fs">FatSecret</span>';
+            badge  = '<span class="mis-badge mis-badge-fs">Online</span>';
             action = '<button class="mis-import-btn" id="ib-' + esc(food.id) + '" '
                    + 'onclick="startImport(this)">+ Save</button>';
         }
@@ -505,7 +506,7 @@
         }
         if (fs.length) {
             panel.insertAdjacentHTML('beforeend',
-                '<div class="mis-section-title">🔍 FatSecret (' + fs.length + ') — click Save to add to your library</div>');
+                '<div class="mis-section-title">🔍 Online Results (' + fs.length + ') — click Save to add to your library</div>');
             fs.forEach(function(f) { panel.insertAdjacentHTML('beforeend', makeRow(f)); });
         }
     }
