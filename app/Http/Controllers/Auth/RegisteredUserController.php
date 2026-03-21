@@ -66,16 +66,22 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        // Send welcome email
+        // Send welcome email (after email is verified the user lands on dashboard)
         Mail::send('emails.welcome', [
             'userName'     => $user->name,
             'dashboardUrl' => route('dashboard'),
+            'logoUrl'      => asset('images/mindful-nutrico.png'),
         ], function ($m) use ($user) {
             $m->to($user->email, $user->name)
-              ->subject('Welcome to mindfulnutrico 🌿');
+              ->subject('Welcome to Mindfulnutrico Dietitians App 🌿');
         });
 
         Auth::login($user);
+
+        // If email not yet verified, redirect to verification notice
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
 
         // Handle pending team invite
         if ($inviteToken = session()->pull('pending_invite_token')) {
