@@ -11,6 +11,7 @@ class MealPlannerEntry extends Model
         'week_id',
         'day_of_week',
         'meal_slot',
+        'exchange_category',
         'sort_order',
         'meal_text',
         'meal_item_id',

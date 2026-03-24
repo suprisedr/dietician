@@ -106,9 +106,9 @@
                     @endif
                 </div>
             </div>
-            {{-- Progress pill --}}
+            {{-- Progress pill + email --}}
             @if($totalItems > 0)
-                <div style="text-align:right;flex-shrink:0">
+                <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
                     <div style="font-size:.78rem;font-weight:700;color:{{ $pct===100?'#15803d':'var(--text-muted)' }}">
                         {{ $checkedItems }}/{{ $totalItems }}
                         @if($pct===100) ✓ All done! @endif
@@ -116,6 +116,16 @@
                     <div style="width:120px;height:5px;background:#e5e7eb;border-radius:10px;overflow:hidden;margin-top:.3rem">
                         <div style="height:100%;width:{{ $pct }}%;background:{{ $pct===100?'#16a34a':'var(--primary)' }};border-radius:10px;transition:width .3s"></div>
                     </div>
+                    @if($groceryList->patient?->email)
+                        <form method="POST" action="{{ route('grocery-lists.email', $groceryList) }}" style="margin:0">
+                            @csrf
+                            <button type="submit"
+                                    style="display:flex;align-items:center;gap:.3rem;padding:.3rem .75rem;background:#16a34a;color:#fff;border:none;border-radius:20px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap"
+                                    onclick="this.disabled=true;this.textContent='Sending…';this.form.submit()">
+                                ✉ Email to Patient
+                            </button>
+                        </form>
+                    @endif
                 </div>
             @endif
         </div>

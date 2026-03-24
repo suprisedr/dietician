@@ -126,7 +126,7 @@
 }
 .mis-row {
     display:grid;
-    grid-template-columns: 1fr 80px repeat(4, 54px) auto;
+    grid-template-columns: 1fr 80px repeat(5, 54px) auto;
     align-items:center; gap:.3rem .6rem;
     padding:.52rem .85rem; border-bottom:1px solid #f0f0f0;
     transition:background .12s;
@@ -486,11 +486,21 @@
             + '<div class="mis-num" style="color:#0f766e">' + (food.fat   ?? '—') + '</div>'
             + '<div class="mis-num" style="color:#c2410c">' + (food.carbs ?? '—') + '</div>'
             + '<div class="mis-num" style="color:#4338ca">' + (food.protein ?? '—') + '</div>'
+            + '<div class="mis-num" style="color:#15803d">' + (food.fiber  ?? '—') + '</div>'
             + '<div>' + action + '</div>'
             + '</div>';
     }
 
     /* ── Render results ── */
+    const MIS_HDR = '<div class="mis-row" style="background:#f8fafc;font-size:.67rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em">'
+        + '<div>Item</div><div></div>'
+        + '<div style="text-align:right;color:#b45309">kJ</div>'
+        + '<div style="text-align:right;color:#0f766e">Fat</div>'
+        + '<div style="text-align:right;color:#c2410c">Carbs</div>'
+        + '<div style="text-align:right;color:#4338ca">Protein</div>'
+        + '<div style="text-align:right;color:#15803d">Fiber</div>'
+        + '<div></div></div>';
+
     function renderResults(q, db, fs) {
         panel.innerHTML = '';
         if (!db.length && !fs.length) {
@@ -502,11 +512,13 @@
         if (db.length) {
             panel.insertAdjacentHTML('beforeend',
                 '<div class="mis-section-title">📋 Your Library (' + db.length + ')</div>');
+            panel.insertAdjacentHTML('beforeend', MIS_HDR);
             db.forEach(function(f) { panel.insertAdjacentHTML('beforeend', makeRow(f)); });
         }
         if (fs.length) {
             panel.insertAdjacentHTML('beforeend',
                 '<div class="mis-section-title">🔍 Online Results (' + fs.length + ') — click Save to add to your library</div>');
+            panel.insertAdjacentHTML('beforeend', MIS_HDR);
             fs.forEach(function(f) { panel.insertAdjacentHTML('beforeend', makeRow(f)); });
         }
     }

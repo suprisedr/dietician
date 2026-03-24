@@ -23,8 +23,19 @@ class RequiresPlan
         $user = $request->user();
 
         if (! $user || ! $user->canAccessPlan($minSlug)) {
-            // Flash the minimum required plan so the locked page can build the
-            // correct "Upgrade to Package X" button.
+            // For write/save requests show an in-page upgrade modal instead of
+            // navigating the user away from what they were doing.
+            if (! $request->isMethod('GET')) {
+                if ($request->expectsJson()) {
+                    return response()->json(['upgrade_required' => $minSlug], 402);
+                }
+
+                return redirect()
+                    ->back()
+                    ->with('upgrade_required', $minSlug);
+            }
+
+            // For GET requests keep the dedicated full-page locked view.
             return redirect()
                 ->route('plan.locked', ['required' => $minSlug])
                 ->with('required_plan', $minSlug);

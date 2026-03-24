@@ -29,6 +29,9 @@
                 <form method="POST" action="{{ route('patients.store') }}">
                     @csrf
 
+                    {{-- ── Personal Details section label ──────────────────── --}}
+                    <p style="font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--primary-dark);padding-bottom:.3rem;border-bottom:1.5px solid var(--border);margin-bottom:.9rem">Personal Details</p>
+
                     {{-- Title + Name + Surname --}}
                     <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:1rem;margin-bottom:1rem">
                         <div>
@@ -123,6 +126,87 @@
                             <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    {{-- Email --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                            Email Address
+                        </label>
+                        <input type="email" name="email" value="{{ old('email') }}"
+                               placeholder="e.g. patient@email.com"
+                               style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
+                               onfocus="this.style.borderColor='var(--primary)'"
+                               onblur="this.style.borderColor='#d1d5db'">
+                        @error('email')
+                            <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- ID Type + Number + DOB ───────────────────────────── --}}
+                    <div style="display:grid;grid-template-columns:160px 1fr;gap:1rem;margin-bottom:1rem" id="id-row">
+                        <div>
+                            <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                                ID Type
+                            </label>
+                            <select name="id_type" id="id_type"
+                                    style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;background:#fff;transition:border-color .15s"
+                                    onchange="onIdTypeChange()">
+                                <option value="">— none —</option>
+                                <option value="sa_id"    {{ old('id_type')==='sa_id'    ? 'selected' : '' }}>SA ID Number</option>
+                                <option value="passport" {{ old('id_type')==='passport' ? 'selected' : '' }}>Passport</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                                ID / Passport Number
+                            </label>
+                            <input type="text" name="id_number" id="id_number"
+                                   value="{{ old('id_number') }}"
+                                   placeholder="e.g. 9001015800086"
+                                   maxlength="50"
+                                   style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
+                                   onfocus="this.style.borderColor='var(--primary)'"
+                                   onblur="this.style.borderColor='#d1d5db'"
+                                   oninput="onIdNumberInput()">
+                            @error('id_number')
+                                <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Date of Birth --}}
+                    <div style="margin-bottom:1rem" id="dob-wrap">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                            Date of Birth
+                            <span id="dob-hint" style="font-weight:400;font-size:.7rem;color:var(--primary);margin-left:.4rem;display:none">auto-filled from ID</span>
+                        </label>
+                        <input type="date" name="date_of_birth" id="date_of_birth"
+                               value="{{ old('date_of_birth') }}"
+                               style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
+                               onfocus="this.style.borderColor='var(--primary)'"
+                               onblur="this.style.borderColor='#d1d5db'">
+                        @error('date_of_birth')
+                            <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Address --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
+                            Address
+                        </label>
+                        <textarea name="address" rows="2"
+                                  placeholder="e.g. 12 Main Street, Cape Town, 8001"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('address') }}</textarea>
+                        @error('address')
+                            <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- ── Clinical Details section label ───────────────────── --}}
+                    <p style="font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--primary-dark);padding-bottom:.3rem;border-bottom:1.5px solid var(--border);margin:.6rem 0 .9rem">Clinical Details</p>
 
                     {{-- Reason for Assessment --}}
                     <div style="margin-bottom:1rem">
@@ -258,6 +342,64 @@
             lblF.style.borderColor = female.checked ? 'var(--primary)' : '#d1d5db';
             lblF.style.background  = female.checked ? 'var(--primary-light, #eef2ff)' : '';
         }
-        document.addEventListener('DOMContentLoaded', styleGenderLabels);
+
+        function onIdTypeChange() {
+            const type = document.getElementById('id_type').value;
+            const numEl = document.getElementById('id_number');
+            numEl.placeholder = type === 'sa_id' ? 'e.g. 9001015800086 (13 digits)' : 'e.g. A12345678';
+            if (type !== 'sa_id') {
+                document.getElementById('dob-hint').style.display = 'none';
+            }
+        }
+
+        /* Parse a South African 13-digit ID number and fill DOB + gender */
+        function onIdNumberInput() {
+            const type = document.getElementById('id_type').value;
+            if (type !== 'sa_id') return;
+
+            const val = document.getElementById('id_number').value.replace(/\D/g, '');
+            if (val.length !== 13) {
+                document.getElementById('dob-hint').style.display = 'none';
+                return;
+            }
+
+            const yy   = parseInt(val.substring(0, 2), 10);
+            const mm   = val.substring(2, 4);
+            const dd   = val.substring(4, 6);
+            const seq  = parseInt(val.substring(6, 10), 10);
+
+            /* Century: if YY > current 2-digit year → born in 1900s, else 2000s */
+            const currentYY = new Date().getFullYear() % 100;
+            const yyyy = yy > currentYY ? 1900 + yy : 2000 + yy;
+
+            const dobStr = yyyy + '-' + mm + '-' + dd;
+            const dobEl  = document.getElementById('date_of_birth');
+            dobEl.value  = dobStr;
+            document.getElementById('dob-hint').style.display = 'inline';
+
+            /* 0000–4999 = female, 5000–9999 = male */
+            const isMale   = seq >= 5000;
+            const maleRad  = document.querySelector('input[name="gender"][value="male"]');
+            const femaleRad= document.querySelector('input[name="gender"][value="female"]');
+            if (maleRad && femaleRad) {
+                maleRad.checked   = isMale;
+                femaleRad.checked = !isMale;
+                styleGenderLabels();
+            }
+
+            /* Auto-calculate age */
+            const today = new Date();
+            const dob   = new Date(dobStr);
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+            const ageEl = document.querySelector('input[name="age"]');
+            if (ageEl && age >= 0 && age <= 150) ageEl.value = age;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            styleGenderLabels();
+            onIdTypeChange();
+        });
     </script>
 </x-app-layout>

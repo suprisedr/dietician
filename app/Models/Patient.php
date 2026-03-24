@@ -13,6 +13,11 @@ class Patient extends Model
         'title',
         'name',
         'surname',
+        'email',
+        'id_type',
+        'id_number',
+        'date_of_birth',
+        'address',
         'reason_for_assessment',
         'age',
         'gender',
@@ -20,6 +25,7 @@ class Patient extends Model
         'height',
         'activity_factor',
         'ibw_bmi_target',
+        'use_ibw_weight',
         'exchange_template_id',
         'diet_preset_id',
     ];
@@ -29,6 +35,8 @@ class Patient extends Model
         'height'          => 'decimal:2',
         'activity_factor' => 'float',
         'ibw_bmi_target'  => 'integer',
+        'use_ibw_weight'  => 'boolean',
+        'date_of_birth'   => 'date',
     ];
 
     /**
@@ -69,6 +77,12 @@ class Patient extends Model
      */
     public function getWeightForBmrAttribute(): ?float
     {
+        // When IBW is explicitly activated, use the IBW value directly for all
+        // energy calculations instead of actual body weight.
+        if ($this->use_ibw_weight) {
+            return $this->ibw ?? (float) $this->weight;
+        }
+
         $bmi = $this->bmi;
         $ibw = $this->ibw;
 
@@ -231,6 +245,11 @@ class Patient extends Model
     public function exchangeTemplate(): BelongsTo
     {
         return $this->belongsTo(\App\Models\ExchangeTemplate::class, 'exchange_template_id');
+    }
+
+    public function dietPreset(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\DietPreset::class, 'diet_preset_id');
     }
 
     public function visits(): HasMany

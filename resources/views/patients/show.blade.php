@@ -6,8 +6,9 @@
     @php
         $initials = collect(explode(' ', $patient->name))->map(fn($w)=>strtoupper(substr($w,0,1)))->take(2)->implode('');
         $bmiCat   = strtolower($patient->bmi_category ?? 'normal');
-        $teeKcal  = $patient->tee ? round($patient->tee / 4.184) : null;
-        $teeKj    = $patient->tee ?? 0;
+        $teeKcal      = $patient->tee ? round($patient->tee / 4.184) : null;
+        $teeKj        = $patient->tee ?? 0;
+        $useIbwWeight = (bool) ($patient->use_ibw_weight ?? false);
 
         // Obesity BMR adjustments (only relevant when BMI > 30)
         $isObese          = ($patient->bmi ?? 0) > 30;
@@ -66,6 +67,26 @@
                     <p style="opacity:.7;font-size:.9rem;margin-top:.2rem">
                         {{ ucfirst($patient->gender) }} · {{ $patient->age }} years · Registered {{ $patient->created_at->format('M d, Y') }}
                     </p>
+                    @if($patient->date_of_birth)
+                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
+                            🗓 DOB: {{ $patient->date_of_birth->format('d M Y') }}
+                        </p>
+                    @endif
+                    @if($patient->email)
+                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
+                            ✉ {{ $patient->email }}
+                        </p>
+                    @endif
+                    @if($patient->id_number)
+                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
+                            🪪 {{ $patient->id_type === 'passport' ? 'Passport' : 'SA ID' }}: {{ $patient->id_number }}
+                        </p>
+                    @endif
+                    @if($patient->address)
+                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
+                            📍 {{ $patient->address }}
+                        </p>
+                    @endif
                     @if($patient->reason_for_assessment)
                         <p style="opacity:.85;font-size:.82rem;margin-top:.3rem;font-style:italic">
                             📋 {{ $patient->reason_for_assessment }}
@@ -77,6 +98,12 @@
                    onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
                     <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 0 0 2-2V9.414a1 1 0 0 0-.293-.707l-5.414-5.414A1 1 0 0 0 12.586 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/></svg>
                     Patient Report
+                </a>
+                <a href="{{ route('patients.edit', $patient->id) }}"
+                   style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
+                   onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Edit Patient
                 </a>
             </div>
         </div>
@@ -109,13 +136,13 @@
                 @endif
             </div>
             <div class="metric-card">
-                <div class="mc-val">{{ $patient->bmr ? number_format($patient->bmr * 4.184, 0) : '—' }}</div>
-                <div class="mc-label">RMR @if($isObese)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#fff7ed;color:#c2410c;border-radius:999px;vertical-align:middle">Adj.</span>@endif</div>
+                <div class="mc-val" id="hero-rmr-val">{{ $patient->bmr ? number_format($patient->bmr * 4.184, 0) : '—' }}</div>
+                <div class="mc-label" id="hero-rmr-label">RMR @if($isObese)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#fff7ed;color:#c2410c;border-radius:999px;vertical-align:middle">Adj.</span>@endif @if($useIbwWeight)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#dcfce7;color:#15803d;border-radius:999px;vertical-align:middle">IBW</span>@endif</div>
                 <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
-                <div class="mc-val">{{ $teeKj ? number_format($teeKj) : '—' }}</div>
-                <div class="mc-label">TEE</div>
+                <div class="mc-val" id="hero-tee-val">{{ $teeKj ? number_format($teeKj) : '—' }}</div>
+                <div class="mc-label" id="hero-tee-label">TEE @if($useIbwWeight)<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#dcfce7;color:#15803d;border-radius:999px;vertical-align:middle">IBW</span>@endif</div>
                 <div class="mc-sub">kJ/day</div>
             </div>
             <div class="metric-card">
@@ -145,212 +172,6 @@
         @endif
 
         <div class="space-y-6">
-
-        {{-- ═══════════════════════════════════════════
-             DIET PRESETS
-        ═══════════════════════════════════════════ --}}
-        <x-plan-gate min="package_1">
-        <div class="dash-section" id="diet-preset-section">
-            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('preset-body','preset-chevron')">
-                <span class="dash-section-title">Diet Presets</span>
-                <svg id="preset-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </div>
-            <div id="preset-body" style="display:block;padding:1.25rem">
-                <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:1rem">
-                    Select a standard diet template — the exchange items &amp; meal plan slots will be previewed below.
-                    Click <strong>Apply Preset</strong> to save it to this patient.
-                </p>
-
-                {{-- Preset selector cards --}}
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.75rem;margin-bottom:1.25rem">
-                    @php $dbPresets = \App\Models\DietPreset::all(); @endphp
-                    @foreach($dbPresets as $dp)
-                    <label class="preset-card {{ $patient->diet_preset_id === $dp->id ? 'selected' : '' }}" data-preset="{{ $dp->key }}" for="preset-{{ $dp->key }}"
-                        style="cursor:pointer;border:2px solid var(--border);border-radius:.75rem;padding:.9rem 1rem;background:#fff;transition:border-color .15s,background .15s;display:block">
-                        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
-                            <input type="radio" id="preset-{{ $dp->key }}" name="diet_preset" value="{{ $dp->key }}"
-                                {{ $patient->diet_preset_id === $dp->id ? 'checked' : '' }}
-                                style="accent-color:var(--primary)">
-                            <span style="font-weight:700;font-size:.88rem;color:var(--text-primary)">{{ $dp->name }}</span>
-                        </div>
-                        <p style="font-size:.75rem;color:var(--text-muted);margin:0 0 .4rem 1.4rem;line-height:1.4">{{ $dp->description }}</p>
-                        <span style="display:inline-block;margin-left:1.4rem;font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:#f0fdf4;color:var(--primary);border:1px solid #bbf7d0">
-                            ~{{ $dp->kcal_target }} kcal
-                        </span>
-                    </label>
-                    @endforeach
-                </div>
-
-                {{-- Live preview panel (populated via JS fetch) --}}
-                <div id="preset-preview" style="display:none;margin-bottom:1.25rem">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-                        <span id="preset-preview-title" style="font-size:.82rem;font-weight:700;color:var(--text-primary)"></span>
-                        <span style="font-size:.75rem;color:var(--text-muted)">Preview — not saved yet</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
-                            <thead>
-                                <tr style="background:#f0fdf4;color:var(--primary)">
-                                    <th style="text-align:left;padding:.4rem .7rem;font-weight:700">Item</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Nu</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Breakf</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Lunch</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Supper</th>
-                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
-                                    <th style="text-align:right;padding:.4rem .7rem;color:#c2410c">CHO</th>
-                                    <th style="text-align:right;padding:.4rem .7rem;color:#4338ca">Prot</th>
-                                    <th style="text-align:right;padding:.4rem .7rem;color:#0f766e">Fat</th>
-                                    <th style="text-align:right;padding:.4rem .7rem">kJ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="preset-preview-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="display:flex;align-items:center;gap:1rem">
-                    <button id="apply-preset-btn" onclick="applyPreset()"
-                        style="padding:.5rem 1.4rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer;opacity:.5;pointer-events:none">
-                        Apply Preset
-                    </button>
-                    <span id="preset-status" style="font-size:.82rem"></span>
-                </div>
-            </div>
-        </div>
-
-        <style>
-        .preset-card.selected { border-color:var(--primary)!important; background:#f0fdf4!important; }
-        #preset-preview-body tr:nth-child(even) { background:#f8fafc; }
-        #preset-preview-body td { padding:.35rem .7rem; border-bottom:1px solid #e5e7eb; }
-        </style>
-
-        <script>
-        (function () {
-            var _selectedPreset = null;
-            var _previewCache   = {};
-
-            var previewGetUrl = '{{ url('diet-presets') }}/';
-            var applyUrl      = '{{ route('patients.apply-preset', $patient->id) }}';
-            var csrfToken     = document.querySelector('meta[name="csrf-token"]').content;
-
-            /* Initialise from any already-checked radio (preset previously applied) */
-            var _checkedRadio = document.querySelector('input[name="diet_preset"]:checked');
-            if (_checkedRadio) {
-                _selectedPreset = _checkedRadio.value;
-                var _btn = document.getElementById('apply-preset-btn');
-                _btn.style.opacity = '1';
-                _btn.style.pointerEvents = 'auto';
-            }
-
-            function fmt(v) { return (v !== null && v !== undefined && v !== '') ? v : '—'; }
-
-            function renderPreview(data) {
-                var panel   = document.getElementById('preset-preview');
-                var title   = document.getElementById('preset-preview-title');
-                var tbody   = document.getElementById('preset-preview-body');
-                title.textContent = data.name + '  (~' + data.kcal_target + ' kcal)';
-                tbody.innerHTML   = '';
-                data.items.forEach(function (i) {
-                    var tr = document.createElement('tr');
-                    tr.innerHTML =
-                        '<td style="font-weight:600">' + i.name + '</td>' +
-                        '<td style="text-align:center;font-weight:700">' + i.nu + '</td>' +
-                        '<td style="text-align:center">' + fmt(i.slot_breakfast) + '</td>' +
-                        '<td style="text-align:center">' + fmt(i.slot_snack1)    + '</td>' +
-                        '<td style="text-align:center">' + fmt(i.slot_lunch)     + '</td>' +
-                        '<td style="text-align:center">' + fmt(i.slot_snack2)    + '</td>' +
-                        '<td style="text-align:center">' + fmt(i.slot_supper)    + '</td>' +
-                        '<td style="text-align:center">' + fmt(i.slot_snack3)    + '</td>' +
-                        '<td style="text-align:right;color:#c2410c">' + (i.cho_g        !== null ? i.nu * i.cho_g        : '—') + '</td>' +
-                        '<td style="text-align:right;color:#4338ca">' + (i.protein_min_g !== null ? i.nu * i.protein_min_g : '—') + '</td>' +
-                        '<td style="text-align:right;color:#0f766e">' + (i.fat_min_g    !== null ? i.nu * i.fat_min_g    : '—') + '</td>' +
-                        '<td style="text-align:right">'               + (i.kj           !== null ? i.nu * i.kj           : '—') + '</td>';
-                    tbody.appendChild(tr);
-                });
-                panel.style.display = 'block';
-            }
-
-            /* Listen to radio changes — fetch preset from DB and show preview */
-            document.querySelectorAll('input[name="diet_preset"]').forEach(function (radio) {
-                radio.addEventListener('change', function () {
-                    _selectedPreset = this.value;
-                    document.querySelectorAll('.preset-card').forEach(function (c) {
-                        c.classList.toggle('selected', c.dataset.preset === _selectedPreset);
-                    });
-                    document.getElementById('apply-preset-btn').style.opacity      = '1';
-                    document.getElementById('apply-preset-btn').style.pointerEvents = 'auto';
-                    document.getElementById('preset-status').textContent = '';
-
-                    /* Use cache to avoid repeated fetches */
-                    if (_previewCache[_selectedPreset]) {
-                        renderPreview(_previewCache[_selectedPreset]);
-                        return;
-                    }
-
-                    fetch(previewGetUrl + _selectedPreset, {
-                        credentials: 'same-origin',
-                        headers: { 'Accept': 'application/json' },
-                    })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        _previewCache[_selectedPreset] = data;
-                        renderPreview(data);
-                    })
-                    .catch(function () {
-                        document.getElementById('preset-preview').style.display = 'none';
-                    });
-                });
-            });
-
-            /* Apply: POST to patient, save to DB, then reload so all sections reflect new values */
-            window.applyPreset = function () {
-                if (!_selectedPreset) return;
-                var btn    = document.getElementById('apply-preset-btn');
-                var status = document.getElementById('preset-status');
-                btn.disabled = true;
-                btn.textContent = 'Applying…';
-                status.textContent = '';
-
-                fetch(applyUrl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ preset: _selectedPreset }),
-                })
-                .then(function (r) {
-                    if (!r.ok) {
-                        return r.json().then(function (e) { throw new Error(e.error || ('HTTP ' + r.status)); });
-                    }
-                    return r.json();
-                })
-                .then(function (data) {
-                    if (data.error) throw new Error(data.error);
-
-                    /* Show success status then reload the page so every section
-                       (exchange template, meal plan) reflects the saved preset. */
-                    status.style.color = '#15803d';
-                    status.textContent = '✓ ' + data.preset_name + ' applied — reloading…';
-
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 900);
-                })
-                .catch(function (err) {
-                    status.style.color = '#b91c1c';
-                    status.textContent = '⚠ ' + (err.message || 'Something went wrong');
-                    btn.textContent = 'Apply Preset';
-                    btn.disabled = false;
-                });
-            };
-        })();
-        </script>
-        </x-plan-gate>
 
                 {{-- Anthropometrics card --}}
                 <div class="dash-section">
@@ -386,16 +207,30 @@
                                             $activeTarget = (int) ($patient->ibw_bmi_target ?? 22);
                                         @endphp
                                         @foreach($ibwRows as $bmiVal => $row)
-                                            @php $isActive = ($bmiVal === $activeTarget); @endphp
+                                            @php
+                                                $isActive    = ($bmiVal === $activeTarget);
+                                                $isIbwActive = ($bmiVal === 30 && $useIbwWeight);
+                                                $rowBg = $isIbwActive
+                                                    ? 'background:#f0fdf4'
+                                                    : ($loop->even ? 'background:#f9fafb' : 'background:#fff');
+                                            @endphp
                                             <tr data-bmi="{{ $bmiVal }}"
-                                                style="{{ $loop->even ? 'background:#f9fafb' : 'background:#fff' }};{{ $isActive ? 'outline:2px solid var(--primary);outline-offset:-2px;' : '' }}cursor:pointer"
+                                                style="{{ $rowBg }};{{ $isActive && !$isIbwActive ? 'outline:2px solid var(--primary);outline-offset:-2px;' : '' }}{{ $isIbwActive ? 'outline:2px solid #15803d;outline-offset:-2px;' : '' }}cursor:pointer"
                                                 onclick="selectIbwTarget({{ $bmiVal }})">
                                                 <td style="padding:.4rem .5rem;text-align:center;border-bottom:1px solid #f3f4f6">
                                                     <span id="ibw-radio-{{ $bmiVal }}"
-                                                          style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;border:2px solid {{ $isActive ? 'var(--primary)' : '#9ca3af' }};background:{{ $isActive ? 'var(--primary)' : '#fff' }};vertical-align:middle"></span>
+                                                          style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;border:2px solid {{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#9ca3af' }};background:{{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#fff' }};vertical-align:middle"></span>
                                                 </td>
                                                 <td style="padding:.35rem .6rem;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6">{{ $row['label'] }}</td>
-                                                <td style="padding:.35rem .6rem;color:var(--text-muted);font-size:.75rem;text-align:center;border-bottom:1px solid #f3f4f6">{{ $row['meaning'] }}</td>
+                                                <td style="padding:.35rem .6rem;color:var(--text-muted);font-size:.75rem;text-align:center;border-bottom:1px solid #f3f4f6">
+                                                    {{ $row['meaning'] }}
+                                                    @if($isIbwActive)
+                                                        <span style="display:inline-flex;align-items:center;gap:.2rem;margin-left:.35rem;padding:.1rem .4rem;background:#dcfce7;color:#15803d;border-radius:999px;font-size:.65rem;font-weight:700;white-space:nowrap">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.6rem;height:.6rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                                            Using IBW
+                                                        </span>
+                                                    @endif
+                                                </td>
                                                 <td style="padding:.35rem .6rem;text-align:right;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6"
                                                     id="ibw-weight-{{ $bmiVal }}">
                                                     {{ $row['val'] ? number_format($row['val'], 2).' kg' : '—' }}
@@ -404,7 +239,13 @@
                                         @endforeach
                                     </tbody>
                                 </table>
-                                <p id="ibw-save-msg" style="font-size:.72rem;color:#15803d;margin-top:.35rem;display:none">✓ Target saved</p>
+                                <p id="ibw-save-msg" style="font-size:.72rem;color:#15803d;margin-top:.35rem;display:none">✓ Saving…</p>
+                                @if($useIbwWeight)
+                                <div id="ibw-weight-notice" style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding:.5rem .75rem;background:#dcfce7;border:1px solid #bbf7d0;border-radius:8px;font-size:.75rem;font-weight:600;color:#15803d">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    IBW active — RMR, TEE &amp; macros are calculated using <strong>&nbsp;{{ number_format($patient->ibw, 2) }} kg&nbsp;</strong> (IBW at BMI&nbsp;30) instead of actual weight. Click BMI&nbsp;22 or BMI&nbsp;25 to revert.
+                                </div>
+                                @endif
                             </dd>
                         </div>
                         <div class="info-item"><dt>Activity Factor</dt><dd>{{ $patient->activity_factor }}</dd></div>
@@ -414,7 +255,7 @@
                                     <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
                                 @endif
                             </dt>
-                            <dd>{{ $patient->bmr ? number_format(round($patient->bmr), 0).' kcal/day' : '—' }}</dd>
+                            <dd id="anthro-rmr-kcal">{{ $patient->bmr ? number_format(round($patient->bmr), 0).' kcal/day' : '—' }}</dd>
                         </div>
                         <div class="info-item">
                             <dt>RMR (kJ)
@@ -422,10 +263,10 @@
                                     <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
                                 @endif
                             </dt>
-                            <dd>{{ $patient->bmr ? number_format(round($patient->bmr * 4.184), 0).' kJ/day' : '—' }}</dd>
+                            <dd id="anthro-rmr-kj">{{ $patient->bmr ? number_format(round($patient->bmr * 4.184), 0).' kJ/day' : '—' }}</dd>
                         </div>
-                        <div class="info-item"><dt>TEE</dt><dd>{{ $patient->tee ? number_format(round($patient->tee), 0).' kJ/day' : '—' }}</dd></div>
-                        <div class="info-item"><dt>TEE (kcal)</dt><dd>{{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}</dd></div>
+                        <div class="info-item"><dt>TEE</dt><dd id="anthro-tee-kj">{{ $patient->tee ? number_format(round($patient->tee), 0).' kJ/day' : '—' }}</dd></div>
+                        <div class="info-item"><dt>TEE (kcal)</dt><dd id="anthro-tee-kcal">{{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}</dd></div>
                     </dl>
 
                     @if($isObese)
@@ -489,7 +330,265 @@
                     </div>{{-- /anthro-body --}}
                 </div>{{-- /dash-section anthro --}}
 
-            <x-plan-gate min="package_1">
+
+        {{-- ═══════════════════════════════════════════
+             DIET PRESETS
+        ═══════════════════════════════════════════ --}}
+        <div class="dash-section" id="diet-preset-section">
+            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('preset-body','preset-chevron')">
+                <span class="dash-section-title">Diet Presets</span>
+                <svg id="preset-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+            <div id="preset-body" style="display:block;padding:1.25rem">
+                <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:1rem">
+                    Select a standard diet template — the exchange items &amp; meal plan slots will be previewed below.
+                    Click <strong>Apply Preset</strong> to save it to this patient.
+                </p>
+
+                {{-- Preset selector dropdown --}}
+                @php $dbPresets = \App\Models\DietPreset::all(); @endphp
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+                    <select id="diet_preset_select"
+                            style="flex:1;min-width:200px;max-width:420px;padding:.5rem .75rem;font-size:.875rem;border:1.5px solid var(--border);border-radius:8px;outline:none;background:#fff;transition:border-color .15s"
+                            onfocus="this.style.borderColor='var(--primary)'"
+                            onblur="this.style.borderColor='var(--border)'">
+                        <option value="">— Select a diet preset —</option>
+                        @foreach($dbPresets as $dp)
+                            <option value="{{ $dp->key }}"
+                                    data-kcal="{{ $dp->kcal_target }}"
+                                    {{ $patient->diet_preset_id === $dp->id ? 'selected' : '' }}>
+                                {{ $dp->name }} (~{{ $dp->kcal_target }} kcal)
+                            </option>
+                        @endforeach
+                    </select>
+                    <span id="preset-current-badge" style="font-size:.75rem;color:var(--text-muted);display:flex;align-items:center;gap:.4rem">
+                        @if($patient->dietPreset ?? null)
+                        Current: <strong id="preset-current-name">{{ $patient->dietPreset->name }}</strong>
+                        <button onclick="clearPreset()" id="clear-preset-btn"
+                            title="Clear current preset"
+                            style="font-size:.7rem;font-weight:700;padding:.1rem .5rem;border-radius:999px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca;cursor:pointer;line-height:1.4;margin-left:.15rem">
+                            × Change
+                        </button>
+                        @endif
+                    </span>
+                </div>
+
+                {{-- Live preview panel (populated via JS fetch) --}}
+                <div id="preset-preview" style="display:none;margin-bottom:1.25rem">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+                        <span id="preset-preview-title" style="font-size:.82rem;font-weight:700;color:var(--text-primary)"></span>
+                        <span style="font-size:.75rem;color:var(--text-muted)">Preview — not saved yet</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                            <thead>
+                                <tr style="background:#f0fdf4;color:var(--primary)">
+                                    <th style="text-align:left;padding:.4rem .7rem;font-weight:700">Item</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Nu</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Breakf</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Lunch</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Supper</th>
+                                    <th style="text-align:center;padding:.4rem .7rem">Snack</th>
+                                    <th style="text-align:right;padding:.4rem .7rem;color:#c2410c">CHO</th>
+                                    <th style="text-align:right;padding:.4rem .7rem;color:#4338ca">Prot</th>
+                                    <th style="text-align:right;padding:.4rem .7rem;color:#0f766e">Fat</th>
+                                    <th style="text-align:right;padding:.4rem .7rem">kJ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preset-preview-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:1rem">
+                    <button id="apply-preset-btn" onclick="applyPreset()"
+                        style="padding:.5rem 1.4rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer;opacity:.5;pointer-events:none">
+                        Apply Preset
+                    </button>
+                    <span id="preset-status" style="font-size:.82rem"></span>
+                </div>
+            </div>
+        </div>
+
+        <style>
+        .preset-card.selected { border-color:var(--primary)!important; background:#f0fdf4!important; }
+        #preset-preview-body tr:nth-child(even) { background:#f8fafc; }
+        #preset-preview-body td { padding:.35rem .7rem; border-bottom:1px solid #e5e7eb; }
+        </style>
+
+        <script>
+        (function () {
+            var _selectedPreset = null;
+            var _previewCache   = {};
+
+            var previewGetUrl = '{{ url('diet-presets') }}/';
+            var applyUrl      = '{{ route('patients.apply-preset', $patient->id) }}';
+            var csrfToken     = document.querySelector('meta[name="csrf-token"]').content;
+
+            /* Initialise from current select value (preset previously applied) */
+            var _selectEl = document.getElementById('diet_preset_select');
+            if (_selectEl && _selectEl.value) {
+                _selectedPreset = _selectEl.value;
+                var _btn = document.getElementById('apply-preset-btn');
+                _btn.style.opacity = '1';
+                _btn.style.pointerEvents = 'auto';
+            }
+
+            function fmt(v) { return (v !== null && v !== undefined && v !== '') ? v : '—'; }
+
+            function renderPreview(data) {
+                var panel   = document.getElementById('preset-preview');
+                var title   = document.getElementById('preset-preview-title');
+                var tbody   = document.getElementById('preset-preview-body');
+                title.textContent = data.name + '  (~' + data.kcal_target + ' kcal)';
+                tbody.innerHTML   = '';
+                data.items.forEach(function (i) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td style="font-weight:600">' + i.name + '</td>' +
+                        '<td style="text-align:center;font-weight:700">' + i.nu + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_breakfast) + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_snack1)    + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_lunch)     + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_snack2)    + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_supper)    + '</td>' +
+                        '<td style="text-align:center">' + fmt(i.slot_snack3)    + '</td>' +
+                        '<td style="text-align:right;color:#c2410c">' + (i.cho_g        !== null ? i.nu * i.cho_g        : '—') + '</td>' +
+                        '<td style="text-align:right;color:#4338ca">' + (i.protein_min_g !== null ? i.nu * i.protein_min_g : '—') + '</td>' +
+                        '<td style="text-align:right;color:#0f766e">' + (i.fat_min_g    !== null ? i.nu * i.fat_min_g    : '—') + '</td>' +
+                        '<td style="text-align:right">'               + (i.kj           !== null ? i.nu * i.kj           : '—') + '</td>';
+                    tbody.appendChild(tr);
+                });
+                panel.style.display = 'block';
+            }
+
+            /* Listen to dropdown changes — fetch preset from DB and show preview */
+            var _selectEl2 = document.getElementById('diet_preset_select');
+            if (_selectEl2) {
+                _selectEl2.addEventListener('change', function () {
+                    _selectedPreset = this.value;
+                    var btn    = document.getElementById('apply-preset-btn');
+                    var status = document.getElementById('preset-status');
+                    status.textContent = '';
+
+                    if (!_selectedPreset) {
+                        btn.style.opacity      = '.5';
+                        btn.style.pointerEvents = 'none';
+                        document.getElementById('preset-preview').style.display = 'none';
+                        return;
+                    }
+
+                    btn.style.opacity      = '1';
+                    btn.style.pointerEvents = 'auto';
+
+                    /* Use cache to avoid repeated fetches */
+                    if (_previewCache[_selectedPreset]) {
+                        renderPreview(_previewCache[_selectedPreset]);
+                        return;
+                    }
+
+                    fetch(previewGetUrl + _selectedPreset, {
+                        credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json' },
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        _previewCache[_selectedPreset] = data;
+                        renderPreview(data);
+                    })
+                    .catch(function () {
+                        document.getElementById('preset-preview').style.display = 'none';
+                    });
+                });
+            }
+
+            /* Apply: POST to patient, save to DB, then reload so all sections reflect new values */
+            window.applyPreset = function () {
+                if (!_selectedPreset) return;
+                var btn    = document.getElementById('apply-preset-btn');
+                var status = document.getElementById('preset-status');
+                btn.disabled = true;
+                btn.textContent = 'Applying…';
+                status.textContent = '';
+
+                fetch(applyUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ preset: _selectedPreset }),
+                })
+                .then(function (r) {
+                    if (!r.ok) {
+                        return r.json().then(function (e) { throw new Error(e.error || ('HTTP ' + r.status)); });
+                    }
+                    return r.json();
+                })
+                .then(function (data) {
+                    if (data.error) throw new Error(data.error);
+
+                    /* Update Current: badge immediately */
+                    var badge = document.getElementById('preset-current-badge');
+                    if (badge) {
+                        badge.innerHTML = 'Current: <strong id="preset-current-name">' + data.preset_name + '</strong>'
+                            + ' <button onclick="clearPreset()" id="clear-preset-btn" title="Clear current preset"'
+                            + ' style="font-size:.7rem;font-weight:700;padding:.1rem .5rem;border-radius:999px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca;cursor:pointer;line-height:1.4;margin-left:.15rem">'
+                            + '× Change</button>';
+                    }
+
+                    status.style.color = '#15803d';
+                    status.textContent = '✓ ' + data.preset_name + ' applied — reloading…';
+
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 900);
+                })
+                .catch(function (err) {
+                    status.style.color = '#b91c1c';
+                    status.textContent = '⚠ ' + (err.message || 'Something went wrong');
+                    btn.textContent = 'Apply Preset';
+                    btn.disabled = false;
+                });
+            };
+
+            window.clearPreset = function () {
+                if (!confirm('Remove the current preset assignment? The exchange template values will stay as-is — only the "Current:" label will be cleared.')) return;
+                var clearBtn = document.getElementById('clear-preset-btn');
+                if (clearBtn) { clearBtn.disabled = true; clearBtn.textContent = '…'; }
+
+                fetch('{{ route('patients.clear-preset', $patient->id) }}', {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(function (r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function () {
+                    /* Clear the badge and reset the dropdown */
+                    var badge = document.getElementById('preset-current-badge');
+                    if (badge) badge.innerHTML = '';
+                    var sel = document.getElementById('diet_preset_select');
+                    if (sel) { sel.value = ''; sel.dispatchEvent(new Event('change')); }
+                })
+                .catch(function (err) {
+                    alert('Could not clear preset: ' + (err.message || 'Something went wrong'));
+                    if (clearBtn) { clearBtn.disabled = false; clearBtn.textContent = '× Change'; }
+                });
+            };
+        })();
+        </script>
+
+
             {{-- ── Macronutrients ──────────────────────────── --}}
                 <div class="dash-section">
                     <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('macro-body','macro-chevron')">
@@ -543,11 +642,11 @@
                                 </div>
                                 {{-- kJ --}}
                                 <div class="macro-val macro-kj" style="text-align:right">
-                                    {{ $macro->kj ?: number_format($computedKj, 1) }}
+                                    {{ number_format($computedKj, 1) }}
                                 </div>
                                 {{-- grams --}}
                                 <div class="macro-val macro-grams" style="text-align:right">
-                                    {{ $macro->grams ?: $computedG }}<span style="font-size:.65rem;color:var(--text-muted);margin-left:.2rem">g</span>
+                                    {{ $computedG }}<span style="font-size:.65rem;color:var(--text-muted);margin-left:.2rem">g</span>
                                 </div>
                             </div>
                         @endforeach
@@ -597,10 +696,10 @@
                                         <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#f97316;margin-right:.4rem;vertical-align:.05rem"></span>
                                         Carbs (g)
                                     </td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-act">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-diff">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12);color:#c2410c" id="na-cho-pct">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(249,115,22,.12)" id="na-cho-act">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-diff">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-pct">—</td>
                                 </tr>
                                 {{-- Protein --}}
                                 <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
@@ -608,10 +707,10 @@
                                         <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#6366f1;margin-right:.4rem;vertical-align:.05rem"></span>
                                         Protein (g)
                                     </td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-act">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-diff">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12);color:#4338ca" id="na-pro-pct">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(99,102,241,.12)" id="na-pro-act">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-diff">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-pct">—</td>
                                 </tr>
                                 {{-- Fat --}}
                                 <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
@@ -619,10 +718,10 @@
                                         <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#14b8a6;margin-right:.4rem;vertical-align:.05rem"></span>
                                         Fat (g)
                                     </td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-act">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-diff">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12);color:#0f766e" id="na-fat-pct">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(20,184,166,.12)" id="na-fat-act">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-diff">—</td>
+                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-pct">—</td>
                                 </tr>
                                 {{-- Energy --}}
                                 <tr style="background:#f8fafc;border-top:2px solid var(--border)">
@@ -630,7 +729,7 @@
                                         Energy (kJ)
                                     </td>
                                     <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-rec">{{ $teeKj ? round($teeKj) : '—' }}</td>
-                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:800;color:var(--primary)" id="na-kj-act">—</td>
+                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:800" id="na-kj-act">—</td>
                                     <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-diff">—</td>
                                     <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-pct">—</td>
                                 </tr>
@@ -641,9 +740,6 @@
                 </div>{{-- /nutrient-analysis dash-section --}}
                 @endif
 
-            </x-plan-gate>
-
-        <x-plan-gate min="package_1">
         {{-- ═══════════════════════════════════════════
              EXCHANGE TEMPLATE
         ═══════════════════════════════════════════ --}}
@@ -665,9 +761,9 @@
                         <tr>
                             <th style="min-width:160px">Item</th>
                             <th style="text-align:center;min-width:110px">nu</th>
-                            <th style="text-align:right;color:#c2410c;background:rgba(249,115,22,.12)">CHO (g)</th>
-                            <th style="text-align:right;color:#4338ca;background:rgba(99,102,241,.12)">Protein (g)</th>
-                            <th style="text-align:right;color:#0f766e;background:rgba(20,184,166,.12)">Fat (g)</th>
+                            <th style="text-align:right;background:rgba(249,115,22,.12)">CHO (g)</th>
+                            <th style="text-align:right;background:rgba(99,102,241,.12)">Protein (g)</th>
+                            <th style="text-align:right;background:rgba(20,184,166,.12)">Fat (g)</th>
                             <th style="text-align:right">kJ</th>
                         </tr>
                     </thead>
@@ -700,9 +796,9 @@
                                     </form>
                                 </div>
                             </td>
-                            <td class="et-cho"  style="text-align:right;background:rgba(249,115,22,.12);color:#c2410c;font-weight:600">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
-                            <td class="et-pmin" style="text-align:right;background:rgba(99,102,241,.12);color:#4338ca;font-weight:600">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
-                            <td class="et-fmin" style="text-align:right;background:rgba(20,184,166,.12);color:#0f766e;font-weight:600">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
+                            <td class="et-cho"  style="text-align:right;background:rgba(249,115,22,.12);font-weight:600">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
+                            <td class="et-pmin" style="text-align:right;background:rgba(99,102,241,.12);font-weight:600">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
+                            <td class="et-fmin" style="text-align:right;background:rgba(20,184,166,.12);font-weight:600">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
                             <td class="et-kj"   style="text-align:right;font-weight:600">{{ $item->kj !== null ? $nu * $item->kj : '—' }}</td>
                         </tr>
                         @endforeach
@@ -711,18 +807,17 @@
                         <!-- grams totals row -->
                         <tr style="background:var(--bg-page);border-top:2px solid var(--border)">
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(g)</td>
-                            <td id="tot-cho"     style="text-align:right;font-weight:800;color:#c2410c;background:rgba(249,115,22,.12)">—</td>
-                            <td id="tot-pmin"    style="text-align:right;font-weight:800;color:#4338ca;background:rgba(99,102,241,.12)">—</td>
-                            <td id="tot-fmin"    style="text-align:right;font-weight:800;color:#0f766e;background:rgba(20,184,166,.12)">—</td>
-                            <td id="tot-g-total" style="text-align:right;font-weight:800;color:var(--primary)">—</td>
+                            <td id="tot-cho"     style="text-align:right;font-weight:800;background:rgba(249,115,22,.12)">—</td>
+                            <td id="tot-pmin"    style="text-align:right;font-weight:800;background:rgba(99,102,241,.12)">—</td>
+                            <td id="tot-fmin"    style="text-align:right;font-weight:800;background:rgba(20,184,166,.12)">—</td>
                         </tr>
                         <!-- kJ conversion row -->
                         <tr style="background:var(--bg-page);border-top:1px solid var(--border)">
                             <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(kJ)</td>
-                            <td id="tot-kj-cho"  style="text-align:right;font-weight:800;color:#c2410c;background:rgba(249,115,22,.12)">—</td>
-                            <td id="tot-kj-pmin" style="text-align:right;font-weight:800;color:#4338ca;background:rgba(99,102,241,.12)">—</td>
-                            <td id="tot-kj-fmin" style="text-align:right;font-weight:800;color:#0f766e;background:rgba(20,184,166,.12)">—</td>
-                            <td id="tot-kj-total"   style="text-align:right;font-weight:700;color:var(--primary)">—</td>
+                            <td id="tot-kj-cho"  style="text-align:right;font-weight:800;background:rgba(249,115,22,.12)">—</td>
+                            <td id="tot-kj-pmin" style="text-align:right;font-weight:800;background:rgba(99,102,241,.12)">—</td>
+                            <td id="tot-kj-fmin" style="text-align:right;font-weight:800;background:rgba(20,184,166,.12)">—</td>
+                            <td id="tot-kj-total"   style="text-align:right;font-weight:700">—</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -747,92 +842,215 @@
         </div>
         @endif
 
-        </x-plan-gate>
-        <x-plan-gate min="package_1">
         @if($patient->exchangeTemplate)
-        <div class="dash-section mt-6" id="meal-plan-details">            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('mp-body','mp-chevron')">
+
+        <style>
+        /* ── Meal Plan Distribution ───────────────────────────── */
+        #meal-plan-details { margin-top:1.5rem }
+
+        .mp-grid {
+            display: grid;
+            grid-template-columns: 160px 56px repeat(6, 1fr) 72px;
+            gap: 0;
+            min-width: 680px;
+        }
+
+        /* column header row */
+        .mp-col-header {
+            padding: .55rem .4rem;
+            text-align: center;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            border-bottom: 2px solid var(--border);
+            background: #f8fafc;
+            color: var(--text-muted);
+        }
+        .mp-col-header.col-item  { text-align:left; padding-left:.9rem; }
+        .mp-col-header.col-no   { background:#f1f5f9; }
+        .mp-col-header.col-bf   { background:#fffbeb; color:#92400e; }
+        .mp-col-header.col-sn1  { background:#f0fdf4; color:#166534; }
+        .mp-col-header.col-ln   { background:#eff6ff; color:#1e40af; }
+        .mp-col-header.col-sn2  { background:#f0fdf4; color:#166534; }
+        .mp-col-header.col-sup  { background:#fdf4ff; color:#7e22ce; }
+        .mp-col-header.col-sn3  { background:#f0fdf4; color:#166534; }
+        .mp-col-header.col-sum  { background:#f8fafc; }
+
+        /* data rows */
+        .mp-row { display: contents; }
+        .mp-row:hover > .mp-cell { background: #f8fafc !important; }
+
+        .mp-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: .35rem .3rem;
+            border-bottom: 1px solid #f1f5f9;
+            min-height: 46px;
+        }
+        .mp-cell.cell-item  { justify-content:flex-start; padding-left:.9rem; font-size:.83rem; font-weight:600; color:var(--text-primary); }
+        .mp-cell.cell-no    { font-size:.88rem; font-weight:800; color:var(--primary); background:#fafbff; }
+        .mp-cell.cell-bf    { background:#fffdf5; }
+        .mp-cell.cell-sn    { background:#f7fef9; }
+        .mp-cell.cell-ln    { background:#f5f9ff; }
+        .mp-cell.cell-sup   { background:#fdf5ff; }
+        .mp-cell.cell-sum   { flex-direction:column; gap:1px; }
+
+        /* square input boxes */
+        .mp-slot-input {
+            width: 44px;
+            height: 44px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 6px;
+            text-align: center;
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: #fff;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            -moz-appearance: textfield;
+        }
+        .mp-slot-input::-webkit-outer-spin-button,
+        .mp-slot-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .mp-slot-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+        }
+        .mp-slot-input.has-value {
+            border-color: var(--primary);
+            background: #f0fdf4;
+            color: var(--primary);
+        }
+        .mp-slot-input.col-bf:focus  { border-color:#d97706; box-shadow:0 0 0 3px rgba(217,119,6,.1); }
+        .mp-slot-input.col-sn:focus  { border-color:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,.1); }
+        .mp-slot-input.col-ln:focus  { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+        .mp-slot-input.col-sup:focus { border-color:#9333ea; box-shadow:0 0 0 3px rgba(147,51,234,.1); }
+
+        /* sum badge */
+        .mp-sum-badge {
+            font-size:.82rem; font-weight:800;
+            min-width:36px; text-align:center;
+            display:block;
+        }
+        .mp-sum-ok    { color:#15803d; }
+        .mp-sum-over  { color:#c2410c; }
+        .mp-sum-under { color:#64748b; }
+
+        /* footer totals row */
+        .mp-foot-cell {
+            padding: .55rem .3rem;
+            text-align: center;
+            font-size: .8rem;
+            font-weight: 800;
+            border-top: 2px solid var(--border);
+            background: #f8fafc;
+            color: var(--text-primary);
+        }
+        .mp-foot-cell.cell-item { text-align:left; padding-left:.9rem; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:700; }
+        </style>
+
+        <div class="dash-section mt-6" id="meal-plan-details">
+            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('mp-body','mp-chevron')">
                 <span class="dash-section-title">Meal Plan Distribution</span>
                 <div style="display:flex;align-items:center;gap:.5rem">
-                    <span style="font-size:.75rem;color:var(--text-muted)">Enter serving exchanges per meal — each row must sum to the total (No)</span>
+                    <span style="font-size:.75rem;color:var(--text-muted)">Each row must sum to the total (No)</span>
                     <svg id="mp-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
             </div>
             <div id="mp-body" style="display:block">
 
                 @if(session('success') && str_contains(session('success'), 'Meal plan'))
-                    <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#dcfce7;color:#15803d;border-radius:6px;font-size:.82rem;font-weight:600">
-                        ✓ {{ session('success') }}
-                    </div>
+                <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#dcfce7;color:#15803d;border-radius:6px;font-size:.82rem;font-weight:600">
+                    ✓ {{ session('success') }}
+                </div>
                 @endif
                 @error('meal_plan')
-                    <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#fee2e2;color:#b91c1c;border-radius:6px;font-size:.82rem">
-                        ⚠ {{ $message }}
-                    </div>
+                <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#fee2e2;color:#b91c1c;border-radius:6px;font-size:.82rem">
+                    ⚠ {{ $message }}
+                </div>
                 @enderror
 
                 <form method="POST" action="{{ route('patients.meal-plan.save', $patient) }}" id="meal-plan-form">
                     @csrf @method('PATCH')
-                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem;max-height:420px;overflow-y:auto;position:relative">
-                        <table class="exchange-table" id="meal-plan-table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>No</th>
-                                    <th>Breakf</th>
-                                    <th>Snack</th>
-                                    <th>Lunch</th>
-                                    <th>Snack</th>
-                                    <th>Supper</th>
-                                    <th>Snack</th>
-                                    <th>Sum</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($patient->exchangeTemplate->items as $item)
-                                <tr data-nu="{{ $item->nu }}" data-item-id="{{ $item->id }}">
-                                    <td style="font-weight:600">{{ $item->name }}</td>
-                                    <td style="font-weight:700">{{ $item->nu }}</td>
-                                    @foreach(['breakfast','snack1','lunch','snack2','supper','snack3'] as $slot)
-                                    <td>
-                                        <input
-                                            type="number"
-                                            name="items[{{ $item->id }}][{{ $slot }}]"
-                                            value="{{ $item->{'slot_'.$slot} > 0 ? $item->{'slot_'.$slot} + 0 : '' }}"
-                                            min="0"
-                                            step="0.5"
-                                            placeholder="—"
-                                            class="meal-slot-input"
-                                            data-row="{{ $item->id }}"
-                                        >
-                                    </td>
-                                    @endforeach
-                                    <td>
-                                        <span class="row-sum" data-row="{{ $item->id }}"
-                                            style="font-weight:700;font-size:.85rem;display:block">0</span>
-                                        <span class="row-status" data-row="{{ $item->id }}"
-                                            style="display:block;font-size:.65rem;font-weight:700"></span>
-                                    </td>
-                                </tr>
+                    <div class="overflow-x-auto" style="padding:0 1.25rem 1rem">
+                        <div class="mp-grid" id="meal-plan-table">
+
+                            {{-- Column headers --}}
+                            <div class="mp-col-header col-item">Item</div>
+                            <div class="mp-col-header col-no">No</div>
+                            <div class="mp-col-header col-bf">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;display:block;margin:0 auto .15rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1M4.22 4.22l.7.7m13.16 13.16.7.7M3 12h1m16 0h1M4.92 19.07l.7-.7M18.36 5.64l.7-.7"/></svg>
+                                Breakf
+                            </div>
+                            <div class="mp-col-header col-sn1">Snack 1</div>
+                            <div class="mp-col-header col-ln">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;display:block;margin:0 auto .15rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h2l2 5 4-10 3 6 2-3h5"/></svg>
+                                Lunch
+                            </div>
+                            <div class="mp-col-header col-sn2">Snack 2</div>
+                            <div class="mp-col-header col-sup">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;display:block;margin:0 auto .15rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                                Supper
+                            </div>
+                            <div class="mp-col-header col-sn3">Snack 3</div>
+                            <div class="mp-col-header col-sum">Sum</div>
+
+                            {{-- Data rows --}}
+                            @foreach($patient->exchangeTemplate->items as $item)
+                            <div class="mp-row" data-nu="{{ $item->nu }}" data-item-id="{{ $item->id }}">
+                                <div class="mp-cell cell-item">{{ $item->name }}</div>
+                                <div class="mp-cell cell-no">{{ $item->nu }}</div>
+                                @php
+                                    $slotDefs = [
+                                        'breakfast' => 'col-bf cell-bf',
+                                        'snack1'    => 'col-sn cell-sn',
+                                        'lunch'     => 'col-ln cell-ln',
+                                        'snack2'    => 'col-sn cell-sn',
+                                        'supper'    => 'col-sup cell-sup',
+                                        'snack3'    => 'col-sn cell-sn',
+                                    ];
+                                @endphp
+                                @foreach($slotDefs as $slot => $classes)
+                                @php $slotVal = $item->{'slot_'.$slot} > 0 ? $item->{'slot_'.$slot} + 0 : ''; @endphp
+                                <div class="mp-cell {{ explode(' ', $classes)[1] }}">
+                                    <input
+                                        type="number"
+                                        name="items[{{ $item->id }}][{{ $slot }}]"
+                                        value="{{ $slotVal }}"
+                                        min="0"
+                                        step="0.5"
+                                        placeholder=""
+                                        class="mp-slot-input meal-slot-input {{ explode(' ', $classes)[0] }}{{ $slotVal !== '' ? ' has-value' : '' }}"
+                                        data-row="{{ $item->id }}"
+                                    >
+                                </div>
                                 @endforeach
-                            </tbody>
-                            <tfoot>
-                                <tr style="border-top:2px solid var(--border);background:#f8fafc">
-                                    <td style="font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);padding:.6rem 1rem">Total</td>
-                                    <td id="mp-tot-no"  style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-bf"  style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-sn1" style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-ln"  style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-sn2" style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-sup" style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-sn3" style="font-weight:700;padding:.6rem 1rem">—</td>
-                                    <td id="mp-tot-sum" style="font-weight:700;padding:.6rem 1rem">—</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                <div class="mp-cell cell-sum">
+                                    <span class="mp-sum-badge row-sum mp-sum-under" data-row="{{ $item->id }}">0</span>
+                                    <span class="row-status" data-row="{{ $item->id }}" style="font-size:.6rem;font-weight:700"></span>
+                                </div>
+                            </div>
+                            @endforeach
+
+                            {{-- Footer totals --}}
+                            <div class="mp-foot-cell cell-item">Total</div>
+                            <div class="mp-foot-cell" id="mp-tot-no">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-bf">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-sn1">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-ln">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-sn2">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-sup">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-sn3">—</div>
+                            <div class="mp-foot-cell" id="mp-tot-sum">—</div>
+
+                        </div>{{-- /mp-grid --}}
                     </div>
+
                     <div style="padding:.75rem 1.25rem 1.25rem;display:flex;align-items:center;gap:1rem">
                         <button type="submit" id="meal-plan-save"
-                            style="padding:.5rem 1.5rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer">
+                            style="padding:.55rem 1.6rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer;letter-spacing:.02em">
                             Save Meal Plan
                         </button>
                         <span id="meal-plan-status" style="font-size:.8rem;color:var(--text-muted)"></span>
@@ -855,6 +1073,17 @@
     var saveBtn = document.getElementById('meal-plan-save');
     if (!form) return;
 
+    /* colour has-value boxes live */
+    form.addEventListener('input', function (e) {
+        var inp = e.target;
+        if (!inp.classList.contains('mp-slot-input')) return;
+        if (inp.value && Number(inp.value) > 0) {
+            inp.classList.add('has-value');
+        } else {
+            inp.classList.remove('has-value');
+        }
+    });
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         saveBtn.disabled = true;
@@ -869,11 +1098,28 @@
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(function (r) {
+            if (r.status === 402) {
+                return r.json().then(function (data) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Meal Plan';
+                    @foreach(\App\Models\PricingPackage::all() as $pkg)
+                    if (data.upgrade_required === '{{ $pkg->slug }}') {
+                        window.dispatchEvent(new CustomEvent('open-upgrade-modal', { detail: {
+                            slug: '{{ $pkg->slug }}',
+                            planName: '{{ $pkg->name }}',
+                            price: 'R{{ number_format($pkg->price_zar) }}/mo',
+                            isFree: {{ $pkg->price_zar == 0 ? 'true' : 'false' }},
+                            features: {!! json_encode($pkg->features ?? []) !!},
+                            checkoutUrl: '{{ route('subscription.checkout', $pkg->slug) }}'
+                        }}));
+                    }
+                    @endforeach
+                });
+            }
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
         })
         .then(function (data) {
-            /* Show toast + countdown */
             toast.style.display = 'block';
             var secs = 3;
             cdEl.textContent = secs;
@@ -897,7 +1143,6 @@
             </div>{{-- /mp-body --}}
         </div>{{-- /meal-plan-details --}}
         @endif
-        </x-plan-gate>
 
     </div>
 
@@ -1088,26 +1333,112 @@
             30: {{ $patient->ibw30 ?? 'null' }},
         };
 
-        window.selectIbwTarget = function(bmi) {
-            const token   = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const url     = '{{ route("patients.ibw-target.update", $patient->id) }}';
+        // ── Shared DOM updater — called from both AJAX response and Echo event ──
+        window.applyPatientUpdate = function(data) {
+            const ibwBadge = data.use_ibw_weight
+                ? '<span style="font-size:.6rem;font-weight:700;padding:.05rem .35rem;background:#dcfce7;color:#15803d;border-radius:999px;vertical-align:middle">IBW</span>'
+                : '';
+
+            // Hero cards
+            const heroRmr = document.getElementById('hero-rmr-val');
+            if (heroRmr && data.rmr_kj != null) {
+                heroRmr.textContent = Number(data.rmr_kj).toLocaleString();
+            }
+            const heroRmrLabel = document.getElementById('hero-rmr-label');
+            if (heroRmrLabel) {
+                heroRmrLabel.innerHTML = 'RMR ' + ibwBadge;
+            }
+            const heroTee = document.getElementById('hero-tee-val');
+            if (heroTee && data.tee_kj != null) {
+                heroTee.textContent = Number(data.tee_kj).toLocaleString();
+            }
+            const heroTeeLabel = document.getElementById('hero-tee-label');
+            if (heroTeeLabel) {
+                heroTeeLabel.innerHTML = 'TEE ' + ibwBadge;
+            }
+            const heroIbw = document.getElementById('hero-ibw-val');
+            if (heroIbw && data.ibw != null) {
+                heroIbw.textContent = Number(data.ibw).toFixed(2);
+            }
+            const heroIbwLabel = document.getElementById('hero-ibw-label');
+            if (heroIbwLabel && data.ibw_bmi_target != null) {
+                heroIbwLabel.textContent = '(BMI ' + data.ibw_bmi_target + ')';
+            }
+
+            // Anthropometrics detail values
+            const anthroRmrKcal = document.getElementById('anthro-rmr-kcal');
+            if (anthroRmrKcal && data.rmr_kcal != null) {
+                anthroRmrKcal.textContent = Number(data.rmr_kcal).toLocaleString() + ' kcal/day';
+            }
+            const anthroRmrKj = document.getElementById('anthro-rmr-kj');
+            if (anthroRmrKj && data.rmr_kj != null) {
+                anthroRmrKj.textContent = Number(data.rmr_kj).toLocaleString() + ' kJ/day';
+            }
+            const anthroTeeKj = document.getElementById('anthro-tee-kj');
+            if (anthroTeeKj && data.tee_kj != null) {
+                anthroTeeKj.textContent = Number(data.tee_kj).toLocaleString() + ' kJ/day';
+            }
+            const anthroTeeKcal = document.getElementById('anthro-tee-kcal');
+            if (anthroTeeKcal && data.tee_kcal != null) {
+                anthroTeeKcal.textContent = Number(data.tee_kcal).toLocaleString() + ' kcal';
+            }
+
+            // Update macro calculator's live TEE so the % selectors recalculate
+            if (data.tee_kj != null && typeof window._updateMacroTee === 'function') {
+                window._updateMacroTee(data.tee_kj);
+            }
+
+            // IBW notice banner
+            const notice = document.getElementById('ibw-weight-notice');
+            if (notice) {
+                notice.style.display = data.use_ibw_weight ? 'flex' : 'none';
+            }
+
+            // Macro rows — kJ and grams
+            if (data.macros && Array.isArray(data.macros)) {
+                data.macros.forEach(function(m) {
+                    const row = document.querySelector('[data-macro-id="' + m.id + '"]');
+                    if (!row) return;
+                    const kjEl = row.querySelector('.macro-kj');
+                    const gEl  = row.querySelector('.macro-grams');
+                    if (kjEl) kjEl.innerHTML = Number(m.kj).toFixed(1);
+                    if (gEl)  gEl.innerHTML  = m.grams + '<span style="font-size:.65rem;color:var(--text-muted);margin-left:.2rem">g</span>';
+                });
+            }
+
+            // IBW row highlight & radios
+            if (data.ibw_bmi_target != null) {
+                [22, 25, 30].forEach(function(b) {
+                    const active  = (b === data.ibw_bmi_target);
+                    const isIbw   = (b === 30 && data.use_ibw_weight);
+                    const color   = isIbw ? '#15803d' : 'var(--primary)';
+                    const radio   = document.getElementById('ibw-radio-' + b);
+                    const row     = document.querySelector('#ibw-table tr[data-bmi="' + b + '"]');
+                    if (radio) {
+                        radio.style.background  = active ? color : '#fff';
+                        radio.style.borderColor = active ? color : '#9ca3af';
+                    }
+                    if (row) {
+                        row.style.outline       = active ? ('2px solid ' + color) : 'none';
+                        row.style.outlineOffset = active ? '-2px' : '0';
+                    }
+                });
+            }
+
+            // Save message
             const saveMsg = document.getElementById('ibw-save-msg');
+            if (saveMsg) {
+                saveMsg.textContent = '✓ Saved';
+                saveMsg.style.display = 'block';
+                setTimeout(function() { saveMsg.style.display = 'none'; }, 2000);
+            }
+        };
 
-            // Optimistic UI: update radio buttons and row highlight
-            [22, 25, 30].forEach(function(b) {
-                const radio = document.getElementById('ibw-radio-' + b);
-                const row   = document.querySelector('#ibw-table tr[data-bmi="' + b + '"]');
-                if (radio) {
-                    radio.style.background   = (b === bmi) ? 'var(--primary)' : '#fff';
-                    radio.style.borderColor  = (b === bmi) ? 'var(--primary)' : '#9ca3af';
-                }
-                if (row) {
-                    row.style.outline       = (b === bmi) ? '2px solid var(--primary)' : 'none';
-                    row.style.outlineOffset = (b === bmi) ? '-2px' : '0';
-                }
-            });
+        window.selectIbwTarget = function(bmi) {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const url   = '{{ route("patients.ibw-target.update", $patient->id) }}';
 
-            // Update hero card
+            // Optimistic: update IBW hero card immediately
             const heroVal   = document.getElementById('hero-ibw-val');
             const heroLabel = document.getElementById('hero-ibw-label');
             if (heroVal && ibwValues[bmi] !== null) {
@@ -1115,24 +1446,28 @@
                 heroLabel.textContent = '(BMI ' + bmi + ')';
             }
 
-            // Persist to server
+            // Persist and apply full update from JSON response — no reload
             fetch(url, {
-                method: 'PATCH',
+                method:  'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
+                    'Accept':       'application/json',
                 },
                 body: JSON.stringify({ ibw_bmi_target: bmi }),
-            }).then(function(res) {
-                if (res.ok) {
-                    if (saveMsg) {
-                        saveMsg.style.display = 'block';
-                        setTimeout(function() { saveMsg.style.display = 'none'; }, 2500);
-                    }
-                }
-            }).catch(function(err) { console.error('IBW target save failed', err); });
+            })
+            .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+            .then(function(data) { window.applyPatientUpdate(data); })
+            .catch(function(err) { console.error('IBW target save failed', err); });
         };
+
+        // ── Echo: listen for updates pushed from other sessions / devices ──
+        if (window.Echo) {
+            window.Echo.private('patient.{{ $patient->id }}')
+                .listen('.patient.updated', function(data) {
+                    window.applyPatientUpdate(data);
+                });
+        }
     })();
     </script>
 
@@ -1141,11 +1476,19 @@
     ═══════════════════════════════════════════ --}}
     <script>
     (function () {
-        const teeKj   = {{ $teeKj }};
+        // teeKj is mutable — updated live when IBW target changes
+        let teeKj     = {{ $teeKj }};
         const selects = Array.from(document.querySelectorAll('select[name^="macronutrients"]'));
         const totalEl = document.getElementById('macros-total');
         const badgeEl = document.getElementById('total-badge');
         const errorEl = document.getElementById('macros-error');
+
+        // Expose so applyPatientUpdate can refresh the macro calculator's teeKj
+        window._updateMacroTee = function(newTeeKj) {
+            teeKj = newTeeKj;
+            selects.forEach(function(sel) { updateRow(sel); });
+            updateTotal();
+        };
         const saveBtn = document.getElementById('macros-save');
 
         function fmt(v, dec) { return Number(v).toFixed(dec); }
@@ -1216,7 +1559,6 @@
             document.getElementById('tot-cho').textContent     = totCho  || '—';
             document.getElementById('tot-pmin').textContent    = totPmin || '—';
             document.getElementById('tot-fmin').textContent    = totFmin || '—';
-            document.getElementById('tot-g-total').textContent = totG    || '—';
 
             // kJ row: convert each macro gram total to kJ (CHO=17, Protein=17, Fat=37)
             const kjCho  = Math.round(totCho  * 17);
@@ -1225,8 +1567,9 @@
             document.getElementById('tot-kj-cho').textContent  = kjCho  || '—';
             document.getElementById('tot-kj-pmin').textContent = kjPmin || '—';
             document.getElementById('tot-kj-fmin').textContent = kjFmin || '—';
-            // last cell of kJ row = actual kJ sum from the items' own kJ values
-            document.getElementById('tot-kj-total').textContent = totKj || '—';
+            // total kJ excludes fat_max and protein_max — computed from min values only
+            const totKjFromMins = kjCho + kjPmin + kjFmin;
+            document.getElementById('tot-kj-total').textContent = totKjFromMins || '—';
 
             // ── Nutrient Analysis Summary ──────────────────────────────
             const teeKjVal  = {{ $teeKj ?: 0 }};
@@ -1238,8 +1581,8 @@
             const actChoG  = sums.cho;
             const actProG  = sums.pmin || 0;
             const actFatG  = sums.fmin || 0;
-            // actual kJ from exchange template
-            const actKj    = sums.kj;
+            // actual kJ from exchange template — excludes fat_max / protein_max
+            const actKj    = totKjFromMins;
             // % of TEE
             const actChoKj = actChoG * 17;
             const actProKj = actProG * 17;
@@ -1248,12 +1591,8 @@
             function naSet(id, val, refVal, isKj) {
                 const el = document.getElementById(id);
                 if (!el) return;
-                if (val === null || val === 0) { el.textContent = '—'; el.style.color = ''; return; }
+                if (val === null || val === 0) { el.textContent = '—'; return; }
                 el.textContent = isKj ? Math.round(val) : val;
-                if (refVal !== null) {
-                    el.style.color = Math.abs(val - refVal) < 0.5 ? '#15803d'
-                                   : val < refVal ? '#b91c1c' : '#c2410c';
-                }
             }
 
             function naDiff(id, act, rec) {
@@ -1348,14 +1687,12 @@
         function syncMealPlanNo(itemId, newNu) {
             var mpForm = document.getElementById('meal-plan-form');
             if (!mpForm) return;
-            var mpRow = mpForm.querySelector('tr[data-item-id="' + itemId + '"]');
+            var mpRow = mpForm.querySelector('.mp-row[data-item-id="' + itemId + '"]');
             if (!mpRow) return;
-            // update the data attribute used by the validator
             mpRow.dataset.nu = newNu;
-            // update the visible No cell (second <td>)
-            var noCell = mpRow.querySelectorAll('td')[1];
-            if (noCell) noCell.textContent = newNu;
-            // refresh meal plan row validation and totals
+            // update the visible No cell (second .mp-cell)
+            var cells = mpRow.querySelectorAll('.mp-cell');
+            if (cells[1]) cells[1].textContent = newNu;
             if (window._mpUpdateRow)        window._mpUpdateRow(itemId);
             if (window._mpUpdateColTotals)  window._mpUpdateColTotals();
             if (window._mpUpdateSaveButton) window._mpUpdateSaveButton();
@@ -1386,9 +1723,9 @@
         }
 
         function updateRow(rowId) {
-            const tr   = form.querySelector('tr[data-item-id="' + rowId + '"]');
-            if (!tr) return;
-            const nu   = parseFloat(tr.dataset.nu) || 0;
+            const row  = form.querySelector('.mp-row[data-item-id="' + rowId + '"]');
+            if (!row) return;
+            const nu   = parseFloat(row.dataset.nu) || 0;
             const sum  = rowSum(rowId);
             const ok   = Math.abs(sum - nu) < 0.01;
 
@@ -1397,25 +1734,30 @@
 
             if (sumEl) {
                 sumEl.textContent = sum % 1 === 0 ? sum : sum.toFixed(2);
-                sumEl.style.color = ok ? '#15803d' : '#b91c1c';
+                sumEl.className = 'mp-sum-badge row-sum ' + (ok ? 'mp-sum-ok' : (sum > nu ? 'mp-sum-over' : 'mp-sum-under'));
             }
             if (statusEl) {
                 statusEl.textContent = ok ? '✓' : (sum < nu ? '↑ need ' + (nu - sum).toFixed(2) : '↓ over by ' + (sum - nu).toFixed(2));
                 statusEl.style.color = ok ? '#15803d' : '#b91c1c';
             }
 
-            // highlight inputs in this row — green when balanced, neutral when incomplete
-            form.querySelectorAll('.meal-slot-input[data-row="' + rowId + '"]').forEach(function(inp) {
-                inp.style.borderColor = ok ? '#86efac' : '';
-                inp.style.background  = ok ? '#f0fdf4' : '';
+            // update input styling — use CSS class only (not inline style)
+            form.querySelectorAll('.mp-slot-input[data-row="' + rowId + '"]').forEach(function(inp) {
+                if (ok) {
+                    inp.style.borderColor = '#86efac';
+                    inp.style.background  = '#f0fdf4';
+                } else {
+                    inp.style.borderColor = '';
+                    inp.style.background  = '';
+                }
             });
         }
 
         function allRowsValid() {
             let valid = true;
-            form.querySelectorAll('tr[data-item-id]').forEach(function(tr) {
-                const nu  = parseFloat(tr.dataset.nu) || 0;
-                const sum = rowSum(tr.dataset.itemId);
+            form.querySelectorAll('.mp-row[data-item-id]').forEach(function(row) {
+                const nu  = parseFloat(row.dataset.nu) || 0;
+                const sum = rowSum(row.dataset.itemId);
                 if (Math.abs(sum - nu) >= 0.01) valid = false;
             });
             return valid;
@@ -1435,8 +1777,8 @@
         window._mpUpdateSaveButton   = updateSaveButton;
 
         // initialise on load
-        form.querySelectorAll('tr[data-item-id]').forEach(function(tr) {
-            updateRow(tr.dataset.itemId);
+        form.querySelectorAll('.mp-row[data-item-id]').forEach(function(row) {
+            updateRow(row.dataset.itemId);
         });
         updateSaveButton();
 
@@ -1472,7 +1814,7 @@
             });
             // No column — sum of all item nu values
             let noTotal = 0;
-            form.querySelectorAll('tr[data-nu]').forEach(function(row) {
+            form.querySelectorAll('.mp-row[data-nu]').forEach(function(row) {
                 noTotal += parseFloat(row.dataset.nu) || 0;
             });
             const noEl = document.getElementById('mp-tot-no');

@@ -177,7 +177,7 @@ class MealPlannerController extends Controller
 
         // All meal items grouped by category for the search-and-select UI
         $mealItemsByCategory = MealItem::orderBy('category')->orderBy('name')
-            ->get(['id', 'category', 'name'])
+            ->get(['id', 'category', 'name', 'energy_kcal', 'energy_kj', 'serving_size'])
             ->groupBy('category');
 
         // ── Meal plan distribution from the patient's exchange template ──────
@@ -286,7 +286,7 @@ class MealPlannerController extends Controller
 
                             $newItem = MealItem::create([
                                 'name'         => $text,
-                                'category'     => 'FatSecret',
+                                'category'     => 'Other',
                                 'serving_size' => $serving,
                                 'energy_kcal'  => $kcal,
                                 'energy_kj'    => $kcal ? round($kcal * 4.184) : null,
@@ -308,12 +308,13 @@ class MealPlannerController extends Controller
                     if ($text === '' && !$itemId) continue;
 
                     MealPlannerEntry::create([
-                        'week_id'      => $mealPlanner->id,
-                        'day_of_week'  => (int) $day,
-                        'meal_slot'    => $slot,
-                        'sort_order'   => (int) $order,
-                        'meal_text'    => $text,
-                        'meal_item_id' => $itemId,
+                        'week_id'           => $mealPlanner->id,
+                        'day_of_week'       => (int) $day,
+                        'meal_slot'         => $slot,
+                        'exchange_category' => $item['exchCat'] ?? null,
+                        'sort_order'        => (int) $order,
+                        'meal_text'         => $text,
+                        'meal_item_id'      => $itemId,
                     ]);
                 }
             }
@@ -330,5 +331,43 @@ class MealPlannerController extends Controller
         $mealPlanner->delete();
         return redirect()->route('meal-planner.index')
             ->with('success', 'Planner week deleted.');
+    }
+
+    public function pdf(string $patient, MealPlannerWeek $mealPlanner)
+    {
+        abort_if($mealPlanner->user_id !== auth()->id(), 403);
+        abort_if((int) $patient !== (int) ($mealPlanner->patient_id ?? 0), 404);
+
+        $mealPlanner->load(['entries.mealItem', 'patient']);
+
+        $days      = \App\Models\MealPlannerWeek::DAYS;
+        $slots     = \App\Models\MealPlannerWeek::MEAL_SLOTS;
+        $slotLabels = \App\Models\MealPlannerWeek::SLOT_LABELS;
+        $grid      = $mealPlanner->grid;
+
+        // Compute per-day kJ totals and per-cell kJ totals
+        $dayKj  = array_fill(0, 7, 0);
+        $cellKj = [];
+        foreach (range(0, 6) as $d) {
+            foreach ($slots as $slot) {
+                $kj = 0;
+                foreach ($grid[$d][$slot] as $entry) {
+                    $kj += $entry->mealItem?->energy_kj ?? 0;
+                }
+                $cellKj[$d][$slot] = $kj;
+                $dayKj[$d] += $kj;
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('meal-planner.pdf', compact(
+            'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj'
+        ))->setPaper('a4', 'landscape');
+
+        $label    = $mealPlanner->label ?: $mealPlanner->week_start->format('Y-m-d');
+        $patient  = $mealPlanner->patient;
+        $nameSlug = $patient ? \Illuminate\Support\Str::slug($patient->name) : 'plan';
+        $filename = 'meal-plan-' . $nameSlug . '-' . \Illuminate\Support\Str::slug($label) . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

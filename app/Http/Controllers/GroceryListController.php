@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\GroceryListMail;
 use App\Models\GroceryList;
 use App\Models\GroceryListItem;
 use App\Models\MealPlannerWeek;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class GroceryListController extends Controller
 {
@@ -167,5 +169,20 @@ class GroceryListController extends Controller
         abort_if($groceryList->user_id !== auth()->id(), 403);
         $item->delete();
         return back()->with('success', 'Item removed.');
+    }
+
+    public function sendEmail(GroceryList $groceryList)
+    {
+        abort_if($groceryList->user_id !== auth()->id(), 403);
+
+        $groceryList->load(['items', 'patient', 'week']);
+
+        $email = $groceryList->patient?->email;
+        abort_if(empty($email), 422, 'This patient has no email address on file.');
+
+        Mail::to($email, $groceryList->patient->name)
+            ->send(new GroceryListMail($groceryList));
+
+        return back()->with('success', 'Grocery list emailed to ' . $email . '.');
     }
 }

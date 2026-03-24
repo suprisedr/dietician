@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PatientUpdated;
 use App\Models\ExchangeTemplateItem;
 use App\Models\Macronutrient;
 use App\Models\MealPlannerWeek;
@@ -37,30 +38,40 @@ class PatientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'nullable|string|max:10',
-            'name' => 'required|string|max:255',
-            'surname' => 'nullable|string|max:255',
+            'title'                  => 'nullable|string|max:10',
+            'name'                  => 'required|string|max:255',
+            'surname'               => 'nullable|string|max:255',
+            'email'                 => 'nullable|email|max:255',
+            'id_type'               => 'nullable|in:sa_id,passport',
+            'id_number'             => 'nullable|string|max:50',
+            'date_of_birth'         => 'nullable|date',
+            'address'               => 'nullable|string|max:500',
             'reason_for_assessment' => 'nullable|string|max:1000',
-            'age' => 'required|integer|min:0|max:150',
-            'gender' => 'required|in:male,female',
-            'weight' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
-            'activity_factor' => 'required|numeric|min:0',
-            'ibw_bmi_target'  => 'nullable|integer|in:22,25,30',
+            'age'                   => 'required|integer|min:0|max:150',
+            'gender'                => 'required|in:male,female',
+            'weight'                => 'required|numeric|min:0',
+            'height'                => 'required|numeric|min:0',
+            'activity_factor'       => 'required|numeric|min:0',
+            'ibw_bmi_target'        => 'nullable|integer|in:22,25,30',
         ]);
 
         $patient = Patient::create([
-            'user_id' => auth()->id(),
-            'title' => $request->title,
-            'name' => $request->name,
-            'surname' => $request->surname,
+            'user_id'               => auth()->id(),
+            'title'                 => $request->title,
+            'name'                  => $request->name,
+            'surname'               => $request->surname,
+            'email'                 => $request->email,
+            'id_type'               => $request->id_type,
+            'id_number'             => $request->id_number,
+            'date_of_birth'         => $request->date_of_birth,
+            'address'               => $request->address,
             'reason_for_assessment' => $request->reason_for_assessment,
-            'age' => $request->age,
-            'gender' => $request->gender,
-            'weight' => $request->weight,
-            'height' => $request->height,
-            'activity_factor' => $request->activity_factor,
-            'ibw_bmi_target' => $request->ibw_bmi_target ?? 22,
+            'age'                   => $request->age,
+            'gender'                => $request->gender,
+            'weight'                => $request->weight,
+            'height'                => $request->height,
+            'activity_factor'       => $request->activity_factor,
+            'ibw_bmi_target'        => $request->ibw_bmi_target ?? 22,
         ]);
 
         // Create default macronutrients
@@ -87,6 +98,14 @@ class PatientController extends Controller
                 'grams' => round($initialGrams, 0),
             ]);
         }
+
+        // Log the initial capture as the first visit
+        $patient->visits()->create([
+            'visited_at' => now()->toDateString(),
+            'weight'     => $patient->weight,
+            'height'     => $patient->height,
+            'notes'      => 'Initial assessment',
+        ]);
 
         return redirect()->route('patients.index')->with('success', 'Patient added successfully.');
     }
@@ -235,7 +254,8 @@ class PatientController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
+        return view('patients.edit', compact('patient'));
     }
 
     /**
@@ -246,19 +266,31 @@ class PatientController extends Controller
         $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
 
         $request->validate([
-            'title' => 'nullable|string|max:10',
-            'name' => 'required|string|max:255',
-            'surname' => 'nullable|string|max:255',
+            'title'                  => 'nullable|string|max:10',
+            'name'                  => 'required|string|max:255',
+            'surname'               => 'nullable|string|max:255',
+            'email'                 => 'nullable|email|max:255',
+            'id_type'               => 'nullable|in:sa_id,passport',
+            'id_number'             => 'nullable|string|max:50',
+            'date_of_birth'         => 'nullable|date',
+            'address'               => 'nullable|string|max:500',
             'reason_for_assessment' => 'nullable|string|max:1000',
-            'age' => 'required|integer|min:0|max:150',
-            'gender' => 'required|in:male,female',
-            'weight' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
-            'activity_factor' => 'required|numeric|min:0',
-            'ibw_bmi_target'  => 'nullable|integer|in:22,25,30',
+            'age'                   => 'required|integer|min:0|max:150',
+            'gender'                => 'required|in:male,female',
+            'weight'                => 'required|numeric|min:0',
+            'height'                => 'required|numeric|min:0',
+            'activity_factor'       => 'required|numeric|min:0',
+            'ibw_bmi_target'        => 'nullable|integer|in:22,25,30',
         ]);
 
-        $patient->update($request->only(['title', 'name', 'surname', 'reason_for_assessment', 'age', 'gender', 'weight', 'height', 'activity_factor', 'ibw_bmi_target']));
+        $updateData = $request->only([
+            'title', 'name', 'surname', 'email', 'id_type', 'id_number',
+            'date_of_birth', 'address', 'reason_for_assessment',
+            'age', 'gender', 'weight', 'height', 'activity_factor', 'ibw_bmi_target',
+        ]);
+        // Sync use_ibw_weight when ibw_bmi_target changes via the edit form
+        $updateData['use_ibw_weight'] = isset($updateData['ibw_bmi_target']) && ((int) $updateData['ibw_bmi_target'] === 30);
+        $patient->update($updateData);
 
         return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');
     }
@@ -280,19 +312,52 @@ class PatientController extends Controller
      */
     public function updateIbwTarget(Request $request, string $id)
     {
-        $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
+        $patient = Patient::with('macronutrients')->where('user_id', auth()->id())->findOrFail($id);
 
         $data = $request->validate([
             'ibw_bmi_target' => 'required|integer|in:22,25,30',
         ]);
 
+        // Selecting BMI 30 activates IBW as the calculation weight;
+        // any other target deactivates it.
+        $data['use_ibw_weight'] = ($data['ibw_bmi_target'] === 30);
+
         $patient->update($data);
         $patient->refresh();
 
+        // Recalculate and persist macro kJ/grams using the new TEE so that
+        // all downstream calculations (RMR, TEE, macros, exchange totals)
+        // immediately reflect the weight change — no manual re-save needed.
+        $teeKj = $patient->tee ?? 0;
+        foreach ($patient->macronutrients as $macro) {
+            $kj      = ($macro->selected_percentage / 100) * $teeKj;
+            $divisor = in_array($macro->type, ['fat', 'fats']) ? 38 : 17;
+            $grams   = $kj > 0 ? ($kj / $divisor) : 0;
+            $macro->update([
+                'kj'    => round($kj, 2),
+                'grams' => round($grams, 0),
+            ]);
+        }
+
+        $patient->refresh();
+        broadcast(new PatientUpdated($patient))->toOthers();
+
         return response()->json([
             'ibw_bmi_target' => $patient->ibw_bmi_target,
+            'use_ibw_weight' => $patient->use_ibw_weight,
             'ibw'            => $patient->ibw,
             'abw'            => $patient->abw,
+            'weight_for_bmr' => $patient->weight_for_bmr,
+            'rmr_kcal'       => $patient->bmr ? round($patient->bmr) : null,
+            'rmr_kj'         => $patient->bmr ? round($patient->bmr * 4.184) : null,
+            'tee_kj'         => $teeKj ? round($teeKj) : null,
+            'tee_kcal'       => $teeKj ? round($teeKj / 4.184) : null,
+            'macros'         => $patient->macronutrients->map(fn($m) => [
+                'id'    => $m->id,
+                'type'  => $m->type,
+                'kj'    => round(($m->selected_percentage / 100) * $teeKj, 1),
+                'grams' => round(($m->selected_percentage / 100) * $teeKj / (in_array($m->type, ['fat','fats']) ? 38 : 17)),
+            ])->values(),
         ]);
     }
 
@@ -342,6 +407,8 @@ class PatientController extends Controller
                 'grams' => round($grams, 0),
             ]);
         }
+
+        broadcast(new PatientUpdated($patient->fresh('macronutrients')))->toOthers();
 
         return back()->with('success', 'Macronutrients updated.');
     }
@@ -469,6 +536,24 @@ class PatientController extends Controller
             ];
         }
 
+        // Zero out nu and all slots for items NOT included in this preset
+        $presetNameKeys = $dbPreset->items->map(fn($i) => strtolower(trim($i->name)))->flip();
+
+        $template->load('items');
+        foreach ($template->items as $item) {
+            if (! $presetNameKeys->has(strtolower(trim($item->name)))) {
+                $item->update([
+                    'nu'             => 0,
+                    'slot_breakfast' => 0,
+                    'slot_snack1'    => 0,
+                    'slot_lunch'     => 0,
+                    'slot_snack2'    => 0,
+                    'slot_supper'    => 0,
+                    'slot_snack3'    => 0,
+                ]);
+            }
+        }
+
         return response()->json([
             'preset_name' => $dbPreset->name,
             'kcal_target' => $dbPreset->kcal_target,
@@ -506,6 +591,17 @@ class PatientController extends Controller
                 'slot_snack3'    => $i->slot_snack3,
             ]),
         ]);
+    }
+
+    /**
+     * Clear the active preset from the patient (sets diet_preset_id to null).
+     */
+    public function clearPreset(string $patientId)
+    {
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($patientId);
+        $patient->update(['diet_preset_id' => null]);
+
+        return response()->json(['cleared' => true]);
     }
 
     public function createExchangeTemplate(string $patientId)

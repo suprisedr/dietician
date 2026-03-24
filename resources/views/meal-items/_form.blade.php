@@ -60,9 +60,39 @@ select.mi-input {
 
     <div class="mi-field">
         <label class="mi-label">Serving Size</label>
-        <input type="text" name="serving_size" id="f-serving"
-               value="{{ old('serving_size', $item->serving_size ?? '') }}"
-               class="mi-input" placeholder="e.g. 1 cup (30 g)">
+        @if(isset($item) && ($item->serving_size ?? '') !== '')
+            @php
+                $servingRaw = old('serving_size', $item->serving_size ?? '');
+                preg_match('/^((?:\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?))\s*(.*)$/u', trim($servingRaw), $_sp);
+                $_servingNum    = $_sp[1] ?? '';
+                $_servingSuffix = isset($_sp[2]) ? trim($_sp[2]) : '';
+                if (preg_match('/^(\d+)\s+(\d+)\/(\d+)$/', $_servingNum, $_fm))
+                    $_servingDecimal = $_fm[1] + $_fm[2] / $_fm[3];
+                elseif (preg_match('/^(\d+)\/(\d+)$/', $_servingNum, $_fm))
+                    $_servingDecimal = $_fm[1] / $_fm[2];
+                else
+                    $_servingDecimal = str_replace(',', '.', $_servingNum);
+            @endphp
+            <div style="display:flex;align-items:center;gap:.5rem">
+                <input type="number" id="f-serving-prefix"
+                       value="{{ $_servingDecimal }}"
+                       class="mi-input" style="width:7rem;flex-shrink:0" min="0" step="any"
+                       placeholder="1">
+                @if($_servingSuffix)
+                <span class="mi-input"
+                      style="flex:1;background:#f8fafc;color:var(--text-muted);cursor:default;user-select:none;pointer-events:none">
+                    {{ $_servingSuffix }}
+                </span>
+                @endif
+            </div>
+            <input type="hidden" name="serving_size" id="f-serving"
+                   value="{{ $servingRaw }}"
+                   data-suffix="{{ $_servingSuffix }}">
+        @else
+            <input type="text" name="serving_size" id="f-serving"
+                   value="{{ old('serving_size', $item->serving_size ?? '') }}"
+                   class="mi-input" placeholder="e.g. 1 cup (30 g)">
+        @endif
         @error('serving_size')<p class="mi-error">{{ $message }}</p>@enderror
     </div>
 
@@ -169,17 +199,30 @@ select.mi-input {
     const nameEl    = document.getElementById('f-name');
     const servingEl = document.getElementById('f-serving');
     const kcalEl    = document.getElementById('f-kcal');
+    const kjEl      = document.getElementById('f-kj');
     const fatEl     = document.getElementById('f-fat');
     const carbsEl   = document.getElementById('f-carbs');
     const protEl    = document.getElementById('f-prot');
     const fiberEl   = document.getElementById('f-fiber');
+
+    /* Parse the leading number from a serving string like "100g", "1 slice", "250 ml", "1/2 cup" */
+    function parseServingNum(s) {
+        const str = String(s).trim();
+        // Handle fraction: "1/2", "3/4", "1 1/2" (mixed number)
+        const mixed = str.match(/^(\d+)\s+(\d+)\/(\d+)/);
+        if (mixed) return parseFloat(mixed[1]) + parseFloat(mixed[2]) / parseFloat(mixed[3]);
+        const frac = str.match(/^(\d+)\/(\d+)/);
+        if (frac) return parseFloat(frac[1]) / parseFloat(frac[2]);
+        const m = str.match(/^([\d]+(?:[.,]\d+)?)/);
+        return m ? parseFloat(m[1].replace(',', '.')) : null;
+    }
 
     function fmt(el, dec) {
         const n = parseFloat(el ? el.value : '');
         return isNaN(n) || el.value === '' ? '—' : n.toFixed(dec);
     }
 
-    function update() {
+    function updatePreview() {
         const c = parseFloat(carbsEl.value) || 0;
         const p = parseFloat(protEl.value)  || 0;
         const f = parseFloat(fatEl.value)   || 0;
@@ -187,7 +230,7 @@ select.mi-input {
         let kcal = parseFloat(kcalEl.value);
         if (isNaN(kcal) || kcalEl.value === '') kcal = (c * 4) + (p * 4) + (f * 9);
 
-        document.getElementById('card-name').textContent    = (nameEl.value.trim())    || '—';
+        document.getElementById('card-name').textContent    = nameEl.value.trim() || '—';
         document.getElementById('card-serving').textContent = servingEl.value.trim() ? '· ' + servingEl.value.trim() : '';
         document.getElementById('card-kcal').textContent    = kcal > 0 ? Math.round(kcal) : '—';
         document.getElementById('card-fat').textContent     = fmt(fatEl,   2);
@@ -196,9 +239,66 @@ select.mi-input {
         document.getElementById('card-fiber').textContent   = fmt(fiberEl, 2);
     }
 
-    [nameEl, servingEl, kcalEl, fatEl, carbsEl, protEl, fiberEl]
-        .filter(Boolean).forEach(el => el.addEventListener('input', update));
+    /* ── Serving-size proportional scaling ────────────────────────── */
+    /* Capture base values when the page loads (original DB values) */
+    let baseQty    = parseServingNum(servingEl.value);
+    const baseVals = {
+        kcal:  parseFloat(kcalEl.value)  || null,
+        kj:    kjEl ? (parseFloat(kjEl.value)    || null) : null,
+        fat:   parseFloat(fatEl.value)   || null,
+        carbs: parseFloat(carbsEl.value) || null,
+        prot:  parseFloat(protEl.value)  || null,
+        fiber: fiberEl ? (parseFloat(fiberEl.value) || null) : null,
+    };
 
-    update();
+    function scaleField(el, baseVal, ratio) {
+        if (!el || baseVal === null || isNaN(baseVal)) return;
+        el.value = Math.round(baseVal * ratio * 10) / 10;
+    }
+
+    servingEl.addEventListener('input', function() {
+        const newQty = parseServingNum(this.value);
+        if (newQty && baseQty && baseQty > 0 && newQty !== baseQty) {
+            const ratio = newQty / baseQty;
+            scaleField(kcalEl,  baseVals.kcal,  ratio);
+            scaleField(kjEl,    baseVals.kj,    ratio);
+            scaleField(fatEl,   baseVals.fat,   ratio);
+            scaleField(carbsEl, baseVals.carbs, ratio);
+            scaleField(protEl,  baseVals.prot,  ratio);
+            scaleField(fiberEl, baseVals.fiber, ratio);
+        }
+        updatePreview();
+    });
+
+    /* Re-anchor base when a nutrient field is manually edited */
+    [kcalEl, kjEl, fatEl, carbsEl, protEl, fiberEl].filter(Boolean).forEach(function(el) {
+        el.addEventListener('change', function() {
+            /* Update the base for this field so future serving changes scale from the new value */
+            if (el === kcalEl)  baseVals.kcal  = parseFloat(el.value) || null;
+            if (el === kjEl)    baseVals.kj    = parseFloat(el.value) || null;
+            if (el === fatEl)   baseVals.fat   = parseFloat(el.value) || null;
+            if (el === carbsEl) baseVals.carbs = parseFloat(el.value) || null;
+            if (el === protEl)  baseVals.prot  = parseFloat(el.value) || null;
+            if (el === fiberEl) baseVals.fiber = parseFloat(el.value) || null;
+            /* Also re-anchor baseQty to current serving number */
+            baseQty = parseServingNum(servingEl.value) || baseQty;
+            updatePreview();
+        });
+        el.addEventListener('input', updatePreview);
+    });
+
+    nameEl.addEventListener('input', updatePreview);
+
+    /* Prefix-only serving input (edit mode) */
+    const prefixEl = document.getElementById('f-serving-prefix');
+    if (prefixEl) {
+        const suf = servingEl.dataset.suffix || '';
+        prefixEl.addEventListener('input', function() {
+            servingEl.value = this.value + (suf ? ' ' + suf : '');
+            servingEl.dispatchEvent(new Event('input'));
+        });
+    }
+
+    updatePreview();
 })();
 </script>

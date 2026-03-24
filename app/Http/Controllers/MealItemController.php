@@ -141,7 +141,7 @@ class MealItemController extends Controller
             'cho_g'        => $data['carbs']   ?? null,
             'protein_g'    => $data['protein'] ?? null,
             'fiber_g'      => $data['fiber']   ?? null,
-            'category'     => $data['category'] ?? 'Protein',
+            'category'     => $data['category'] ?? 'Other',
             'is_system'    => false,
             'created_by'   => auth()->id(),
         ]);

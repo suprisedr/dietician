@@ -111,6 +111,10 @@ Route::middleware('auth')->group(function () {
             [\App\Http\Controllers\PatientController::class, 'applyPreset'])
             ->name('patients.apply-preset');
 
+        Route::delete('patients/{patient}/preset',
+            [\App\Http\Controllers\PatientController::class, 'clearPreset'])
+            ->name('patients.clear-preset');
+
         Route::get('diet-presets/{preset}',
             [\App\Http\Controllers\PatientController::class, 'getPreset'])
             ->name('diet-presets.show');
@@ -132,6 +136,7 @@ Route::middleware('auth')->group(function () {
         Route::post('meal-planner',                                         [\App\Http\Controllers\MealPlannerController::class, 'store'])  ->name('meal-planner.store');
         Route::get ('meal-planner/food-search',                             [\App\Http\Controllers\MealPlannerController::class, 'foodSearch'])->name('meal-planner.food-search');
         Route::get ('meal-planner/{patient}/{mealPlanner}',                 [\App\Http\Controllers\MealPlannerController::class, 'show'])   ->name('meal-planner.show');
+        Route::get ('meal-planner/{patient}/{mealPlanner}/pdf',              [\App\Http\Controllers\MealPlannerController::class, 'pdf'])    ->name('meal-planner.pdf');
         Route::patch('meal-planner/{patient}/{mealPlanner}/entries',        [\App\Http\Controllers\MealPlannerController::class, 'saveEntries']) ->name('meal-planner.save-entries');
         Route::delete('meal-planner/{patient}/{mealPlanner}',               [\App\Http\Controllers\MealPlannerController::class, 'destroy']) ->name('meal-planner.destroy');
 
@@ -150,6 +155,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('grocery-lists/{groceryList}/items/{item}',
             [\App\Http\Controllers\GroceryListController::class, 'removeItem'])
             ->name('grocery-lists.items.remove');
+        Route::post('grocery-lists/{groceryList}/email',
+            [\App\Http\Controllers\GroceryListController::class, 'sendEmail'])
+            ->name('grocery-lists.email');
     });
 
     // ════════════════════════════════════════════════════════════════════

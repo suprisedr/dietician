@@ -46,5 +46,8 @@
                 {{ $slot }}
             </main>
         </div>
+
+        {{-- Global upgrade modal — triggered by RequiresPlan middleware on save attempts --}}
+        <x-upgrade-modal />
     </body>
 </html>
