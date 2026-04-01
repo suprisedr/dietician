@@ -78,6 +78,12 @@
                             <div style="text-align:left">
                                 <div style="font-size:.8rem;font-weight:700;color:var(--text-primary);line-height:1.1">{{ Auth::user()->name }}</div>
                                 <div style="font-size:.68rem;color:var(--text-muted);letter-spacing:.03em">{{ Auth::user()->dietician_number }}</div>
+                                @unless(Auth::user()->admin_verified_at)
+                                <div style="margin-top:.2rem;display:inline-flex;align-items:center;gap:.3rem;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;padding:.1rem .5rem;font-size:.6rem;font-weight:700;color:#92400e;letter-spacing:.02em">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    Pending DT Confirmation
+                                </div>
+                                @endunless
                             </div>
                             <svg class="fill-current" style="width:.85rem;height:.85rem;color:var(--text-muted)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -161,6 +167,12 @@
         <div class="pt-4 pb-3 border-t border-gray-200 px-4">
             <div style="font-weight:700;font-size:.9rem;color:var(--text-primary)">{{ Auth::user()->name }}</div>
             <div style="font-size:.8rem;color:var(--text-muted)">{{ Auth::user()->dietician_number }}</div>
+            @unless(Auth::user()->admin_verified_at)
+            <div style="margin-top:.4rem;display:inline-flex;align-items:center;gap:.35rem;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;padding:.2rem .65rem;font-size:.7rem;font-weight:700;color:#92400e">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:.75rem;height:.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Pending DT Confirmation
+            </div>
+            @endunless
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('devices.index')" :active="request()->routeIs('devices.*')">{{ __('Devices') }}</x-responsive-nav-link>

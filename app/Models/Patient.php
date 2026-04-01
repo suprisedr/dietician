@@ -65,15 +65,16 @@ class Patient extends Model
     }
 
     /**
-     * For obese patients (BMI > 30) the Mifflin-St Jeor equation overestimates
-     * energy needs when actual body weight is used. This accessor returns the
-     * weight that will be plugged into the equation:
+     * Selects the appropriate weight for the Mifflin-St Jeor BMR equation based
+     * on clinical BMI category:
      *
-     *  - BMI ≤ 30 → actual weight
-     *  - BMI > 30 → Obesity-adjusted weight: IBW + 0.25 × (actual − IBW)
+     *  - BMI < 18.5 (Underweight) → Actual Body Weight (ABW)
+     *  - BMI 18.5–29.9 (Normal / Overweight) → Actual Body Weight (ABW)
+     *  - BMI ≥ 30 (Obese) → Adjusted Body Weight: IBW + 0.4 × (actual − IBW)
      *
-     * Note: the 0.25 factor here is specifically for BMR estimation; it differs
-     * from the 0.25 factor used in the general clinical ABW accessor (getAbwAttribute).
+     * Using ABW in obese patients overestimates energy needs; AdjBW with the
+     * 0.4 correction factor accounts for the lower metabolic activity of excess
+     * adipose tissue.
      */
     public function getWeightForBmrAttribute(): ?float
     {
@@ -86,8 +87,9 @@ class Patient extends Model
         $bmi = $this->bmi;
         $ibw = $this->ibw;
 
-        if ($bmi && $bmi > 30 && $ibw && $this->weight > $ibw) {
-            return $ibw + 0.25 * ((float) $this->weight - $ibw);
+        // BMI ≥ 30: use Adjusted Body Weight (AdjBW = IBW + 0.4 × (actual − IBW))
+        if ($bmi && $bmi >= 30 && $ibw && $this->weight > $ibw) {
+            return $ibw + 0.4 * ((float) $this->weight - $ibw);
         }
 
         return (float) $this->weight;
@@ -96,7 +98,7 @@ class Patient extends Model
     /**
      * Accessor to calculate BMR using Mifflin-St Jeor Equation.
      *
-     * When BMI > 30 the obesity-adjusted body weight (IBW + 0.25 × excess) is
+     * When BMI >= 30 the adjusted body weight (IBW + 0.4 × (actual − IBW)) is
      * substituted for actual weight to avoid overestimating energy needs.
      * Returns kcal/day (the rest of the application converts to kJ via × 4.184).
      */
@@ -181,12 +183,12 @@ class Patient extends Model
         return $this->ibwForBmi(30);
     }
 
-    // Accessor to calculate ABW (Adjusted Body Weight)
+    // Accessor to calculate ABW (Adjusted Body Weight) — AdjBW = IBW + 0.4 × (actual − IBW)
     public function getAbwAttribute()
     {
         $ibw = $this->ibw;
         if ($ibw && $this->weight > $ibw) {
-            return $ibw + (0.25 * ($this->weight - $ibw));
+            return $ibw + (0.4 * ($this->weight - $ibw));
         }
         return $this->weight; // If weight <= IBW, ABW = actual weight
     }

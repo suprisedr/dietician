@@ -13,8 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'device.limit' => \App\Http\Middleware\EnforceDeviceLimit::class,
-            'plan'         => \App\Http\Middleware\RequiresPlan::class,
+            'device.limit'   => \App\Http\Middleware\EnforceDeviceLimit::class,
+            'plan'           => \App\Http\Middleware\RequiresPlan::class,
+            'admin.approved' => \App\Http\Middleware\RequireAdminApproval::class,
         ]);
 
         // Apply device tracking + enforcement to all auth web routes

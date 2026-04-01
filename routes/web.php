@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DeviceController;
-use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PaystackWebhookController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public pages ──────────────────────────────────────────────────────────────
@@ -20,12 +21,21 @@ Route::get('/pricing', function () {
 // ── Public: Team invite acceptance ───────────────────────────────────────────
 Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('team.accept');
 
-// ── Dashboard (auth, no plan gate – free tier can always access) ──────────────
+// ── Dashboard (auth + verified + admin approved) ─────────────────────────────
 
 Route::get('/dashboard', function () {
     $patients = \App\Models\Patient::where('user_id', auth()->id())->get();
     return view('dashboard', compact('patients'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'admin.approved'])->name('dashboard');
+
+// ── Pending admin approval holding page ───────────────────────────────────────
+Route::get('/pending-approval', function () {
+    return view('auth.pending-approval');
+})->middleware(['auth', 'verified'])->name('pending-approval');
+
+// ── Admin: verify dietician via signed URL (public — no auth required) ────────
+Route::get('/admin/verify-dietician/{user}', [AdminController::class, 'verifyDietician'])
+    ->name('admin.verify-dietician');
 
 // ── Authenticated routes ───────────────────────────────────────────────────────
 
@@ -61,10 +71,13 @@ Route::middleware('auth')->group(function () {
     })->name('plan.locked');
 
     // ════════════════════════════════════════════════════════════════════════
-    // FREE TIER — Patients (CRUD + calculations: BMI, ABW/IBW/AF, RMR/BMR)
-    // All authenticated users may create/view/edit/delete patients and see
-    // the Anthropometrics section. Advanced features are locked in the view.
+    // CLINICAL FEATURES — require admin approval in addition to auth
     // ════════════════════════════════════════════════════════════════════════
+    Route::middleware(['verified', 'admin.approved'])->group(function () {
+
+    // FREE TIER — Patients (CRUD + calculations: BMI, ABW/IBW/AF, RMR/BMR)
+    // All approved authenticated users may create/view/edit/delete patients and
+    // see the Anthropometry section. Advanced features are locked in the view.
     Route::resource('patients', \App\Http\Controllers\PatientController::class);
 
     // Patient visit history (monitoring)
@@ -180,7 +193,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('plan:package_3')->group(function () {
         // Route::resource('enteral-feeds', EnteralFeedController::class);
     });
-});
+    }); // end admin.approved group
+
+}); // end auth group
 
 // ── Paystack webhook — public, no auth, no CSRF ───────────────────────────────
 

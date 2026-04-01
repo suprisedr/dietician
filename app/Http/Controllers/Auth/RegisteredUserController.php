@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AdminNewDieticianMail;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -66,6 +67,10 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        // Notify admin to verify HPCSA registration before activating the account
+        Mail::to(env('ADMIN_EMAIL', 'support@mindfulnutrico.co.za'))
+            ->send(new AdminNewDieticianMail($user));
+
         // Send welcome email (after email is verified the user lands on dashboard)
         Mail::send('emails.welcome', [
             'userName'     => $user->name,
@@ -78,12 +83,8 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // If email not yet verified, redirect to verification notice
-        if (! $user->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice');
-        }
-
-        // Handle pending team invite
+        // Handle pending team invite — must run before verification redirect
+        // so owner_id is set regardless of email verification status.
         if ($inviteToken = session()->pull('pending_invite_token')) {
             $invitation = TeamInvitation::where('token', $inviteToken)
                 ->whereNull('accepted_at')
@@ -104,14 +105,24 @@ class RegisteredUserController extends Controller
                     'accepted_at' => now(),
                 ]);
 
-                return redirect()->route('dashboard')
-                    ->with('success', "Welcome! You've joined {$owner->name}'s team.");
+                // Stash a success message to show after email verification
+                session(['invite_accepted_owner' => $owner->name]);
             }
+        }
+
+        // If email not yet verified, redirect to verification notice
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
         }
 
         // Handle pending plan checkout
         if ($pendingPlan = session()->pull('pending_plan')) {
             return redirect()->route('subscription.checkout', $pendingPlan);
+        }
+
+        if ($ownerName = session()->pull('invite_accepted_owner')) {
+            return redirect()->route('dashboard')
+                ->with('success', "Welcome! You've joined {$ownerName}'s team.");
         }
 
         return redirect(route('dashboard', absolute: false));

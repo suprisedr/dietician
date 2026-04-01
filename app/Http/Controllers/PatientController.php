@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\PatientUpdated;
+use App\Mail\PatientConsentMail;
 use App\Models\ExchangeTemplateItem;
 use App\Models\Macronutrient;
 use App\Models\MealPlannerWeek;
@@ -10,6 +11,7 @@ use App\Models\Patient;
 use App\Models\ExchangeTemplate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PatientController extends Controller
 {
@@ -107,6 +109,11 @@ class PatientController extends Controller
             'notes'      => 'Initial assessment',
         ]);
 
+        // Send POPIA consent notice to patient if an email address was provided
+        if ($patient->email) {
+            Mail::to($patient->email)->send(new PatientConsentMail($patient, auth()->user()));
+        }
+
         return redirect()->route('patients.index')->with('success', 'Patient added successfully.');
     }
 
@@ -147,7 +154,7 @@ class PatientController extends Controller
         $teeKj      = $patient->tee ?? 0;
         $teeKcal    = $patient->tee ? round($patient->tee / 4.184) : null;
         $bmrKj      = $patient->bmr ? round($patient->bmr * 4.184) : null;
-        $isObese    = ($patient->bmi ?? 0) > 30;
+        $isObese    = ($patient->bmi ?? 0) >= 30;
 
         $macroByType = $patient->macronutrients->keyBy('type');
         $recCho_g = $recPro_g = $recFat_g = null;
@@ -206,7 +213,7 @@ class PatientController extends Controller
         $teeKj      = $patient->tee ?? 0;
         $teeKcal    = $patient->tee ? round($patient->tee / 4.184) : null;
         $bmrKj      = $patient->bmr ? round($patient->bmr * 4.184) : null;
-        $isObese    = ($patient->bmi ?? 0) > 30;
+        $isObese    = ($patient->bmi ?? 0) >= 30;
 
         $macroByType = $patient->macronutrients->keyBy('type');
         $recCho_g = $recPro_g = $recFat_g = null;

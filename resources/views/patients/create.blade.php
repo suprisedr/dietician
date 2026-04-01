@@ -230,12 +230,13 @@
                                 Weight (kg)
                             </label>
                             <div style="position:relative">
-                                <input type="number" step="0.1" name="weight" value="{{ old('weight') }}"
+                                <input type="number" step="0.1" name="weight" id="weight" value="{{ old('weight') }}"
                                        placeholder="e.g. 72.5"
                                        min="0"
                                        style="width:100%;padding:.5rem 2.75rem .5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
                                        onfocus="this.style.borderColor='var(--primary)'"
                                        onblur="this.style.borderColor='#d1d5db'"
+                                       oninput="updateBmi()"
                                        required>
                                 <span style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--text-muted);pointer-events:none">kg</span>
                             </div>
@@ -249,12 +250,13 @@
                                 Height (cm)
                             </label>
                             <div style="position:relative">
-                                <input type="number" step="0.1" name="height" value="{{ old('height') }}"
+                                <input type="number" step="0.1" name="height" id="height" value="{{ old('height') }}"
                                        placeholder="e.g. 168"
                                        min="0"
                                        style="width:100%;padding:.5rem 2.75rem .5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
                                        onfocus="this.style.borderColor='var(--primary)'"
                                        onblur="this.style.borderColor='#d1d5db'"
+                                       oninput="updateBmi()"
                                        required>
                                 <span style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--text-muted);pointer-events:none">cm</span>
                             </div>
@@ -262,6 +264,14 @@
                                 <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
                             @enderror
                         </div>
+                    </div>
+
+                    {{-- Live BMI display --}}
+                    <div id="bmi-display" style="margin-bottom:1rem;padding:.55rem .75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;display:flex;align-items:center;gap:.6rem;font-size:.875rem">
+                        <span style="font-weight:600;color:var(--text-muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em">BMI</span>
+                        <span id="bmi-value" style="font-weight:700;font-size:1rem;color:var(--text-primary)">—</span>
+                        <span id="bmi-category" style="font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:#e5e7eb;color:#374151"></span>
+                        <span style="font-size:.72rem;color:var(--text-muted);margin-left:auto">kg/m²</span>
                     </div>
 
                     {{-- Activity Factor --}}
@@ -284,10 +294,10 @@
                         @enderror
                     </div>
 
-                    {{-- IBW BMI Target --}}
+                    {{-- Ideal Body Weight (IBW) BMI Target --}}
                     <div style="margin-bottom:1rem">
                         <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">
-                            IBW BMI Target
+                            Ideal Body Weight (IBW) BMI Target
                         </label>
                         <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:.55rem">
                             Choose which BMI value to use when calculating the patient's Ideal Body Weight.
@@ -349,6 +359,8 @@
             numEl.placeholder = type === 'sa_id' ? 'e.g. 9001015800086 (13 digits)' : 'e.g. A12345678';
             if (type !== 'sa_id') {
                 document.getElementById('dob-hint').style.display = 'none';
+            } else {
+                onIdNumberInput();
             }
         }
 
@@ -397,9 +409,41 @@
             if (ageEl && age >= 0 && age <= 150) ageEl.value = age;
         }
 
+        function updateBmi() {
+            const w = parseFloat(document.getElementById('weight')?.value);
+            const h = parseFloat(document.getElementById('height')?.value);
+            const valEl = document.getElementById('bmi-value');
+            const catEl = document.getElementById('bmi-category');
+            if (!valEl || !catEl) return;
+            if (!w || !h || h <= 0) { valEl.textContent = '\u2014'; catEl.textContent = ''; catEl.style.background='#e5e7eb'; catEl.style.color='#374151'; return; }
+            const bmi = w / Math.pow(h / 100, 2);
+            valEl.textContent = bmi.toFixed(1);
+            let cat, bg, col;
+            if (bmi < 18.5)      { cat='Underweight'; bg='#dbeafe'; col='#1d4ed8'; }
+            else if (bmi < 25)   { cat='Normal';      bg='#dcfce7'; col='#15803d'; }
+            else if (bmi < 30)   { cat='Overweight';  bg='#fef9c3'; col='#92400e'; }
+            else                 { cat='Obese';        bg='#fee2e2'; col='#b91c1c'; }
+            catEl.textContent = cat;
+            catEl.style.background = bg;
+            catEl.style.color = col;
+
+            // Auto-select IBW BMI target based on BMI category
+            const target = bmi < 25 ? 22 : (bmi < 30 ? 25 : 30);
+            document.querySelectorAll('input[name="ibw_bmi_target"]').forEach(function(radio) {
+                const val = parseInt(radio.value, 10);
+                radio.checked = (val === target);
+                const lbl = radio.closest('label');
+                if (lbl) {
+                    lbl.style.borderColor = radio.checked ? 'var(--primary)' : '#d1d5db';
+                    lbl.style.background  = radio.checked ? 'rgba(103,159,95,.07)' : '#fff';
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             styleGenderLabels();
             onIdTypeChange();
+            updateBmi();
         });
     </script>
 </x-app-layout>

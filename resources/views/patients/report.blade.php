@@ -367,7 +367,7 @@
                     <span class="rpt-badge">Age {{ $patient->age }} yrs</span>
                     <span class="rpt-badge">{{ $patient->weight }} kg &middot; {{ $patient->height }} cm</span>
                     @if($isObese)
-                        <span class="rpt-badge alert">BMI &gt; 30 — Obesity adjustment applied</span>
+                        <span class="rpt-badge alert">BMI &ge; 30 — Obesity adjustment applied</span>
                     @endif
                 </div>
             </div>
@@ -383,7 +383,7 @@
             <div class="rpt-section">
                 <div class="rpt-section-title">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/></svg>
-                    Anthropometrics &amp; Energy
+                    Anthropometry &amp; Energy
                 </div>
                 <div class="metric-grid">
                     <div class="metric-card">
@@ -394,7 +394,7 @@
                         <span class="bmi-pill {{ $bmiCat }}">{{ $patient->bmi_category }}</span>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">IBW</div>
+                        <div class="metric-label">Ideal Body Weight (IBW)</div>
                         <div class="metric-value">{{ $patient->ibw ? number_format($patient->ibw, 1) : '—' }}</div>
                         <div class="metric-unit">kg</div>
                     </div>
@@ -437,8 +437,8 @@
 
                 @if($isObese)
                     <div class="obesity-note">
-                        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 1) }} &gt; 30):</strong>
-                        RMR calculated using adjusted body weight (IBW + 0.25 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
+                        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 1) }} &ge; 30):</strong>
+                        RMR calculated using adjusted body weight (IBW + 0.4 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
                     </div>
                 @endif
             </div>

@@ -261,7 +261,7 @@
                     <span class="badge">Age {{ $patient->age }} yrs</span>
                     <span class="badge">{{ $patient->weight }} kg &middot; {{ $patient->height }} cm</span>
                     <span class="badge">AF {{ $patient->activity_factor }}</span>
-                    @if($isObese)<span class="badge badge-alert">BMI &gt; 30 &mdash; Obesity adj. applied</span>@endif
+                    @if($isObese)<span class="badge badge-alert">BMI &ge; 30 &mdash; Obesity adj. applied</span>@endif
                 </div>
             </td>
             <td class="header-right">
@@ -274,7 +274,7 @@
 
 {{-- ── SECTION 1: Anthropometrics & Energy ── --}}
 <div class="section">
-    <div class="section-title">Anthropometrics &amp; Energy</div>
+    <div class="section-title">Anthropometry &amp; Energy</div>
     @php $bmiCat = strtolower($patient->bmi_category ?? 'normal'); @endphp
     <table class="metric-table" cellpadding="0" cellspacing="0">
         <tr>
@@ -288,7 +288,7 @@
             </td>
             <td>
                 <div class="metric-box">
-                    <div class="metric-label">IBW</div>
+                    <div class="metric-label">Ideal Body Weight (IBW)</div>
                     <div class="metric-value">{{ $patient->ibw ? number_format($patient->ibw, 1) : '—' }}</div>
                     <div class="metric-unit">kg</div>
                 </div>
@@ -346,8 +346,8 @@
     </table>
     @if($isObese)
     <div class="obese-note">
-        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 2) }} &gt; 30):</strong>
-        BMR calculated using adjusted body weight (IBW + 0.25 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
+        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 2) }} &ge; 30):</strong>
+        BMR calculated using adjusted body weight (IBW + 0.4 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
     </div>
     @endif
 </div>

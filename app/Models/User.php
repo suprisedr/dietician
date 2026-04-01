@@ -23,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'pricing_package_slug',
         'owner_id',
+        'admin_verified_at',
     ];
 
     protected $hidden = [
@@ -33,9 +34,15 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'  => 'datetime',
+            'admin_verified_at'  => 'datetime',
+            'password'           => 'hashed',
         ];
+    }
+
+    public function isAdminVerified(): bool
+    {
+        return $this->admin_verified_at !== null;
     }
 
     // ── Relationships ─────────────────────────────────────────────────────────

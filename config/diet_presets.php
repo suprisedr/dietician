@@ -25,7 +25,7 @@ return [
     // 1. Standard Balanced Diet  (~1 800 kcal)
     // ─────────────────────────────────────────────────────────────────────────
     'balanced' => [
-        'name'        => 'Standard Balanced Diet',
+        'name'        => 'Standard Normal Meal Exchange',
         'description' => 'Normal healthy adult — ~1 800 kcal balanced macros',
         'kcal_target' => 1800,
         'items' => [
@@ -132,7 +132,7 @@ return [
     // 2. Diabetes Meal Exchange  (~1 800 kcal)
     // ─────────────────────────────────────────────────────────────────────────
     'diabetes' => [
-        'name'        => 'Diabetes Meal Exchange',
+        'name'        => 'Standard Diabetes Meal Exchange',
         'description' => 'Controlled carbohydrate — ~1 800 kcal diabetic plan',
         'kcal_target' => 1800,
         'items' => [
@@ -239,7 +239,7 @@ return [
     // 3. Renal Diet (CKD)  (~1 800 kcal)
     // ─────────────────────────────────────────────────────────────────────────
     'renal' => [
-        'name'        => 'Renal Diet (CKD)',
+        'name'        => 'Standard Renal Meal Exchange',
         'description' => 'Chronic Kidney Disease — controlled protein, K⁺ & P',
         'kcal_target' => 1800,
         'items' => [

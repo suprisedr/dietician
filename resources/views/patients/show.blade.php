@@ -10,10 +10,10 @@
         $teeKj        = $patient->tee ?? 0;
         $useIbwWeight = (bool) ($patient->use_ibw_weight ?? false);
 
-        // Obesity BMR adjustments (only relevant when BMI > 30)
-        $isObese          = ($patient->bmi ?? 0) > 30;
+        // Obesity BMR adjustments (only relevant when BMI >= 30)
+        $isObese          = ($patient->bmi ?? 0) >= 30;
         $bmrActual        = $patient->bmr_actual;           // kcal — actual weight, no correction
-        $bmrAbwAdj        = $patient->bmr;                  // kcal — IBW + 0.25×(actual−IBW)
+        $bmrAbwAdj        = $patient->bmr;                  // kcal — IBW + 0.4×(actual−IBW)
         $bmrBmiAdj        = $patient->bmr_bmi_adjusted;     // kcal — capped at BMI 25 weight
         $weightForBmr     = $patient->weight_for_bmr;       // kg used in primary BMR
 
@@ -147,7 +147,7 @@
             </div>
             <div class="metric-card">
                 <div class="mc-val" id="hero-ibw-val">{{ $patient->ibw ? number_format($patient->ibw, 2) : '—' }}</div>
-                <div class="mc-label">IBW <span style="font-size:.55rem;opacity:.7" id="hero-ibw-label">(BMI {{ $patient->ibw_bmi_target ?? 22 }})</span></div>
+                <div class="mc-label">Ideal Body Weight (IBW) <span style="font-size:.55rem;opacity:.7" id="hero-ibw-label">(BMI {{ $patient->ibw_bmi_target ?? 22 }})</span></div>
                 <div class="mc-sub">kg</div>
             </div>
 
@@ -176,17 +176,17 @@
                 {{-- Anthropometrics card --}}
                 <div class="dash-section">
                     <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('anthro-body','anthro-chevron')">
-                        <span class="dash-section-title">Anthropometrics</span>
+                        <span class="dash-section-title">Anthropometry</span>
                         <svg id="anthro-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </div>
                     <div id="anthro-body" style="display:none">
                     <dl class="info-grid">
                         <div class="info-item"><dt>Weight</dt><dd>{{ $patient->weight }} kg</dd></div>
                         <div class="info-item"><dt>Height</dt><dd>{{ $patient->height }} cm</dd></div>
-                        <div class="info-item"><dt>ABW <span style="font-size:.65rem;color:var(--text-muted);font-weight:500">(0.25 factor)</span></dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
+                        <div class="info-item"><dt>ABW <span style="font-size:.65rem;color:var(--text-muted);font-weight:500">(0.4 factor)</span></dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
                         {{-- Target / Ideal Weights at three BMI benchmarks --}}
                         <div class="info-item" style="grid-column:1/-1">
-                            <dt style="margin-bottom:.45rem">Target Weight (IBW) — select active target</dt>
+                            <dt style="margin-bottom:.45rem">Ideal Body Weight (IBW) — select active target</dt>
                             <dd style="padding:0">
                                 <table id="ibw-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
                                     <thead>
@@ -282,7 +282,7 @@
                             Using <strong>actual body weight</strong> in Mifflin-St Jeor overestimates
                             energy needs in obesity. The primary RMR above uses
                             <strong>{{ number_format($weightForBmr, 1) }} kg</strong>
-                            (IBW&nbsp;+&nbsp;0.25&nbsp;×&nbsp;excess).
+                            (IBW&nbsp;+&nbsp;0.4&nbsp;×&nbsp;excess).
                             Two alternative estimates are shown below for comparison.
                         </p>
 
@@ -299,7 +299,7 @@
                                 <tr style="background:rgba(249,115,22,.06)">
                                     <td style="padding:.45rem .5rem .45rem 0;font-weight:700;color:#c2410c">
                                         ABW-adjusted
-                                        <span style="display:block;font-size:.65rem;font-weight:500;color:#92400e">IBW + 0.25 × (actual − IBW)</span>
+                                        <span style="display:block;font-size:.65rem;font-weight:500;color:#92400e">IBW + 0.4 × (actual − IBW)</span>
                                     </td>
                                     <td style="text-align:right;font-weight:700;color:#0f172a">{{ number_format($weightForBmr, 1) }} kg</td>
                                     <td style="text-align:right;font-weight:700;color:#0f172a">{{ $bmrAbwAdj ? number_format($bmrAbwAdj * 4.184, 0) : '—' }}</td>
@@ -332,11 +332,11 @@
 
 
         {{-- ═══════════════════════════════════════════
-             DIET PRESETS
+             STANDARD MEAL EXCHANGES
         ═══════════════════════════════════════════ --}}
         <div class="dash-section" id="diet-preset-section">
             <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('preset-body','preset-chevron')">
-                <span class="dash-section-title">Diet Presets</span>
+                <span class="dash-section-title">Standard Meal Exchanges</span>
                 <svg id="preset-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
             </div>
             <div id="preset-body" style="display:block;padding:1.25rem">
@@ -352,7 +352,7 @@
                             style="flex:1;min-width:200px;max-width:420px;padding:.5rem .75rem;font-size:.875rem;border:1.5px solid var(--border);border-radius:8px;outline:none;background:#fff;transition:border-color .15s"
                             onfocus="this.style.borderColor='var(--primary)'"
                             onblur="this.style.borderColor='var(--border)'">
-                        <option value="">— Select a diet preset —</option>
+                        <option value="">— Select a standard meal exchange —</option>
                         @foreach($dbPresets as $dp)
                             <option value="{{ $dp->key }}"
                                     data-kcal="{{ $dp->kcal_target }}"
