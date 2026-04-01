@@ -54,21 +54,50 @@
 
             {{-- What happens next --}}
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-left mb-6">
-                <p class="text-sm font-semibold text-amber-800 mb-3 uppercase tracking-wide">What happens next?</p>
-                <ul class="space-y-2.5 text-sm text-amber-900">
-                    <li class="flex items-start gap-2.5">
-                        <span class="mt-0.5 w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                        Our admin looks up DT number <strong>{{ auth()->user()->dietician_number }}</strong> on the HPCSA iRegister to confirm it is active and valid.
+                <p class="text-sm font-semibold text-amber-800 mb-4 uppercase tracking-wide">What happens next?</p>
+                <ol class="space-y-4 text-sm text-amber-900">
+
+                    {{-- Step 1 --}}
+                    <li class="flex items-start gap-3">
+                        <span class="mt-0.5 w-6 h-6 rounded-full bg-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center flex-shrink-0 shadow-sm">1</span>
+                        <div>
+                            <p class="font-semibold text-amber-900 mb-1">HPCSA iRegister lookup</p>
+                            <p class="leading-relaxed">
+                                Our admin searches for DT number
+                                <span class="inline-flex items-center gap-1 mx-0.5 px-2 py-0.5 rounded-md bg-white border border-amber-300 font-mono font-bold text-amber-900 text-xs tracking-widest shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                    {{ auth()->user()->dietician_number }}
+                                </span>
+                                on the official HPCSA iRegister to confirm your registration is <strong>active and valid</strong>.
+                            </p>
+                        </div>
                     </li>
-                    <li class="flex items-start gap-2.5">
-                        <span class="mt-0.5 w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
-                        Once confirmed, your account is unlocked — typically within <strong>30 minutes</strong>.
+
+                    {{-- Step 2 --}}
+                    <li class="flex items-start gap-3">
+                        <span class="mt-0.5 w-6 h-6 rounded-full bg-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center flex-shrink-0 shadow-sm">2</span>
+                        <div>
+                            <p class="font-semibold text-amber-900 mb-1">Account unlocked</p>
+                            <p class="leading-relaxed">
+                                Once confirmed, your account is activated — typically within <strong>30 minutes</strong> during business hours.
+                            </p>
+                        </div>
                     </li>
-                    <li class="flex items-start gap-2.5">
-                        <span class="mt-0.5 w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-xs font-bold flex items-center justify-center flex-shrink-0">3</span>
-                        You'll receive no further notification — simply log in again after 1 business day to check.
+
+                    {{-- Step 3 --}}
+                    <li class="flex items-start gap-3">
+                        <span class="mt-0.5 w-6 h-6 rounded-full bg-green-400 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 shadow-sm">✓</span>
+                        <div>
+                            <p class="font-semibold text-green-800 mb-1">You'll receive a verification email</p>
+                            <p class="leading-relaxed text-green-900">
+                                A confirmation email will be sent to
+                                <strong class="break-all">{{ auth()->user()->email }}</strong>
+                                the moment your account is unlocked. Open it and click <em>"Log In"</em> to get started right away.
+                            </p>
+                        </div>
                     </li>
-                </ul>
+
+                </ol>
             </div>
 
             <p class="text-sm text-gray-500 mb-8">
