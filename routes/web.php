@@ -6,6 +6,7 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // ── Public pages ──────────────────────────────────────────────────────────────
@@ -24,14 +25,14 @@ Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('tea
 // ── Dashboard (auth + verified + admin approved) ─────────────────────────────
 
 Route::get('/dashboard', function () {
-    $patients = \App\Models\Patient::where('user_id', auth()->id())->get();
+    $patients = \App\Models\Patient::where('user_id', Auth::id())->get();
     return view('dashboard', compact('patients'));
-})->middleware(['auth', 'verified', 'admin.approved'])->name('dashboard');
+})->middleware(['auth', 'two-factor', 'verified', 'admin.approved'])->name('dashboard');
 
 // ── Pending admin approval holding page ───────────────────────────────────────
 Route::get('/pending-approval', function () {
     return view('auth.pending-approval');
-})->middleware(['auth', 'verified'])->name('pending-approval');
+})->middleware(['auth', 'two-factor', 'verified'])->name('pending-approval');
 
 // ── Admin: verify dietician via signed URL (public — no auth required) ────────
 Route::get('/admin/verify-dietician/{user}', [AdminController::class, 'verifyDietician'])
@@ -39,7 +40,7 @@ Route::get('/admin/verify-dietician/{user}', [AdminController::class, 'verifyDie
 
 // ── Authenticated routes ───────────────────────────────────────────────────────
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'two-factor'])->group(function () {
 
     // ── Profile ──────────────────────────────────────────────────────────────
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

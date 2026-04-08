@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -24,11 +25,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'pricing_package_slug',
         'owner_id',
         'admin_verified_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
+        'two_factor_prompted_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -36,6 +43,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at'  => 'datetime',
             'admin_verified_at'  => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_prompted_at' => 'datetime',
+            'two_factor_recovery_codes' => 'array',
             'password'           => 'hashed',
         ];
     }
@@ -43,6 +53,29 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdminVerified(): bool
     {
         return $this->admin_verified_at !== null;
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
+    }
+
+    public function twoFactorGracePeriodEndsAt(): ?Carbon
+    {
+        return $this->two_factor_prompted_at?->copy()->addDays(15);
+    }
+
+    public function canSkipTwoFactorSetup(): bool
+    {
+        if ($this->hasTwoFactorEnabled()) {
+            return false;
+        }
+
+        if (is_null($this->two_factor_prompted_at)) {
+            return true;
+        }
+
+        return now()->lt($this->twoFactorGracePeriodEndsAt());
     }
 
     // ── Relationships ─────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'device.limit'   => \App\Http\Middleware\EnforceDeviceLimit::class,
             'plan'           => \App\Http\Middleware\RequiresPlan::class,
             'admin.approved' => \App\Http\Middleware\RequireAdminApproval::class,
+            'two-factor'     => \App\Http\Middleware\RequireTwoFactorSetup::class,
         ]);
 
         // Apply device tracking + enforcement to all auth web routes

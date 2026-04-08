@@ -13,6 +13,7 @@ class MealPlannerEntry extends Model
         'meal_slot',
         'exchange_category',
         'sort_order',
+        'qty',
         'meal_text',
         'meal_item_id',
         'notes',

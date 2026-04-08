@@ -269,6 +269,11 @@
 .im-option-label { display:flex; flex-direction:column; gap:1px; }
 .im-option-name  { font-weight:600; line-height:1.3; }
 .im-option-desc  { font-size:.71rem; color:var(--text-muted); }
+.im-qty-wrap { display:flex; align-items:center; gap:3px; margin-left:auto; flex-shrink:0; align-self:center; }
+.im-qty-btn { width:22px; height:22px; border:1.5px solid var(--border); background:#fff; border-radius:4px; font-size:.85rem; cursor:pointer; color:var(--text-primary); display:flex; align-items:center; justify-content:center; padding:0; }
+.im-qty-btn:hover { background:#f1f5f9; }
+.im-qty-inp { width:32px; height:22px; text-align:center; border:1.5px solid var(--border); border-radius:4px; font-size:.78rem; font-weight:600; padding:0; -moz-appearance:textfield; }
+.im-qty-inp::-webkit-inner-spin-button,.im-qty-inp::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 .im-no-results   { padding:1.5rem 1.1rem; text-align:center; font-size:.82rem; color:var(--text-muted); }
 #mp-modal-ftr {
     display:flex; align-items:center; justify-content:space-between;
@@ -372,6 +377,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                             'id'      => $e->meal_item_id ? (string)$e->meal_item_id : null,
                             'text'    => $e->meal_text ?? '',
                             'exchCat' => $e->exchange_category ?? null,
+                            'qty'     => (int) ($e->qty ?? 1),
                         ])->values()->all()
                     );
                 @endphp
@@ -667,13 +673,15 @@ function renderCatCell(di, slot, catName, catSlug){
     catItems.forEach(function(item){
         if(!item.text) return;
         var allIdx = allItems.indexOf(item);
-        var kj     = toKj(item);
+        var qty    = item.qty||1;
+        var kj     = toKj(item)*qty;
+        var qtyLbl = qty>1 ? qty+'\u00D7 ' : '';
         var tag    = document.createElement('span');
         tag.className='cell-tag';
         tag.style.cssText='background:'+bg+';color:'+txt+';border-color:'+brd;
         tag.innerHTML=
             '<div class="cell-tag-row">'+
-              '<span class="cell-tag-name">'+esc(item.text)+'</span>'+
+              '<span class="cell-tag-name">'+esc(qtyLbl+item.text)+'</span>'+
               '<button class="cell-tag-rm" type="button" data-day="'+di+'" data-slot="'+slot+'" data-idx="'+allIdx+'" onclick="removeItem(this,event)">&#xD7;</button>'+
             '</div>'+
             (kj>0?'<span class="cell-tag-kcal">'+kj+' kJ</span>':'');
@@ -693,11 +701,12 @@ window.removeItem=function(btn,e){
 };
 
 /* ── Recalc kJ badges & grand totals ────────────────── */
-function recalc(){
+/* recalcWithState(map) — shared engine used by both recalc() and recalcLive() */
+function recalcWithState(stateMap){
     var slotTotals={}, dayTotals={};
-    Object.keys(STATE).forEach(function(key){
+    Object.keys(stateMap).forEach(function(key){
         var parts=key.split('_'), di=parts[0], slot=parts.slice(1).join('_');
-        var kj=STATE[key].reduce(function(s,it){ return s+toKj(it); },0);
+        var kj=stateMap[key].reduce(function(s,it){ return s+toKj(it)*(it.qty||1); },0);
         var kdEl=document.getElementById('slot-day-kcal-'+slot+'-'+di);
         if(kdEl){ kdEl.textContent=kj>0?kj:'0'; kdEl.classList.toggle('has-val',kj>0); }
         slotTotals[slot]=(slotTotals[slot]||0)+kj;
@@ -714,6 +723,16 @@ function recalc(){
         var el=document.getElementById('grand-kcal-'+di);
         if(el) el.textContent=(dayTotals[di]||0);
     }
+}
+function recalc(){ recalcWithState(STATE); }
+/* recalcLive — called while modal is open; previews pending _sel changes */
+function recalcLive(){
+    if(_day===null){ recalc(); return; }
+    var key=_day+'_'+_slot;
+    var others=(_catSlug==='all')?[]:(STATE[key]||[]).filter(function(it){return it.exchCat!==_catSlug;});
+    var preview=Object.assign({},STATE);
+    preview[key]=others.concat(Object.values(_sel));
+    recalcWithState(preview);
 }
 
 
@@ -797,8 +816,10 @@ function renderBody(q){
     var lq=q.toLowerCase().trim();
     var visible=0;
 
-    // Always search across all valid library categories regardless of which exchange card is open
+    // When searching: include ALL groups (covers previously-imported FatSecret items in 'Other').
+    // When no query: restrict to canonical exchange categories for the default browse view.
     var targetGroups = Object.keys(groups).filter(function(g){
+        if(lq) return true;
         return VALID_CATS.size===0 || VALID_CATS.has(g.toLowerCase());
     });
 
@@ -813,22 +834,27 @@ function renderBody(q){
         body.appendChild(grpDiv);
     });
 
-    if(visible===0){
-        var noRes=document.createElement('div'); noRes.className='im-no-results';
-        if(lq){
-            noRes.innerHTML='No results for &ldquo;<strong>'+esc(lq)+'</strong>&rdquo;'
-                +(_cat?' in '+esc(_cat):'')
+    if(visible===0 && lq){
+        // Nothing in local library — show FatSecret fallback
+        if(_fsResults.length===0){
+            // Still searching or query too short — show a friendly "searching…" hint
+            var hint=document.createElement('div'); hint.className='im-no-results';
+            hint.innerHTML='No results in your meal library for &ldquo;<strong>'+esc(lq)+'</strong>&rdquo;.'
+                +(q.length>=2?'<br><span style="font-size:.75rem;color:var(--text-muted)">Searching food database\u2026</span>':'')
                 +'<br><button type="button" class="mp-btn mp-btn-orange" style="margin-top:.65rem;font-size:.75rem;padding:.4rem .9rem" onclick="addCustom()">+ Add &ldquo;'+esc(lq)+'&rdquo; as custom</button>';
-            body.appendChild(noRes);
+            body.appendChild(hint);
         }
+        // FatSecret results (fallback) — only shown when library has 0 matches
+        appendFS(body,lq);
     }
-    appendFS(body,lq);
+    // If library had results: FatSecret section is intentionally NOT shown
 }
 
 function makeRow(it){
     var val=it.value, isChecked=!!_sel[val];
     var kcal=toKcal(it);
     var kj=toKj(it);
+    var curQty=isChecked?((_sel[val].qty)||1):1;
     var desc=[kj>0?kj+' kJ':'',it.serving?it.serving:''].filter(Boolean).join(' \u00B7 ');
     var row=document.createElement('label');
     row.className='im-option'+(isChecked?' selected':'');
@@ -836,16 +862,35 @@ function makeRow(it){
         +'<div class="im-option-label">'
         +'<span class="im-option-name">'+esc(it.text)+'</span>'
         +(desc?'<span class="im-option-desc">'+esc(desc)+'</span>':'')
+        +'</div>'
+        +'<div class="im-qty-wrap"'+(isChecked?'':' style="display:none"')+'>'
+        +'<button type="button" class="im-qty-btn im-qty-minus">&#x2212;</button>'
+        +'<input type="number" class="im-qty-inp" value="'+curQty+'" min="1" max="99">'
+        +'<button type="button" class="im-qty-btn im-qty-plus">&#x2B;</button>'
         +'</div>';
-    row.querySelector('input').addEventListener('change',function(e){
+    var chk=row.querySelector('input[type=checkbox]');
+    var qtyWrap=row.querySelector('.im-qty-wrap');
+    var qtyInp=row.querySelector('.im-qty-inp');
+    // Prevent qty stepper clicks from toggling the checkbox via label default behavior
+    qtyWrap.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); });
+    function updateQty(q){
+        q=Math.max(1,Math.min(99,Math.round(q)||1));
+        qtyInp.value=q;
+        if(_sel[val]){ _sel[val].qty=q; recalcLive(); }
+    }
+    row.querySelector('.im-qty-minus').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); updateQty((parseInt(qtyInp.value,10)||1)-1); });
+    row.querySelector('.im-qty-plus').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); updateQty((parseInt(qtyInp.value,10)||1)+1); });
+    qtyInp.addEventListener('click',function(e){ e.stopPropagation(); });
+    qtyInp.addEventListener('change',function(e){ e.stopPropagation(); updateQty(parseInt(this.value,10)||1); });
+    chk.addEventListener('change',function(e){
         if(e.target.checked){
             if(_qty>0&&Object.keys(_sel).length>=_qty){ e.target.checked=false; return; }
-            _sel[val]={id:val,text:it.text,kcal:kcal,kj:kj,group:it.group,exchCat:_catSlug};
-            row.classList.add('selected');
+            _sel[val]={id:val,text:it.text,kcal:kcal,kj:kj,group:it.group,exchCat:_catSlug,qty:1};
+            row.classList.add('selected'); qtyWrap.style.display='';
         } else {
-            delete _sel[val]; row.classList.remove('selected');
+            delete _sel[val]; row.classList.remove('selected'); qtyWrap.style.display='none';
         }
-        updateCount(); updateQuotaBadge();
+        updateCount(); updateQuotaBadge(); recalcLive();
     });
     return row;
 }
@@ -854,7 +899,7 @@ window.addCustom=function(){
     var q=document.getElementById('mp-modal-search').value.trim();
     if(!q) return;
     var val='_f_'+Date.now()+'_'+q;
-    _sel[val]={id:null,text:q,kcal:0,kj:0,group:null,exchCat:_catSlug};
+    _sel[val]={id:null,text:q,kcal:0,kj:0,group:null,exchCat:_catSlug,qty:1};
     updateCount(); updateQuotaBadge();
     document.getElementById('mp-modal-search').value='';
     renderBody('');
@@ -927,7 +972,7 @@ function appendFS(body,q){
             +(kjDisp||servStr?'<span class="im-option-desc">'+esc(kjDisp+servStr)+'</span>':'')
             +'<span style="font-size:.65rem;color:#2563eb;font-weight:600">+ library</span></div>';
         row.querySelector('input').addEventListener('change',function(e){
-            if(!e.target.checked){ delete _sel[food.id]; row.classList.remove('selected'); updateCount(); return; }
+            if(!e.target.checked){ delete _sel[food.id]; row.classList.remove('selected'); updateCount(); recalcLive(); return; }
             if(_qty>0&&Object.keys(_sel).length>=_qty){ e.target.checked=false; return; }
             row.classList.add('selected'); e.target.disabled=true;
             var payload=new URLSearchParams({_token:CSRF,name:food.name,serving:food.serving||'',kcal:food.kcal||'',kj:food.kj||'',fat:food.fat||'',carbs:food.carbs||'',protein:food.protein||'',fiber:food.fiber||''});
@@ -938,14 +983,14 @@ function appendFS(body,q){
                 ITEMS.push(newIt); idToItem[newIt.value]=newIt;
                 if(!groups[newIt.group]){ groups[newIt.group]=[]; }
                 groups[newIt.group].push(newIt);
-                _sel[newIt.value]={id:newIt.value,text:newIt.text,kcal:toKcal(newIt),kj:toKj(newIt),group:newIt.group,exchCat:_catSlug};
+                _sel[newIt.value]={id:newIt.value,text:newIt.text,kcal:toKcal(newIt),kj:toKj(newIt),group:newIt.group,exchCat:_catSlug,qty:1};
                 _fsResults=_fsResults.filter(function(f){ return f.id!==food.id; });
-                updateCount(); updateQuotaBadge();
+                updateCount(); updateQuotaBadge(); recalcLive();
                 renderBody(document.getElementById('mp-modal-search').value.trim());
             })
             .catch(function(){
-                var val='_f_'+Date.now(); _sel[val]={id:null,text:food.name,kcal:food.kcal?Math.round(food.kcal):0,kj:food.kj?Math.round(food.kj):0,group:null,exchCat:_catSlug};
-                updateCount();
+                var val='_f_'+Date.now(); _sel[val]={id:null,text:food.name,kcal:food.kcal?Math.round(food.kcal):0,kj:food.kj?Math.round(food.kj):0,group:null,exchCat:_catSlug,qty:1};
+                updateCount(); recalcLive();
             });
         });
         grp.appendChild(row);
@@ -962,7 +1007,7 @@ for(var di=0;di<7;di++){
             var parsed=JSON.parse(hidden?hidden.value:'[]');
             STATE[key]=Array.isArray(parsed)?parsed.map(function(it){
                 var lib=it.id?idToItem[it.id]:null;
-                return {id:it.id||null,text:it.text||(lib?lib.text:''),kcal:lib?toKcal(lib):0,kj:lib?toKj(lib):0,group:lib?lib.group:null,exchCat:it.exchCat||null};
+                return {id:it.id||null,text:it.text||(lib?lib.text:''),kcal:lib?toKcal(lib):0,kj:lib?toKj(lib):0,group:lib?lib.group:null,exchCat:it.exchCat||null,qty:it.qty||1};
             }).filter(function(it){ return it.text||it.id; }):[];
         }catch(ex){ STATE[key]=[]; }
         renderAll(di,slot);

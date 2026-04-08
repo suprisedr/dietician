@@ -128,6 +128,9 @@ class MealItemController extends Controller
                 'id'             => $existing->id,
                 'name'           => $existing->name,
                 'category'       => $existing->category,
+                'energy_kcal'    => $existing->energy_kcal,
+                'energy_kj'      => $existing->energy_kj,
+                'serving_size'   => $existing->serving_size,
                 'already_existed'=> true,
             ]);
         }
@@ -150,6 +153,9 @@ class MealItemController extends Controller
             'id'             => $item->id,
             'name'           => $item->name,
             'category'       => $item->category,
+            'energy_kcal'    => $item->energy_kcal,
+            'energy_kj'      => $item->energy_kj,
+            'serving_size'   => $item->serving_size,
             'already_existed'=> false,
         ]);
     }

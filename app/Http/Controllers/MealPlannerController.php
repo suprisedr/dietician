@@ -313,6 +313,7 @@ class MealPlannerController extends Controller
                         'meal_slot'         => $slot,
                         'exchange_category' => $item['exchCat'] ?? null,
                         'sort_order'        => (int) $order,
+                        'qty'               => max(1, (int) ($item['qty'] ?? 1)),
                         'meal_text'         => $text,
                         'meal_item_id'      => $itemId,
                     ]);

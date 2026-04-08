@@ -667,85 +667,79 @@
                     </div>{{-- /macro-body --}}
                 </div>{{-- /dash-section macros --}}
 
-                {{-- Nutrient Analysis --}}
-                @if($patient->exchangeTemplate && $teeKj > 0)
-                <div class="dash-section" id="nutrient-analysis">
-                    <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('na-body','na-chevron')">
-                        <span class="dash-section-title">Nutrient Analysis</span>
-                        <div style="display:flex;align-items:center;gap:.5rem">
-                            <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
-                            <svg id="na-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
-                    </div>
-                    <div id="na-body" style="display:none">
-                    <div class="overflow-x-auto" style="padding:0 1.25rem 1.25rem">
-                        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
-                            <thead>
-                                <tr style="border-bottom:2px solid var(--border)">
-                                    <th style="text-align:left;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc"></th>
-                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Recommended</th>
-                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Actual</th>
-                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Difference</th>
-                                    <th style="text-align:right;padding:.55rem .75rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">% of TEE</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{-- Carbohydrates --}}
-                                <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
-                                    <td style="padding:.6rem .75rem;font-weight:700;color:#c2410c;background:rgba(249,115,22,.12)">
-                                        <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#f97316;margin-right:.4rem;vertical-align:.05rem"></span>
-                                        Carbs (g)
-                                    </td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(249,115,22,.12)" id="na-cho-act">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-diff">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-pct">—</td>
-                                </tr>
-                                {{-- Protein --}}
-                                <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
-                                    <td style="padding:.6rem .75rem;font-weight:700;color:#4338ca;background:rgba(99,102,241,.12)">
-                                        <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#6366f1;margin-right:.4rem;vertical-align:.05rem"></span>
-                                        Protein (g)
-                                    </td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(99,102,241,.12)" id="na-pro-act">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-diff">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-pct">—</td>
-                                </tr>
-                                {{-- Fat --}}
-                                <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
-                                    <td style="padding:.6rem .75rem;font-weight:700;color:#0f766e;background:rgba(20,184,166,.12)">
-                                        <span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#14b8a6;margin-right:.4rem;vertical-align:.05rem"></span>
-                                        Fat (g)
-                                    </td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:700;background:rgba(20,184,166,.12)" id="na-fat-act">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-diff">—</td>
-                                    <td style="text-align:right;padding:.6rem .75rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-pct">—</td>
-                                </tr>
-                                {{-- Energy --}}
-                                <tr style="background:#f8fafc;border-top:2px solid var(--border)">
-                                    <td style="padding:.65rem .75rem;font-weight:800;color:var(--text-primary)">
-                                        Energy (kJ)
-                                    </td>
-                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-rec">{{ $teeKj ? round($teeKj) : '—' }}</td>
-                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:800" id="na-kj-act">—</td>
-                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-diff">—</td>
-                                    <td style="text-align:right;padding:.65rem .75rem;font-weight:700" id="na-kj-pct">—</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    </div>{{-- /na-body --}}
-                </div>{{-- /nutrient-analysis dash-section --}}
-                @endif
-
         {{-- ═══════════════════════════════════════════
-             EXCHANGE TEMPLATE
+             EXCHANGE TEMPLATE  +  NUTRIENT ANALYSIS  (combined card)
         ═══════════════════════════════════════════ --}}
         @if($patient->exchangeTemplate)
-        <div class="dash-section exchange-template-section mt-6">
-            <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('et-body','et-chevron')">
+        <div class="dash-section exchange-template-section" id="et-na-card" style="margin-top:1.5rem">
+
+            {{-- ── Sub-header: Nutrient Analysis (at top) ──────────────── --}}
+            @if($teeKj > 0)
+            <div>
+                <div class="dash-section-header" style="cursor:pointer;user-select:none;border-bottom:1px solid var(--border)" onclick="toggleSection('na-body','na-chevron')">
+                    <span class="dash-section-title">Nutrient Analysis</span>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="font-size:.72rem;color:var(--text-muted);font-weight:500">Updates live as you adjust the exchange template</span>
+                        <svg id="na-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+                <div id="na-body" style="display:block">
+                <div class="overflow-x-auto" style="padding:0 0 0">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                        <thead>
+                            <tr style="border-bottom:2px solid var(--border)">
+                                <th style="text-align:left;padding:.28rem .6rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc"></th>
+                                <th style="text-align:right;padding:.28rem .6rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Recommended</th>
+                                <th style="text-align:right;padding:.28rem .6rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Actual</th>
+                                <th style="text-align:right;padding:.28rem .6rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">Difference</th>
+                                <th style="text-align:right;padding:.28rem .6rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">% of TEE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                                <td style="padding:.28rem .6rem;font-weight:700;color:#c2410c;background:rgba(249,115,22,.12)">
+                                    <span style="display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:#f97316;margin-right:.35rem;vertical-align:.05rem"></span>Carbs (g)
+                                </td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-rec">{{ $recCho_g ?? '—' }}</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:700;background:rgba(249,115,22,.12)" id="na-cho-act">—</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-diff">—</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(249,115,22,.12)" id="na-cho-pct">—</td>
+                            </tr>
+                            <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                                <td style="padding:.28rem .6rem;font-weight:700;color:#4338ca;background:rgba(99,102,241,.12)">
+                                    <span style="display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:#6366f1;margin-right:.35rem;vertical-align:.05rem"></span>Protein (g)
+                                </td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-rec">{{ $recPro_g ?? '—' }}</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:700;background:rgba(99,102,241,.12)" id="na-pro-act">—</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-diff">—</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(99,102,241,.12)" id="na-pro-pct">—</td>
+                            </tr>
+                            <tr class="na-row" style="border-bottom:1px solid #f1f5f9">
+                                <td style="padding:.28rem .6rem;font-weight:700;color:#0f766e;background:rgba(20,184,166,.12)">
+                                    <span style="display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:#14b8a6;margin-right:.35rem;vertical-align:.05rem"></span>Fat (g)
+                                </td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-rec">{{ $recFat_g ?? '—' }}</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:700;background:rgba(20,184,166,.12)" id="na-fat-act">—</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-diff">—</td>
+                                <td style="text-align:right;padding:.28rem .6rem;font-weight:600;background:rgba(20,184,166,.12)" id="na-fat-pct">—</td>
+                            </tr>
+                            <tr style="background:#f8fafc;border-top:2px solid var(--border)">
+                                <td style="padding:.3rem .6rem;font-weight:800;color:var(--text-primary)">Energy (kJ)</td>
+                                <td style="text-align:right;padding:.3rem .6rem;font-weight:700" id="na-kj-rec">{{ $teeKj ? round($teeKj) : '—' }}</td>
+                                <td style="text-align:right;padding:.3rem .6rem;font-weight:800" id="na-kj-act">—</td>
+                                <td style="text-align:right;padding:.3rem .6rem;font-weight:700" id="na-kj-diff">—</td>
+                                <td style="text-align:right;padding:.3rem .6rem;font-weight:700" id="na-kj-pct">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                </div>{{-- /na-body --}}
+            </div>
+            <div style="border-top:2px solid var(--border)">
+            @endif
+
+            {{-- ── Sub-header: Exchange Template ─────────────────────────── --}}
+            <div class="dash-section-header" style="cursor:pointer;user-select:none;border-bottom:1px solid var(--border)" onclick="toggleSection('et-body','et-chevron')">
                 <span class="dash-section-title">Exchange Template</span>
                 <div style="display:flex;align-items:center;gap:.5rem">
                     <span style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:999px;background:#fff7ed;color:#c2410c">
@@ -754,17 +748,18 @@
                     <svg id="et-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
             </div>
+
             <div id="et-body" style="display:block">
-            <div class="overflow-x-auto" style="max-height:420px;overflow-y:auto">
+            <div class="overflow-x-auto" style="max-height:480px;overflow-y:auto">
                 <table class="exchange-table" id="exchange-table">
                     <thead>
                         <tr>
-                            <th style="min-width:160px">Item</th>
-                            <th style="text-align:center;min-width:110px">nu</th>
-                            <th style="text-align:right;background:rgba(249,115,22,.12)">CHO (g)</th>
-                            <th style="text-align:right;background:rgba(99,102,241,.12)">Protein (g)</th>
-                            <th style="text-align:right;background:rgba(20,184,166,.12)">Fat (g)</th>
-                            <th style="text-align:right">kJ</th>
+                            <th style="min-width:150px">Item</th>
+                            <th style="text-align:center;width:96px">nu</th>
+                            <th style="text-align:right;background:rgba(249,115,22,.12);width:80px">CHO (g)</th>
+                            <th style="text-align:right;background:rgba(99,102,241,.12);width:84px">Protein (g)</th>
+                            <th style="text-align:right;background:rgba(20,184,166,.12);width:72px">Fat (g)</th>
+                            <th style="text-align:right;width:68px">kJ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -776,9 +771,9 @@
                             data-pro-min="{{ $item->protein_min_g }}"
                             data-fat-min="{{ $item->fat_min_g }}"
                             data-kj="{{ $item->kj }}">
-                            <td class="font-semibold">{{ $item->name }}</td>
-                            <td style="text-align:center">
-                                <div style="display:inline-flex;align-items:center;gap:.4rem">
+                            <td style="font-weight:600;font-size:.8rem;padding:.35rem .75rem">{{ $item->name }}</td>
+                            <td style="text-align:center;padding:.25rem .4rem">
+                                <div style="display:inline-flex;align-items:center;gap:2px">
                                     <form method="POST"
                                           action="{{ route('patients.exchange-items.nu', [$patient->id, $item->id]) }}"
                                           class="nu-form">
@@ -786,7 +781,7 @@
                                         <input type="hidden" name="delta" value="-1">
                                         <button type="submit" class="nu-btn" {{ $nu <= 0 ? 'disabled' : '' }}>−</button>
                                     </form>
-                                    <input type="number" min="0" step="1" class="nu-input" value="{{ $nu }}" style="width:3rem;text-align:center;font-weight:700;" />
+                                    <input type="number" min="0" step="1" class="nu-input" value="{{ $nu }}" />
                                     <form method="POST"
                                           action="{{ route('patients.exchange-items.nu', [$patient->id, $item->id]) }}"
                                           class="nu-form">
@@ -796,34 +791,36 @@
                                     </form>
                                 </div>
                             </td>
-                            <td class="et-cho"  style="text-align:right;background:rgba(249,115,22,.12);font-weight:600">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
-                            <td class="et-pmin" style="text-align:right;background:rgba(99,102,241,.12);font-weight:600">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
-                            <td class="et-fmin" style="text-align:right;background:rgba(20,184,166,.12);font-weight:600">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
-                            <td class="et-kj"   style="text-align:right;font-weight:600">{{ $item->kj !== null ? $nu * $item->kj : '—' }}</td>
+                            <td class="et-cho"  style="text-align:right;background:rgba(249,115,22,.12);font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
+                            <td class="et-pmin" style="text-align:right;background:rgba(99,102,241,.12);font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
+                            <td class="et-fmin" style="text-align:right;background:rgba(20,184,166,.12);font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
+                            <td class="et-kj"   style="text-align:right;font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->kj !== null ? $nu * $item->kj : '—' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <!-- grams totals row -->
                         <tr style="background:var(--bg-page);border-top:2px solid var(--border)">
-                            <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(g)</td>
-                            <td id="tot-cho"     style="text-align:right;font-weight:800;background:rgba(249,115,22,.12)">—</td>
-                            <td id="tot-pmin"    style="text-align:right;font-weight:800;background:rgba(99,102,241,.12)">—</td>
-                            <td id="tot-fmin"    style="text-align:right;font-weight:800;background:rgba(20,184,166,.12)">—</td>
+                            <td colspan="2" style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:.45rem .75rem">Total&nbsp;(g)</td>
+                            <td id="tot-cho"     style="text-align:right;font-weight:800;background:rgba(249,115,22,.12);padding:.45rem .6rem">—</td>
+                            <td id="tot-pmin"    style="text-align:right;font-weight:800;background:rgba(99,102,241,.12);padding:.45rem .6rem">—</td>
+                            <td id="tot-fmin"    style="text-align:right;font-weight:800;background:rgba(20,184,166,.12);padding:.45rem .6rem">—</td>
+                            <td style="padding:.45rem .6rem"></td>
                         </tr>
-                        <!-- kJ conversion row -->
                         <tr style="background:var(--bg-page);border-top:1px solid var(--border)">
-                            <td colspan="2" style="font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Total&nbsp;(kJ)</td>
-                            <td id="tot-kj-cho"  style="text-align:right;font-weight:800;background:rgba(249,115,22,.12)">—</td>
-                            <td id="tot-kj-pmin" style="text-align:right;font-weight:800;background:rgba(99,102,241,.12)">—</td>
-                            <td id="tot-kj-fmin" style="text-align:right;font-weight:800;background:rgba(20,184,166,.12)">—</td>
-                            <td id="tot-kj-total"   style="text-align:right;font-weight:700">—</td>
+                            <td colspan="2" style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:.45rem .75rem">Total&nbsp;(kJ)</td>
+                            <td id="tot-kj-cho"  style="text-align:right;font-weight:800;background:rgba(249,115,22,.12);padding:.45rem .6rem">—</td>
+                            <td id="tot-kj-pmin" style="text-align:right;font-weight:800;background:rgba(99,102,241,.12);padding:.45rem .6rem">—</td>
+                            <td id="tot-kj-fmin" style="text-align:right;font-weight:800;background:rgba(20,184,166,.12);padding:.45rem .6rem">—</td>
+                            <td id="tot-kj-total" style="text-align:right;font-weight:700;padding:.45rem .6rem">—</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
             </div>{{-- /et-body --}}
-        </div>{{-- /exchange-template-section --}}
+
+            @if($teeKj > 0)</div>@endif{{-- /et-separator --}}
+
+        </div>{{-- /et-na-card --}}
         @else
         <div class="dash-section mt-6 p-5">
             <div style="text-align:center;padding:1.5rem 1rem;color:var(--text-muted)">
@@ -848,212 +845,265 @@
         /* ── Meal Plan Distribution ───────────────────────────── */
         #meal-plan-details { margin-top:1.5rem }
 
-        .mp-grid {
-            display: grid;
-            grid-template-columns: 160px 56px repeat(6, 1fr) 72px;
-            gap: 0;
-            min-width: 680px;
+        /* table layout */
+        #mp-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 660px;
+            font-size: .82rem;
         }
 
-        /* column header row */
-        .mp-col-header {
-            padding: .55rem .4rem;
+        /* header pills */
+        .mp-meal-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .22rem;
+            padding: .12rem .4rem;
+            border-radius: 999px;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+        }
+        .mp-meal-pill svg { flex-shrink:0; }
+
+        /* header cells */
+        #mp-table thead th {
+            padding: .28rem .3rem;
             text-align: center;
             font-size: .65rem;
             font-weight: 700;
-            text-transform: uppercase;
             letter-spacing: .07em;
             border-bottom: 2px solid var(--border);
             background: #f8fafc;
-            color: var(--text-muted);
+            white-space: nowrap;
         }
-        .mp-col-header.col-item  { text-align:left; padding-left:.9rem; }
-        .mp-col-header.col-no   { background:#f1f5f9; }
-        .mp-col-header.col-bf   { background:#fffbeb; color:#92400e; }
-        .mp-col-header.col-sn1  { background:#f0fdf4; color:#166534; }
-        .mp-col-header.col-ln   { background:#eff6ff; color:#1e40af; }
-        .mp-col-header.col-sn2  { background:#f0fdf4; color:#166534; }
-        .mp-col-header.col-sup  { background:#fdf4ff; color:#7e22ce; }
-        .mp-col-header.col-sn3  { background:#f0fdf4; color:#166534; }
-        .mp-col-header.col-sum  { background:#f8fafc; }
+        #mp-table thead th.th-item { text-align:left; padding-left:1rem; min-width:140px; }
+        #mp-table thead th.th-no   { min-width:40px; background:#f1f5f9; color:var(--primary); }
+        #mp-table thead th.th-sum  { min-width:72px; }
 
         /* data rows */
-        .mp-row { display: contents; }
-        .mp-row:hover > .mp-cell { background: #f8fafc !important; }
-
-        .mp-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: .35rem .3rem;
+        .mp-row td {
+            padding: .22rem .3rem;
             border-bottom: 1px solid #f1f5f9;
-            min-height: 46px;
-        }
-        .mp-cell.cell-item  { justify-content:flex-start; padding-left:.9rem; font-size:.83rem; font-weight:600; color:var(--text-primary); }
-        .mp-cell.cell-no    { font-size:.88rem; font-weight:800; color:var(--primary); background:#fafbff; }
-        .mp-cell.cell-bf    { background:#fffdf5; }
-        .mp-cell.cell-sn    { background:#f7fef9; }
-        .mp-cell.cell-ln    { background:#f5f9ff; }
-        .mp-cell.cell-sup   { background:#fdf5ff; }
-        .mp-cell.cell-sum   { flex-direction:column; gap:1px; }
-
-        /* square input boxes */
-        .mp-slot-input {
-            width: 44px;
-            height: 44px;
-            border: 1.5px solid #d1d5db;
-            border-radius: 6px;
+            vertical-align: middle;
             text-align: center;
-            font-size: .88rem;
+        }
+        .mp-row:hover td { background: #f8faf8 !important; }
+        .mp-row td.td-item  { text-align:left; padding-left:1rem; font-weight:700; color:var(--text-primary); font-size:.83rem; background:#fff; }
+        .mp-row td.td-no    { font-size:.88rem; font-weight:900; color:var(--primary); background:#f7fbff; }
+        .mp-row td.td-bf    { background:#fffdf8; }
+        .mp-row td.td-sn    { background:#f7fef9; }
+        .mp-row td.td-ln    { background:#f5f9ff; }
+        .mp-row td.td-sup   { background:#fdf5ff; }
+        .mp-row td.td-sum   { background:#f8fafc; padding:.28rem .5rem; }
+
+        /* compact slot inputs */
+        .mp-slot-input {
+            width: 36px;
+            height: 24px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 4px;
+            text-align: center;
+            font-size: .78rem;
             font-weight: 700;
             color: var(--text-primary);
             background: #fff;
             outline: none;
             transition: border-color .15s, box-shadow .15s;
             -moz-appearance: textfield;
+            padding: 0;
         }
         .mp-slot-input::-webkit-outer-spin-button,
         .mp-slot-input::-webkit-inner-spin-button { -webkit-appearance: none; }
         .mp-slot-input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+            box-shadow: 0 0 0 2px rgba(103,159,95,.18);
         }
         .mp-slot-input.has-value {
             border-color: var(--primary);
             background: #f0fdf4;
-            color: var(--primary);
+            color: var(--primary-dark);
         }
-        .mp-slot-input.col-bf:focus  { border-color:#d97706; box-shadow:0 0 0 3px rgba(217,119,6,.1); }
-        .mp-slot-input.col-sn:focus  { border-color:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,.1); }
-        .mp-slot-input.col-ln:focus  { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
-        .mp-slot-input.col-sup:focus { border-color:#9333ea; box-shadow:0 0 0 3px rgba(147,51,234,.1); }
+        .mp-slot-input.col-bf:focus  { border-color:#d97706; box-shadow:0 0 0 2px rgba(217,119,6,.12); }
+        .mp-slot-input.col-sn:focus  { border-color:#16a34a; box-shadow:0 0 0 2px rgba(22,163,74,.12); }
+        .mp-slot-input.col-ln:focus  { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.12); }
+        .mp-slot-input.col-sup:focus { border-color:#9333ea; box-shadow:0 0 0 2px rgba(147,51,234,.12); }
 
         /* sum badge */
         .mp-sum-badge {
-            font-size:.82rem; font-weight:800;
-            min-width:36px; text-align:center;
-            display:block;
+            font-size:.8rem; font-weight:800;
+            display:block; text-align:center;
         }
         .mp-sum-ok    { color:#15803d; }
         .mp-sum-over  { color:#c2410c; }
         .mp-sum-under { color:#64748b; }
 
+        /* sum progress track */
+        .mp-progress-track {
+            height: 4px;
+            border-radius: 99px;
+            background: #e2e8f0;
+            margin-top: 3px;
+            overflow: hidden;
+        }
+        .mp-progress-bar {
+            height: 100%;
+            border-radius: 99px;
+            transition: width .2s, background .2s;
+        }
+
         /* footer totals row */
-        .mp-foot-cell {
-            padding: .55rem .3rem;
+        #mp-table tfoot td {
+            padding: .28rem .3rem;
             text-align: center;
-            font-size: .8rem;
+            font-size: .75rem;
             font-weight: 800;
             border-top: 2px solid var(--border);
             background: #f8fafc;
             color: var(--text-primary);
         }
-        .mp-foot-cell.cell-item { text-align:left; padding-left:.9rem; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:700; }
+        #mp-table tfoot td.td-item {
+            text-align:left; padding-left:1rem;
+            font-size:.66rem; text-transform:uppercase;
+            letter-spacing:.06em; color:var(--text-muted); font-weight:700;
+        }
         </style>
 
         <div class="dash-section mt-6" id="meal-plan-details">
             <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('mp-body','mp-chevron')">
                 <span class="dash-section-title">Meal Plan Distribution</span>
                 <div style="display:flex;align-items:center;gap:.5rem">
-                    <span style="font-size:.75rem;color:var(--text-muted)">Each row must sum to the total (No)</span>
+                    <span style="font-size:.72rem;color:var(--text-muted)">Each row must sum to the target (No column)</span>
                     <svg id="mp-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(0deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
             </div>
             <div id="mp-body" style="display:block">
 
                 @if(session('success') && str_contains(session('success'), 'Meal plan'))
-                <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#dcfce7;color:#15803d;border-radius:6px;font-size:.82rem;font-weight:600">
+                <div style="margin:0 1.25rem .75rem;padding:.55rem 1rem;background:#dcfce7;color:#15803d;border-left:3px solid #16a34a;font-size:.82rem;font-weight:600">
                     ✓ {{ session('success') }}
                 </div>
                 @endif
                 @error('meal_plan')
-                <div style="margin:0 1.25rem .75rem;padding:.6rem 1rem;background:#fee2e2;color:#b91c1c;border-radius:6px;font-size:.82rem">
+                <div style="margin:0 1.25rem .75rem;padding:.55rem 1rem;background:#fee2e2;color:#b91c1c;border-left:3px solid #dc2626;font-size:.82rem">
                     ⚠ {{ $message }}
                 </div>
                 @enderror
 
                 <form method="POST" action="{{ route('patients.meal-plan.save', $patient) }}" id="meal-plan-form">
                     @csrf @method('PATCH')
-                    <div class="overflow-x-auto" style="padding:0 1.25rem 1rem">
-                        <div class="mp-grid" id="meal-plan-table">
-
-                            {{-- Column headers --}}
-                            <div class="mp-col-header col-item">Item</div>
-                            <div class="mp-col-header col-no">No</div>
-                            <div class="mp-col-header col-bf">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;display:block;margin:0 auto .15rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1M4.22 4.22l.7.7m13.16 13.16.7.7M3 12h1m16 0h1M4.92 19.07l.7-.7M18.36 5.64l.7-.7"/></svg>
-                                Breakf
-                            </div>
-                            <div class="mp-col-header col-sn1">Snack 1</div>
-                            <div class="mp-col-header col-ln">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;display:block;margin:0 auto .15rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h2l2 5 4-10 3 6 2-3h5"/></svg>
-                                Lunch
-                            </div>
-                            <div class="mp-col-header col-sn2">Snack 2</div>
-                            <div class="mp-col-header col-sup">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;display:block;margin:0 auto .15rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                                Supper
-                            </div>
-                            <div class="mp-col-header col-sn3">Snack 3</div>
-                            <div class="mp-col-header col-sum">Sum</div>
-
-                            {{-- Data rows --}}
-                            @foreach($patient->exchangeTemplate->items as $item)
-                            <div class="mp-row" data-nu="{{ $item->nu }}" data-item-id="{{ $item->id }}">
-                                <div class="mp-cell cell-item">{{ $item->name }}</div>
-                                <div class="mp-cell cell-no">{{ $item->nu }}</div>
+                    <div class="overflow-x-auto" style="padding:0 0 0">
+                        <table id="mp-table">
+                            <thead>
+                                <tr>
+                                    <th class="th-item" style="color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">Item</th>
+                                    <th class="th-no">
+                                        <span style="display:inline-flex;align-items:center;gap:.3rem;color:var(--primary)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.75rem;height:.75rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                                            No
+                                        </span>
+                                    </th>
+                                    <th>
+                                        <span class="mp-meal-pill" style="background:#fff7ed;color:#92400e">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1M4.22 4.22l.7.7m13.16 13.16.7.7M3 12h1m16 0h1M4.92 19.07l.7-.7M18.36 5.64l.7-.7"/></svg>
+                                            Breakfast
+                                        </span>
+                                    </th>
+                                    <th>
+                                        <span class="mp-meal-pill" style="background:#f0fdf4;color:#166534">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 3v2M9 5l1.5 1.5"/></svg>
+                                            Snack 1
+                                        </span>
+                                    </th>
+                                    <th>
+                                        <span class="mp-meal-pill" style="background:#eff6ff;color:#1e40af">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h2l2 5 4-10 3 6 2-3h5"/></svg>
+                                            Lunch
+                                        </span>
+                                    </th>
+                                    <th>
+                                        <span class="mp-meal-pill" style="background:#f0fdf4;color:#166534">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 3v2M9 5l1.5 1.5"/></svg>
+                                            Snack 2
+                                        </span>
+                                    </th>
+                                    <th>
+                                        <span class="mp-meal-pill" style="background:#fdf4ff;color:#7e22ce">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                                            Supper
+                                        </span>
+                                    </th>
+                                    <th>
+                                        <span class="mp-meal-pill" style="background:#f0fdf4;color:#166534">
+                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 3v2M9 5l1.5 1.5"/></svg>
+                                            Snack 3
+                                        </span>
+                                    </th>
+                                    <th class="th-sum" style="color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;font-size:.64rem">Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($patient->exchangeTemplate->items as $item)
                                 @php
                                     $slotDefs = [
-                                        'breakfast' => 'col-bf cell-bf',
-                                        'snack1'    => 'col-sn cell-sn',
-                                        'lunch'     => 'col-ln cell-ln',
-                                        'snack2'    => 'col-sn cell-sn',
-                                        'supper'    => 'col-sup cell-sup',
-                                        'snack3'    => 'col-sn cell-sn',
+                                        'breakfast' => ['col-bf','td-bf'],
+                                        'snack1'    => ['col-sn','td-sn'],
+                                        'lunch'     => ['col-ln','td-ln'],
+                                        'snack2'    => ['col-sn','td-sn'],
+                                        'supper'    => ['col-sup','td-sup'],
+                                        'snack3'    => ['col-sn','td-sn'],
                                     ];
                                 @endphp
-                                @foreach($slotDefs as $slot => $classes)
-                                @php $slotVal = $item->{'slot_'.$slot} > 0 ? $item->{'slot_'.$slot} + 0 : ''; @endphp
-                                <div class="mp-cell {{ explode(' ', $classes)[1] }}">
-                                    <input
-                                        type="number"
-                                        name="items[{{ $item->id }}][{{ $slot }}]"
-                                        value="{{ $slotVal }}"
-                                        min="0"
-                                        step="0.5"
-                                        placeholder=""
-                                        class="mp-slot-input meal-slot-input {{ explode(' ', $classes)[0] }}{{ $slotVal !== '' ? ' has-value' : '' }}"
-                                        data-row="{{ $item->id }}"
-                                    >
-                                </div>
+                                <tr class="mp-row" data-nu="{{ $item->nu }}" data-item-id="{{ $item->id }}">
+                                    <td class="td-item">{{ $item->name }}</td>
+                                    <td class="td-no">{{ $item->nu }}</td>
+                                    @foreach($slotDefs as $slot => [$colClass, $tdClass])
+                                    @php $slotVal = $item->{'slot_'.$slot} > 0 ? $item->{'slot_'.$slot} + 0 : ''; @endphp
+                                    <td class="{{ $tdClass }}">
+                                        <input
+                                            type="number"
+                                            name="items[{{ $item->id }}][{{ $slot }}]"
+                                            value="{{ $slotVal }}"
+                                            min="0"
+                                            step="0.5"
+                                            placeholder="—"
+                                            class="mp-slot-input meal-slot-input {{ $colClass }}{{ $slotVal !== '' ? ' has-value' : '' }}"
+                                            data-row="{{ $item->id }}"
+                                        >
+                                    </td>
+                                    @endforeach
+                                    <td class="td-sum">
+                                        <span class="mp-sum-badge row-sum mp-sum-under" data-row="{{ $item->id }}">0</span>
+                                        <div class="mp-progress-track">
+                                            <div class="mp-progress-bar row-progress" data-row="{{ $item->id }}" style="width:0%;background:#e2e8f0"></div>
+                                        </div>
+                                        <span class="row-status" data-row="{{ $item->id }}" style="font-size:.6rem;font-weight:700;display:block;text-align:center;margin-top:2px"></span>
+                                    </td>
+                                </tr>
                                 @endforeach
-                                <div class="mp-cell cell-sum">
-                                    <span class="mp-sum-badge row-sum mp-sum-under" data-row="{{ $item->id }}">0</span>
-                                    <span class="row-status" data-row="{{ $item->id }}" style="font-size:.6rem;font-weight:700"></span>
-                                </div>
-                            </div>
-                            @endforeach
-
-                            {{-- Footer totals --}}
-                            <div class="mp-foot-cell cell-item">Total</div>
-                            <div class="mp-foot-cell" id="mp-tot-no">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-bf">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-sn1">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-ln">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-sn2">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-sup">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-sn3">—</div>
-                            <div class="mp-foot-cell" id="mp-tot-sum">—</div>
-
-                        </div>{{-- /mp-grid --}}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td class="td-item">Column total</td>
+                                    <td id="mp-tot-no">—</td>
+                                    <td id="mp-tot-bf">—</td>
+                                    <td id="mp-tot-sn1">—</td>
+                                    <td id="mp-tot-ln">—</td>
+                                    <td id="mp-tot-sn2">—</td>
+                                    <td id="mp-tot-sup">—</td>
+                                    <td id="mp-tot-sn3">—</td>
+                                    <td id="mp-tot-sum">—</td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
 
                     <div style="padding:.75rem 1.25rem 1.25rem;display:flex;align-items:center;gap:1rem">
                         <button type="submit" id="meal-plan-save"
-                            style="padding:.55rem 1.6rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border:none;border-radius:6px;cursor:pointer;letter-spacing:.02em">
+                            style="padding:.5rem 1.5rem;background:var(--primary);color:#fff;font-weight:700;font-size:.83rem;border:none;cursor:pointer;letter-spacing:.02em">
                             Save Meal Plan
                         </button>
-                        <span id="meal-plan-status" style="font-size:.8rem;color:var(--text-muted)"></span>
+                        <span id="meal-plan-status" style="font-size:.78rem;color:var(--text-muted)"></span>
                     </div>
                 </form>
 
@@ -1236,6 +1286,7 @@
                             <tr style="background:#f9fafb;position:sticky;top:0;z-index:1">
                                 <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Date</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight&nbsp;(kg)</th>
+                                <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Height&nbsp;(cm)</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Change</th>
                                 <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Notes</th>
@@ -1255,6 +1306,9 @@
                                     </td>
                                     <td style="padding:.6rem .9rem;text-align:right;font-weight:700;color:var(--text-primary);border-bottom:1px solid #f3f4f6">
                                         {{ number_format($visit->weight, 1) }}
+                                    </td>
+                                    <td style="padding:.6rem .9rem;text-align:right;color:var(--text-muted);border-bottom:1px solid #f3f4f6">
+                                        {{ $visit->height ? number_format($visit->height, 1) : '—' }}
                                     </td>
                                     <td style="padding:.6rem .9rem;text-align:right;color:var(--text-muted);border-bottom:1px solid #f3f4f6">
                                         {{ $bmi ?? '—' }}
@@ -1735,6 +1789,12 @@
             if (sumEl) {
                 sumEl.textContent = sum % 1 === 0 ? sum : sum.toFixed(2);
                 sumEl.className = 'mp-sum-badge row-sum ' + (ok ? 'mp-sum-ok' : (sum > nu ? 'mp-sum-over' : 'mp-sum-under'));
+            }
+            const progEl = form.querySelector('.row-progress[data-row="' + rowId + '"]');
+            if (progEl && nu > 0) {
+                const pct = Math.min(sum / nu * 100, 100);
+                progEl.style.width = pct + '%';
+                progEl.style.background = ok ? '#16a34a' : (sum > nu ? '#c2410c' : '#94a3b8');
             }
             if (statusEl) {
                 statusEl.textContent = ok ? '✓' : (sum < nu ? '↑ need ' + (nu - sum).toFixed(2) : '↓ over by ' + (sum - nu).toFixed(2));

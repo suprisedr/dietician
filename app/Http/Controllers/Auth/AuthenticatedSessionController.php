@@ -31,9 +31,29 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $request->session()->forget([
+            'auth.two_factor_passed',
+            'auth.two_factor_skip_granted',
+        ]);
+
+        // Register this session's device record immediately so the device-limit
+        // middleware doesn't treat the new session as an "extra" device on the
+        // very next request (e.g. the 2FA setup/challenge page).
         $this->devices->touchDevice($request);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+
+        if ($user->hasTwoFactorEnabled()) {
+            return redirect()->route('two-factor.challenge');
+        }
+
+        if (is_null($user->two_factor_prompted_at)) {
+            $user->forceFill([
+                'two_factor_prompted_at' => now(),
+            ])->save();
+        }
+
+        return redirect()->route('two-factor.setup');
     }
 
     /**

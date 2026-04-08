@@ -660,8 +660,8 @@ select.edit-input { cursor: pointer; }
 /* Exchange template table */
 .exchange-table { width: 100%; border-collapse: collapse; }
 .exchange-table thead th {
-    padding: .65rem 1rem;
-    font-size: .68rem;
+    padding: .45rem .75rem;
+    font-size: .67rem;
     font-weight: 700;
     letter-spacing: .07em;
     text-transform: uppercase;
@@ -672,14 +672,62 @@ select.edit-input { cursor: pointer; }
     text-align: left;
 }
 .exchange-table tbody td {
-    padding: .7rem 1rem;
-    font-size: .83rem;
+    padding: .3rem .6rem;
+    font-size: .8rem;
     color: var(--text-primary);
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
 }
+.exchange-table tfoot td {
+    padding: .4rem .6rem;
+    font-size: .8rem;
+    vertical-align: middle;
+}
 .exchange-table tbody tr:last-child td { border-bottom: none; }
 .exchange-table tbody tr:hover { background: #fef9f5; }
+
+/* nu spinner control */
+.nu-btn {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-page);
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-size: .9rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0;
+    transition: background .12s, border-color .12s;
+}
+.nu-btn:hover:not(:disabled) {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.nu-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.nu-input {
+    width: 2.25rem;
+    height: 1.5rem;
+    padding: 0 .15rem;
+    text-align: center;
+    font-size: .82rem;
+    font-weight: 800;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: #fff;
+    color: var(--text-primary);
+    outline: none;
+    -moz-appearance: textfield;
+}
+.nu-input::-webkit-inner-spin-button,
+.nu-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.nu-input:focus { border-color: var(--primary); }
 
 /* Sticky header for the scrollable Meal Plan table */
 #meal-plan-table { border-collapse: separate; border-spacing: 0; }
