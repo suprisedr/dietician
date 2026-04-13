@@ -561,10 +561,38 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         </summary>
         <div style="padding:1.25rem;overflow-x:auto">
             @php
+                $selMonth   = request()->input('month', now()->format('Y-m'));
+                // Validate format, fall back to current month
+                if (!preg_match('/^\d{4}-\d{2}$/', $selMonth)) { $selMonth = now()->format('Y-m'); }
+                $monthStart = \Carbon\Carbon::createFromFormat('Y-m', $selMonth)->startOfMonth();
+                $monthEnd   = $monthStart->copy()->endOfMonth();
+                $prevMonth  = $monthStart->copy()->subMonth()->format('Y-m');
+                $nextMonth  = $monthStart->copy()->addMonth()->format('Y-m');
+
+                // Include weeks whose 7-day span overlaps the selected month
                 $monthlyWeeks = \App\Models\MealPlannerWeek::where('user_id', auth()->id())
                     ->when($mealPlanner->patient_id, fn($q) => $q->where('patient_id', $mealPlanner->patient_id))
-                    ->orderBy('week_start')->limit(4)->get()->load('entries');
+                    ->where('week_start', '<=', $monthEnd->toDateString())
+                    ->where('week_start', '>=', $monthStart->copy()->subDays(6)->toDateString())
+                    ->orderBy('week_start')
+                    ->get()->load('entries');
+
+                $prevUrl = request()->fullUrlWithQuery(['month' => $prevMonth]);
+                $nextUrl = request()->fullUrlWithQuery(['month' => $nextMonth]);
             @endphp
+
+            {{-- Month navigator --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <a href="{{ $prevUrl }}" style="display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-weight:700;color:var(--text-primary);text-decoration:none;background:#fff" title="Previous month">
+                    &#8592; {{ $monthStart->copy()->subMonth()->format('M Y') }}
+                </a>
+                <span style="font-size:.92rem;font-weight:800;color:var(--text-primary)">
+                    {{ $monthStart->format('F Y') }}
+                </span>
+                <a href="{{ $nextUrl }}" style="display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-weight:700;color:var(--text-primary);text-decoration:none;background:#fff" title="Next month">
+                    {{ $monthStart->copy()->addMonth()->format('M Y') }} &#8594;
+                </a>
+            </div>
             <table class="mp-monthly-table">
                 <thead>
                     <tr>
@@ -612,6 +640,13 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                             </tr>
                         @endforeach
                     @endforeach
+                    @if($monthlyWeeks->isEmpty())
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:.82rem">
+                                No meal plans found for <strong>{{ $monthStart->format('F Y') }}</strong>.
+                            </td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
