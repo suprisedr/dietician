@@ -74,6 +74,7 @@ class PatientController extends Controller
             'height'                => $request->height,
             'activity_factor'       => $request->activity_factor,
             'ibw_bmi_target'        => $request->ibw_bmi_target ?? 22,
+            'use_ibw_weight'        => true,
         ]);
 
         // Create default macronutrients
@@ -295,8 +296,8 @@ class PatientController extends Controller
             'date_of_birth', 'address', 'reason_for_assessment',
             'age', 'gender', 'weight', 'height', 'activity_factor', 'ibw_bmi_target',
         ]);
-        // Sync use_ibw_weight when ibw_bmi_target changes via the edit form
-        $updateData['use_ibw_weight'] = isset($updateData['ibw_bmi_target']) && ((int) $updateData['ibw_bmi_target'] === 30);
+        // Any BMI target (22, 25 or 30) means IBW is used as the calculation weight.
+        $updateData['use_ibw_weight'] = isset($updateData['ibw_bmi_target']) && in_array((int) $updateData['ibw_bmi_target'], [22, 25, 30]);
         $patient->update($updateData);
 
         return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');
@@ -325,9 +326,8 @@ class PatientController extends Controller
             'ibw_bmi_target' => 'required|integer|in:22,25,30',
         ]);
 
-        // Selecting BMI 30 activates IBW as the calculation weight;
-        // any other target deactivates it.
-        $data['use_ibw_weight'] = ($data['ibw_bmi_target'] === 30);
+        // Any selected BMI target (22, 25 or 30) means IBW is used as the calculation weight.
+        $data['use_ibw_weight'] = true;
 
         $patient->update($data);
         $patient->refresh();
