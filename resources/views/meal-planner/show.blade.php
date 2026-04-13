@@ -293,6 +293,75 @@
 }
 #mp-btn-confirm:hover { filter:brightness(.92); }
 
+/* ── FatSecret Portion Modal ─────────────────────────────────── */
+#fs-portion-overlay {
+    display:none; position:fixed; inset:0; z-index:10100;
+    background:rgba(0,0,0,.5); backdrop-filter:blur(2px);
+    align-items:center; justify-content:center;
+}
+#fs-portion-overlay.open { display:flex; }
+#fs-portion-modal {
+    background:#fff; border-radius:14px;
+    width:min(420px,95vw); max-height:90vh; overflow-y:auto;
+    box-shadow:0 24px 60px rgba(0,0,0,.25);
+    animation:modalIn .18s ease;
+    padding:0;
+}
+#fs-portion-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.85rem 1.1rem .6rem; border-bottom:1px solid var(--border);
+}
+#fs-portion-title { font-size:.88rem; font-weight:800; color:var(--text-primary); }
+#fs-portion-close {
+    background:none; border:none; cursor:pointer; font-size:1.25rem;
+    color:var(--text-muted); padding:.1rem .3rem; border-radius:6px;
+}
+#fs-portion-close:hover { background:#f1f5f9; }
+#fs-portion-body { padding:1rem 1.1rem; }
+.fp-food-name { font-size:.95rem; font-weight:800; color:var(--text-primary); margin-bottom:.15rem; }
+.fp-serving-orig { font-size:.73rem; color:var(--text-muted); margin-bottom:1rem; }
+.fp-multiplier-row {
+    display:flex; align-items:center; gap:.6rem; margin-bottom:1rem;
+}
+.fp-multiplier-label { font-size:.78rem; font-weight:600; color:var(--text-primary); white-space:nowrap; }
+.fp-multiplier-inp {
+    width:80px; padding:.4rem .6rem; border:1.5px solid var(--border); border-radius:8px;
+    font-size:.9rem; font-weight:700; text-align:center; outline:none;
+    -moz-appearance:textfield;
+}
+.fp-multiplier-inp::-webkit-inner-spin-button,.fp-multiplier-inp::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.fp-multiplier-inp:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(249,115,22,.12); }
+.fp-serving-desc { font-size:.78rem; color:var(--text-muted); }
+.fp-nutrients {
+    background:#f8fafc; border:1px solid var(--border); border-radius:10px;
+    padding:.65rem .85rem; display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:.4rem .2rem; margin-bottom:1rem;
+}
+.fp-nut-cell { display:flex; flex-direction:column; align-items:center; padding:.3rem .2rem; }
+.fp-nut-val  { font-size:.92rem; font-weight:800; color:var(--text-primary); }
+.fp-nut-lbl  { font-size:.62rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); }
+.fp-nut-cell.nut-kj .fp-nut-val   { color:#c2410c; }
+.fp-nut-cell.nut-cho .fp-nut-val  { color:#d97706; }
+.fp-nut-cell.nut-pro .fp-nut-val  { color:#6366f1; }
+.fp-nut-cell.nut-fat .fp-nut-val  { color:#0d9488; }
+.fp-nut-cell.nut-kcal .fp-nut-val { color:#64748b; }
+.fp-nut-cell.nut-fib .fp-nut-val  { color:#16a34a; }
+#fs-portion-ftr {
+    display:flex; gap:.5rem; justify-content:flex-end;
+    padding:.75rem 1.1rem; border-top:1px solid var(--border); background:#fafafa; border-radius:0 0 14px 14px;
+}
+#fs-portion-cancel {
+    padding:.42rem .9rem; border-radius:8px; font-size:.78rem; font-weight:700;
+    border:1.5px solid var(--border); background:#fff; cursor:pointer;
+}
+#fs-portion-cancel:hover { background:#f1f5f9; }
+#fs-portion-confirm {
+    padding:.42rem 1rem; border-radius:8px; font-size:.78rem; font-weight:700;
+    border:none; background:#1d4ed8; color:#fff; cursor:pointer;
+}
+#fs-portion-confirm:hover { filter:brightness(.92); }
+#fs-portion-confirm:disabled { opacity:.5; cursor:not-allowed; }
+
 /* ── Save bar ─────────────────────────────────────────────── */
 .mp-save-bar {
     display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
@@ -547,6 +616,42 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             </table>
         </div>
     </details>
+</div>
+
+{{-- ── FatSecret Portion Adjustment Modal ────────────────────── --}}
+<div id="fs-portion-overlay" role="dialog" aria-modal="true">
+    <div id="fs-portion-modal">
+        <div id="fs-portion-hdr">
+            <span id="fs-portion-title">🌐 Adjust Portion</span>
+            <button id="fs-portion-close" onclick="fsPortion.cancel()">&times;</button>
+        </div>
+        <div id="fs-portion-body">
+            <div class="fp-food-name" id="fp-name"></div>
+            <div class="fp-serving-orig" id="fp-serving"></div>
+            <div class="fp-multiplier-row">
+                <span class="fp-multiplier-label">Servings:</span>
+                <input type="number" id="fp-mult" class="fp-multiplier-inp" value="1" min="0.1" step="0.1">
+                <span class="fp-serving-desc" id="fp-serving-unit"></span>
+            </div>
+            <div class="fp-multiplier-row" id="fp-grams-row" style="display:none">
+                <span class="fp-multiplier-label">Custom (g):</span>
+                <input type="number" id="fp-grams" class="fp-multiplier-inp" min="0.1" step="1">
+                <span class="fp-serving-desc" style="font-size:.72rem;color:#6366f1">scales nutrients</span>
+            </div>
+            <div class="fp-nutrients">
+                <div class="fp-nut-cell nut-kj">   <span class="fp-nut-val" id="fp-kj">—</span>   <span class="fp-nut-lbl">kJ</span></div>
+                <div class="fp-nut-cell nut-kcal"> <span class="fp-nut-val" id="fp-kcal">—</span> <span class="fp-nut-lbl">kcal</span></div>
+                <div class="fp-nut-cell nut-cho">  <span class="fp-nut-val" id="fp-carbs">—</span> <span class="fp-nut-lbl">CHO (g)</span></div>
+                <div class="fp-nut-cell nut-pro">  <span class="fp-nut-val" id="fp-prot">—</span>  <span class="fp-nut-lbl">Protein (g)</span></div>
+                <div class="fp-nut-cell nut-fat">  <span class="fp-nut-val" id="fp-fat">—</span>   <span class="fp-nut-lbl">Fat (g)</span></div>
+                <div class="fp-nut-cell nut-fib">  <span class="fp-nut-val" id="fp-fib">—</span>   <span class="fp-nut-lbl">Fiber (g)</span></div>
+            </div>
+        </div>
+        <div id="fs-portion-ftr">
+            <button type="button" id="fs-portion-cancel" onclick="fsPortion.cancel()">Cancel</button>
+            <button type="button" id="fs-portion-confirm" onclick="fsPortion.confirm()">&#x2713; Add to Library &amp; Select</button>
+        </div>
+    </div>
 </div>
 
 {{-- ── Item Picker Modal ─────────────────────────────────────── --}}
@@ -973,30 +1078,149 @@ function appendFS(body,q){
             +'<span style="font-size:.65rem;color:#2563eb;font-weight:600">+ library</span></div>';
         row.querySelector('input').addEventListener('change',function(e){
             if(!e.target.checked){ delete _sel[food.id]; row.classList.remove('selected'); updateCount(); recalcLive(); return; }
-            if(_qty>0&&Object.keys(_sel).length>=_qty){ e.target.checked=false; return; }
-            row.classList.add('selected'); e.target.disabled=true;
-            var payload=new URLSearchParams({_token:CSRF,name:food.name,serving:food.serving||'',kcal:food.kcal||'',kj:food.kj||'',fat:food.fat||'',carbs:food.carbs||'',protein:food.protein||'',fiber:food.fiber||''});
-            fetch(IMPORT_URL,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},body:payload.toString()})
-            .then(function(r){ return r.json(); })
-            .then(function(saved){
-                var newIt={value:String(saved.id),text:saved.name,group:saved.category||'Other',kcal:saved.energy_kcal||0,kj:saved.energy_kj||0,serving:saved.serving_size||null};
-                ITEMS.push(newIt); idToItem[newIt.value]=newIt;
-                if(!groups[newIt.group]){ groups[newIt.group]=[]; }
-                groups[newIt.group].push(newIt);
-                _sel[newIt.value]={id:newIt.value,text:newIt.text,kcal:toKcal(newIt),kj:toKj(newIt),group:newIt.group,exchCat:_catSlug,qty:1};
-                _fsResults=_fsResults.filter(function(f){ return f.id!==food.id; });
-                updateCount(); updateQuotaBadge(); recalcLive();
-                renderBody(document.getElementById('mp-modal-search').value.trim());
-            })
-            .catch(function(){
-                var val='_f_'+Date.now(); _sel[val]={id:null,text:food.name,kcal:food.kcal?Math.round(food.kcal):0,kj:food.kj?Math.round(food.kj):0,group:null,exchCat:_catSlug,qty:1};
-                updateCount(); recalcLive();
+            // Uncheck immediately — the portion modal will decide whether to proceed
+            e.target.checked=false;
+            if(_qty>0&&Object.keys(_sel).length>=_qty){ return; }
+            fsPortion.open(food, function(scaled){
+                var payload=new URLSearchParams({_token:CSRF,name:scaled.name,serving:scaled.serving||'',kcal:scaled.kcal||'',kj:scaled.kj||'',fat:scaled.fat||'',carbs:scaled.carbs||'',protein:scaled.protein||'',fiber:scaled.fiber||''});
+                var confirmBtn=document.getElementById('fs-portion-confirm');
+                if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Saving…'; }
+                fetch(IMPORT_URL,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},body:payload.toString()})
+                .then(function(r){ return r.json(); })
+                .then(function(saved){
+                    var newIt={value:String(saved.id),text:saved.name,group:saved.category||'Other',kcal:saved.energy_kcal||0,kj:saved.energy_kj||0,serving:saved.serving_size||null};
+                    if(!idToItem[newIt.value]){ ITEMS.push(newIt); idToItem[newIt.value]=newIt; if(!groups[newIt.group]){ groups[newIt.group]=[]; } groups[newIt.group].push(newIt); }
+                    _sel[newIt.value]={id:newIt.value,text:newIt.text,kcal:toKcal(newIt),kj:toKj(newIt),group:newIt.group,exchCat:_catSlug,qty:1};
+                    _fsResults=_fsResults.filter(function(f){ return f.id!==food.id; });
+                    fsPortion.close();
+                    updateCount(); updateQuotaBadge(); recalcLive();
+                    renderBody(document.getElementById('mp-modal-search').value.trim());
+                })
+                .catch(function(){
+                    var val='_f_'+Date.now(); _sel[val]={id:null,text:scaled.name,kcal:scaled.kcal?Math.round(scaled.kcal):0,kj:scaled.kj?Math.round(scaled.kj):0,group:null,exchCat:_catSlug,qty:1};
+                    fsPortion.close();
+                    updateCount(); recalcLive();
+                });
             });
         });
         grp.appendChild(row);
     });
     if(grp.children.length>1) body.appendChild(grp);
 }
+
+/* ── FatSecret Portion Modal controller ──────────────── */
+window.fsPortion=(function(){
+    var _food=null, _onConfirm=null, _baseGrams=null, _syncing=false;
+    var overlay=document.getElementById('fs-portion-overlay');
+    var multInp=document.getElementById('fp-mult');
+    var gramsInp=document.getElementById('fp-grams');
+    var gramsRow=document.getElementById('fp-grams-row');
+
+    function fmt(v){ return v!==null&&v!==undefined&&!isNaN(v)?Math.round(v*10)/10:'—'; }
+
+    function refresh(){
+        var m=Math.max(0.1,parseFloat(multInp.value)||1);
+        document.getElementById('fp-kj').textContent   = _food.kj      ? Math.round(_food.kj*m)       : '—';
+        document.getElementById('fp-kcal').textContent = _food.kcal    ? Math.round(_food.kcal*m)     : '—';
+        document.getElementById('fp-carbs').textContent= _food.carbs   ? fmt(_food.carbs*m)           : '—';
+        document.getElementById('fp-prot').textContent = _food.protein ? fmt(_food.protein*m)         : '—';
+        document.getElementById('fp-fat').textContent  = _food.fat     ? fmt(_food.fat*m)             : '—';
+        document.getElementById('fp-fib').textContent  = _food.fiber   ? fmt(_food.fiber*m)           : '—';
+    }
+
+    multInp.addEventListener('input', function(){
+        if(_syncing) return;
+        if(_baseGrams){
+            _syncing=true;
+            gramsInp.value=Math.round(Math.max(0.1,parseFloat(multInp.value)||1)*_baseGrams*10)/10;
+            _syncing=false;
+        }
+        refresh();
+    });
+    multInp.addEventListener('change', function(){
+        if(_syncing) return;
+        if(_baseGrams){
+            _syncing=true;
+            gramsInp.value=Math.round(Math.max(0.1,parseFloat(multInp.value)||1)*_baseGrams*10)/10;
+            _syncing=false;
+        }
+        refresh();
+    });
+
+    gramsInp.addEventListener('input', function(){
+        if(_syncing||!_baseGrams) return;
+        var g=Math.max(0.1,parseFloat(gramsInp.value)||0.1);
+        _syncing=true;
+        multInp.value=Math.round(g/_baseGrams*1000)/1000;
+        _syncing=false;
+        refresh();
+    });
+    gramsInp.addEventListener('change', function(){
+        if(_syncing||!_baseGrams) return;
+        var g=Math.max(0.1,parseFloat(gramsInp.value)||0.1);
+        _syncing=true;
+        multInp.value=Math.round(g/_baseGrams*1000)/1000;
+        _syncing=false;
+        refresh();
+    });
+
+    return {
+        open: function(food, onConfirm){
+            _food=food; _onConfirm=onConfirm;
+            // Parse base grams from serving string (e.g. "100g", "1 serving (85g)", "85 g")
+            var gMatch=food.serving&&food.serving.match(/(\d+\.?\d*)\s*g\b/i);
+            _baseGrams=gMatch?parseFloat(gMatch[1]):null;
+            document.getElementById('fp-name').textContent=food.name;
+            var servingText=food.serving?food.serving:'(unknown serving)';
+            document.getElementById('fp-serving').textContent='Per serving: '+servingText;
+            document.getElementById('fp-serving-unit').textContent='× '+servingText;
+            multInp.value='1';
+            if(_baseGrams){
+                gramsRow.style.display='';
+                gramsInp.value=_baseGrams;
+            } else {
+                gramsRow.style.display='none';
+                gramsInp.value='';
+            }
+            var btn=document.getElementById('fs-portion-confirm');
+            if(btn){ btn.disabled=false; btn.innerHTML='&#x2713; Add to Library &amp; Select'; }
+            refresh();
+            overlay.classList.add('open');
+            (_baseGrams?gramsInp:multInp).focus();
+            (_baseGrams?gramsInp:multInp).select();
+        },
+        cancel: function(){
+            overlay.classList.remove('open');
+            _food=null; _onConfirm=null;
+        },
+        close: function(){
+            overlay.classList.remove('open');
+            _food=null; _onConfirm=null;
+        },
+        confirm: function(){
+            if(!_food||!_onConfirm) return;
+            var m=Math.max(0.1,parseFloat(multInp.value)||1);
+            var servingLabel;
+            if(_baseGrams){
+                var customG=Math.round(parseFloat(gramsInp.value)||_baseGrams);
+                servingLabel=customG+'g';
+            } else {
+                servingLabel=_food.serving?(Math.round(m*10)/10+' × '+_food.serving):null;
+            }
+            var scaled={
+                name:    _food.name,
+                serving: servingLabel,
+                kcal:    _food.kcal    ? _food.kcal*m    : null,
+                kj:      _food.kj     ? _food.kj*m      : null,
+                fat:     _food.fat    ? _food.fat*m     : null,
+                carbs:   _food.carbs  ? _food.carbs*m   : null,
+                protein: _food.protein? _food.protein*m : null,
+                fiber:   _food.fiber  ? _food.fiber*m   : null,
+            };
+            _onConfirm(scaled);
+        }
+    };
+})();
 
 /* ── Initialise from saved DB data ───────────────────── */
 for(var di=0;di<7;di++){

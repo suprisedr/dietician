@@ -794,7 +794,7 @@
                             <td class="et-cho"  style="text-align:right;background:rgba(249,115,22,.12);font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->cho_g          !== null ? $nu * $item->cho_g          : '—' }}</td>
                             <td class="et-pmin" style="text-align:right;background:rgba(99,102,241,.12);font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->protein_min_g  !== null ? $nu * $item->protein_min_g  : '—' }}</td>
                             <td class="et-fmin" style="text-align:right;background:rgba(20,184,166,.12);font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->fat_min_g      !== null ? $nu * $item->fat_min_g      : '—' }}</td>
-                            <td class="et-kj"   style="text-align:right;font-weight:600;font-size:.8rem;padding:.35rem .6rem">{{ $item->kj !== null ? $nu * $item->kj : '—' }}</td>
+                            <td class="et-kj"   style="text-align:right;font-weight:600;font-size:.8rem;padding:.35rem .6rem"></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -1592,7 +1592,7 @@
             row.querySelector('.et-cho').textContent  = cho  ? Math.round(cho  * nu * 10) / 10 : '—';
             row.querySelector('.et-pmin').textContent = pmin ? Math.round(pmin * nu * 10) / 10 : '—';
             row.querySelector('.et-fmin').textContent = fmin ? Math.round(fmin * nu * 10) / 10 : '—';
-            row.querySelector('.et-kj').textContent   = kj   ? Math.round(kj   * nu)           : '—';
+            row.querySelector('.et-kj').textContent   = '';
         }
 
         function recalcTotals() {
