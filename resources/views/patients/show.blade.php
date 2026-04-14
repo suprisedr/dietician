@@ -1659,10 +1659,10 @@
                 el.innerHTML = '<span style="display:inline-block;padding:.15rem .5rem;border-radius:999px;font-weight:700;font-size:.8rem;background:'+bgColor+';color:'+color+'">'+sign+d+'</span>';
             }
 
-            function naPct(id, actMacroKj, totalEtKj) {
+            function naPct(id, act, rec) {
                 const el = document.getElementById(id);
-                if (!el || !totalEtKj) { if(el) el.textContent = '—'; return; }
-                const pct = actMacroKj / totalEtKj * 100;
+                if (!el || !rec) { if(el) el.textContent = '—'; return; }
+                const pct = act / rec * 100;
                 el.innerHTML = '<span style="font-weight:700">'+pct.toFixed(1)+'%</span>';
             }
 
@@ -1676,10 +1676,10 @@
             naDiff('na-fat-diff', actFatG, recFatG);
             naDiff('na-kj-diff',  actKj,   teeKjVal);
 
-            naPct('na-cho-pct', actChoKj, actKj);
-            naPct('na-pro-pct', actProKj, actKj);
-            naPct('na-fat-pct', actFatKj, actKj);
-            naPct('na-kj-pct',  actKj,    actKj);
+            naPct('na-cho-pct', actChoG,  recChoG);
+            naPct('na-pro-pct', actProG,  recProG);
+            naPct('na-fat-pct', actFatG,  recFatG);
+            naPct('na-kj-pct',  actKj,    teeKjVal);
         }
 
         // handle +/- forms
@@ -1744,9 +1744,9 @@
             var mpRow = mpForm.querySelector('.mp-row[data-item-id="' + itemId + '"]');
             if (!mpRow) return;
             mpRow.dataset.nu = newNu;
-            // update the visible No cell (second .mp-cell)
-            var cells = mpRow.querySelectorAll('.mp-cell');
-            if (cells[1]) cells[1].textContent = newNu;
+            // update the visible No cell
+            var noCell = mpRow.querySelector('td.td-no');
+            if (noCell) noCell.textContent = newNu;
             if (window._mpUpdateRow)        window._mpUpdateRow(itemId);
             if (window._mpUpdateColTotals)  window._mpUpdateColTotals();
             if (window._mpUpdateSaveButton) window._mpUpdateSaveButton();

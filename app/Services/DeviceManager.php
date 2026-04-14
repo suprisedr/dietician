@@ -26,10 +26,12 @@ class DeviceManager
         $deviceName = $browser . ' on ' . $platform;
 
         UserDevice::updateOrCreate(
-            ['session_id' => $sessionId],
             [
-                'user_id'        => $user->id,
-                'device_name'    => $deviceName,
+                'user_id'     => $user->id,
+                'device_name' => $deviceName,
+            ],
+            [
+                'session_id'     => $sessionId,
                 'browser'        => $browser,
                 'platform'       => $platform,
                 'ip_address'     => $request->ip(),
@@ -51,8 +53,11 @@ class DeviceManager
             return false;
         }
 
-        // If this session is already registered, it's fine.
-        if (UserDevice::where('session_id', $sessionId)->exists()) {
+        // If this device (same browser+platform for this user) is already registered, it's fine.
+        [$browser, $platform] = $this->parseUserAgent($request->userAgent() ?? '');
+        $deviceName = $browser . ' on ' . $platform;
+
+        if (UserDevice::where('user_id', $user->id)->where('device_name', $deviceName)->exists()) {
             return false;
         }
 

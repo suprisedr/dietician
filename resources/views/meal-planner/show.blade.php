@@ -25,6 +25,10 @@
                 'kcal'    => $item->energy_kcal,
                 'kj'      => $item->energy_kj,
                 'serving' => $item->serving_size ?? null,
+                'cho'     => $item->cho_g,
+                'pro'     => $item->protein_g,
+                'fat'     => $item->fat_g,
+                'fib'     => $item->fiber_g,
             ];
         }
     }
@@ -205,7 +209,7 @@
 #mp-modal-overlay.open { display:flex; }
 #mp-modal {
     background:#fff; border-radius:16px;
-    width:min(540px,95vw); max-height:84vh;
+    width:min(600px,97vw); max-height:84vh;
     display:flex; flex-direction:column;
     box-shadow:0 24px 60px rgba(0,0,0,.22);
     overflow:hidden; animation:modalIn .18s ease;
@@ -266,9 +270,19 @@
 .im-option:hover { background:#fef9f5; }
 .im-option.selected { background:#fff7ed; }
 .im-option input[type=checkbox] { width:15px; height:15px; flex-shrink:0; margin-top:2px; accent-color:var(--primary); cursor:pointer; }
-.im-option-label { display:flex; flex-direction:column; gap:1px; }
+.im-option-label { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
 .im-option-name  { font-weight:600; line-height:1.3; }
 .im-option-desc  { font-size:.71rem; color:var(--text-muted); }
+.im-option-macros { display:flex; flex-wrap:wrap; gap:3px; margin-top:2px; }
+.im-macro-chip {
+    display:inline-flex; gap:2px; align-items:baseline;
+    padding:.1rem .35rem; border-radius:4px; font-size:.64rem; font-weight:700;
+}
+.im-macro-chip.kj  { background:#fff1e6; color:#c2410c; }
+.im-macro-chip.cho { background:#fef9c3; color:#a16207; }
+.im-macro-chip.pro { background:#ede9fe; color:#5b21b6; }
+.im-macro-chip.fat { background:#ccfbf1; color:#0f766e; }
+.im-macro-chip-lbl { font-weight:400; opacity:.75; }
 .im-qty-wrap { display:flex; align-items:center; gap:3px; margin-left:auto; flex-shrink:0; align-self:center; }
 .im-qty-btn { width:22px; height:22px; border:1.5px solid var(--border); background:#fff; border-radius:4px; font-size:.85rem; cursor:pointer; color:var(--text-primary); display:flex; align-items:center; justify-content:center; padding:0; }
 .im-qty-btn:hover { background:#f1f5f9; }
@@ -361,6 +375,69 @@
 }
 #fs-portion-confirm:hover { filter:brightness(.92); }
 #fs-portion-confirm:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── Item Edit Modal ─────────────────────────────────────────── */
+#item-edit-overlay {
+    display:none; position:fixed; inset:0; z-index:10200;
+    background:rgba(0,0,0,.5); backdrop-filter:blur(2px);
+    align-items:center; justify-content:center;
+}
+#item-edit-overlay.open { display:flex; }
+#item-edit-modal {
+    background:#fff; border-radius:14px;
+    width:min(380px,95vw); box-shadow:0 24px 60px rgba(0,0,0,.25);
+    animation:modalIn .18s ease;
+}
+#item-edit-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.85rem 1.1rem .6rem; border-bottom:1px solid var(--border);
+}
+#item-edit-hdr-title { font-size:.88rem; font-weight:800; color:var(--text-primary); }
+#item-edit-close-btn {
+    background:none; border:none; cursor:pointer; font-size:1.25rem;
+    color:var(--text-muted); padding:.1rem .3rem; border-radius:6px;
+}
+#item-edit-close-btn:hover { background:#f1f5f9; }
+#item-edit-body { padding:1rem 1.1rem; }
+.ie-food-name { font-size:.93rem; font-weight:800; color:var(--text-primary); margin-bottom:.9rem; line-height:1.4; }
+.ie-field-row { display:flex; flex-direction:column; gap:.3rem; margin-bottom:.85rem; }
+.ie-label { font-size:.69rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); }
+.ie-qty-row { display:flex; align-items:center; gap:.5rem; }
+.ie-qty-btn {
+    width:30px; height:30px; border-radius:6px; border:1.5px solid var(--border);
+    background:#f8fafc; font-size:1rem; font-weight:700; cursor:pointer; color:var(--text-primary);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1;
+}
+.ie-qty-btn:hover { background:#e2e8f0; }
+.ie-qty-inp {
+    width:60px; padding:.35rem .5rem; border:1.5px solid var(--border); border-radius:8px;
+    font-size:.9rem; font-weight:700; text-align:center; outline:none;
+    -moz-appearance:textfield;
+}
+.ie-qty-inp::-webkit-inner-spin-button,.ie-qty-inp::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.ie-qty-inp:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(249,115,22,.12); }
+.ie-note-inp {
+    width:100%; padding:.4rem .65rem; border:1.5px solid var(--border); border-radius:8px;
+    font-size:.82rem; outline:none; box-sizing:border-box;
+}
+.ie-note-inp:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(249,115,22,.12); }
+#item-edit-ftr {
+    display:flex; gap:.5rem; justify-content:flex-end;
+    padding:.75rem 1.1rem; border-top:1px solid var(--border); background:#fafafa; border-radius:0 0 14px 14px;
+}
+#item-edit-cancel-btn {
+    padding:.42rem .9rem; border-radius:8px; font-size:.78rem; font-weight:700;
+    border:1.5px solid var(--border); background:#fff; cursor:pointer;
+}
+#item-edit-cancel-btn:hover { background:#f1f5f9; }
+#item-edit-save-btn {
+    padding:.42rem 1rem; border-radius:8px; font-size:.78rem; font-weight:700;
+    border:none; background:var(--primary); color:#fff; cursor:pointer;
+}
+#item-edit-save-btn:hover { filter:brightness(.92); }
+.cell-tag-name { cursor:pointer; }
+.cell-tag-name:hover { text-decoration:underline dotted; }
+.cell-tag-note { display:block; font-size:.66rem; opacity:.8; margin-top:.1rem; font-style:italic; }
 
 /* ── Save bar ─────────────────────────────────────────────── */
 .mp-save-bar {
@@ -549,7 +626,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         {{-- Save bar --}}
         <div class="mp-save-bar">
             <button type="submit" class="mp-btn mp-btn-orange">&#x1F4BE; Save Plan</button>
-            <span class="mp-save-hint">All cells are saved together when you click Save.</span>
+            <span id="mp-autosave-status" class="mp-save-hint"></span>
         </div>
     </form>
 
@@ -651,6 +728,41 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             </table>
         </div>
     </details>
+</div>
+
+{{-- ── Item Edit Modal ─────────────────────────────────────────── --}}
+<div id="item-edit-overlay" role="dialog" aria-modal="true">
+    <div id="item-edit-modal">
+        <div id="item-edit-hdr">
+            <span id="item-edit-hdr-title">&#x270F;&#xFE0F; Edit Item</span>
+            <button id="item-edit-close-btn" onclick="closeItemEdit()">&times;</button>
+        </div>
+        <div id="item-edit-body">
+            <div class="ie-food-name" id="item-edit-name"></div>
+            <div class="fp-serving-orig" id="item-edit-serving"></div>
+            <div class="ie-field-row">
+                <span class="ie-label">Servings</span>
+                <div class="ie-qty-row">
+                    <button type="button" class="ie-qty-btn" id="item-edit-qty-minus">&#x2212;</button>
+                    <input type="number" id="item-edit-qty" class="ie-qty-inp" value="1" min="1" max="99">
+                    <button type="button" class="ie-qty-btn" id="item-edit-qty-plus">&#x2B;</button>
+                    <span class="fp-serving-desc" id="item-edit-serving-unit" style="font-size:.72rem;color:var(--text-muted)"></span>
+                </div>
+            </div>
+            <div class="fp-nutrients">
+                <div class="fp-nut-cell nut-kj">  <span class="fp-nut-val" id="ie-kj">&#x2014;</span>  <span class="fp-nut-lbl">kJ</span></div>
+                <div class="fp-nut-cell nut-kcal"><span class="fp-nut-val" id="ie-kcal">&#x2014;</span><span class="fp-nut-lbl">kcal</span></div>
+                <div class="fp-nut-cell nut-cho"> <span class="fp-nut-val" id="ie-cho">&#x2014;</span> <span class="fp-nut-lbl">CHO (g)</span></div>
+                <div class="fp-nut-cell nut-pro"> <span class="fp-nut-val" id="ie-pro">&#x2014;</span> <span class="fp-nut-lbl">Protein (g)</span></div>
+                <div class="fp-nut-cell nut-fat"> <span class="fp-nut-val" id="ie-fat">&#x2014;</span> <span class="fp-nut-lbl">Fat (g)</span></div>
+                <div class="fp-nut-cell nut-fib"> <span class="fp-nut-val" id="ie-fib">&#x2014;</span> <span class="fp-nut-lbl">Fiber (g)</span></div>
+            </div>
+        </div>
+        <div id="item-edit-ftr">
+            <button type="button" id="item-edit-cancel-btn" onclick="closeItemEdit()">Cancel</button>
+            <button type="button" id="item-edit-save-btn" onclick="confirmItemEdit()">&#x2713; Save</button>
+        </div>
+    </div>
 </div>
 
 {{-- ── FatSecret Portion Adjustment Modal ────────────────────── --}}
@@ -776,6 +888,7 @@ function renderAll(di, slot){
     var hidden = document.getElementById('cell_'+di+'_'+slot);
     if(hidden) hidden.value = JSON.stringify(STATE[di+'_'+slot]||[]);
     recalc();
+    scheduleAutosave();
 }
 
 /* ── Render one category cell ─────────────────────────── */
@@ -821,9 +934,10 @@ function renderCatCell(di, slot, catName, catSlug){
         tag.style.cssText='background:'+bg+';color:'+txt+';border-color:'+brd;
         tag.innerHTML=
             '<div class="cell-tag-row">'+
-              '<span class="cell-tag-name">'+esc(qtyLbl+item.text)+'</span>'+
+              '<span class="cell-tag-name" onclick="editItem(\''+di+'\',\''+slot+'\','+allIdx+',event)">'+esc(qtyLbl+item.text)+'</span>'+
               '<button class="cell-tag-rm" type="button" data-day="'+di+'" data-slot="'+slot+'" data-idx="'+allIdx+'" onclick="removeItem(this,event)">&#xD7;</button>'+
             '</div>'+
+            (item.note?'<span class="cell-tag-note">'+esc(item.note)+'</span>':'')+
             (kj>0?'<span class="cell-tag-kcal">'+kj+' kJ</span>':'');
         tagsDiv.appendChild(tag);
     });
@@ -839,6 +953,109 @@ window.removeItem=function(btn,e){
     STATE[key].splice(idx,1);
     renderAll(di,slot);
 };
+
+/* ── Item Edit Modal ─────────────────────────────────── */
+var _editDi=null, _editSlot=null, _editIdx=null, _ieLib=null;
+
+function fmt(v){ return (v!==null&&v!==undefined&&!isNaN(v)&&v!=='')?Math.round(v*10)/10:null; }
+function ieSet(id,v){ document.getElementById(id).textContent = v!==null?v:'\u2014'; }
+
+function refreshItemEdit(){
+    var qty=Math.max(1,parseInt(document.getElementById('item-edit-qty').value)||1);
+    var lib=_ieLib;
+    function sc(v){ return v?Math.round(v*qty*10)/10:null; }
+    var kj  = lib&&lib.kj   ? Math.round(lib.kj*qty)   : null;
+    var kcal= lib&&lib.kcal ? Math.round(lib.kcal*qty)  : (kj?Math.round(kj/4.184):null);
+    ieSet('ie-kj',  kj);
+    ieSet('ie-kcal',kcal);
+    ieSet('ie-cho', sc(lib&&lib.cho));
+    ieSet('ie-pro', sc(lib&&lib.pro));
+    ieSet('ie-fat', sc(lib&&lib.fat));
+    ieSet('ie-fib', sc(lib&&lib.fib));
+}
+
+window.editItem=function(di,slot,idx,e){
+    e.stopPropagation();
+    var item=(STATE[di+'_'+slot]||[])[idx];
+    if(!item) return;
+    _editDi=di; _editSlot=slot; _editIdx=idx;
+    _ieLib = item.id ? (idToItem[item.id]||null) : null;
+    // fall back to kj/kcal stored on the state item (e.g. custom/FatSecret items)
+    if(!_ieLib) _ieLib={kj:item.kj||0,kcal:item.kcal||0,cho:null,pro:null,fat:null,fib:null,serving:null};
+    var serving=_ieLib.serving||'';
+    document.getElementById('item-edit-name').textContent=item.text;
+    document.getElementById('item-edit-serving').textContent=serving?'Per serving: '+serving:'';
+    document.getElementById('item-edit-serving-unit').textContent=serving?'\u00D7 '+serving:'';
+    document.getElementById('item-edit-qty').value=item.qty||1;
+    document.getElementById('item-edit-note').value=item.note||'';
+    refreshItemEdit();
+    document.getElementById('item-edit-overlay').classList.add('open');
+    setTimeout(function(){ var q=document.getElementById('item-edit-qty'); q.focus(); q.select(); },60);
+};
+
+window.closeItemEdit=function(){
+    document.getElementById('item-edit-overlay').classList.remove('open');
+    _editDi=null; _editSlot=null; _editIdx=null;
+};
+
+window.confirmItemEdit=function(){
+    if(_editDi===null) return;
+    var item=(STATE[_editDi+'_'+_editSlot]||[])[_editIdx];
+    if(!item){ closeItemEdit(); return; }
+    item.qty=Math.max(1,parseInt(document.getElementById('item-edit-qty').value)||1);
+    item.note=document.getElementById('item-edit-note').value.trim();
+    renderAll(_editDi,_editSlot);
+    closeItemEdit();
+};
+
+document.getElementById('item-edit-qty-minus').addEventListener('click',function(){
+    var inp=document.getElementById('item-edit-qty');
+    inp.value=Math.max(1,(parseInt(inp.value)||1)-1);
+    refreshItemEdit();
+});
+document.getElementById('item-edit-qty-plus').addEventListener('click',function(){
+    var inp=document.getElementById('item-edit-qty');
+    inp.value=Math.min(99,(parseInt(inp.value)||1)+1);
+    refreshItemEdit();
+});
+document.getElementById('item-edit-qty').addEventListener('input',refreshItemEdit);
+document.getElementById('item-edit-overlay').addEventListener('click',function(e){ if(e.target===this) closeItemEdit(); });
+
+/* ── Autosave ─────────────────────────────────────────── */
+var _autosaveTimer = null;
+var _autosaveStatus = document.getElementById('mp-autosave-status');
+var _autosaveForm   = document.getElementById('mp-form');
+var AUTOSAVE_URL    = _autosaveForm ? _autosaveForm.getAttribute('action') : '';
+var AUTOSAVE_TOKEN  = document.querySelector('meta[name="csrf-token"]')
+                        ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        : (document.querySelector('input[name="_token"]') ? document.querySelector('input[name="_token"]').value : '');
+
+function setAutosaveStatus(msg, color){
+    if(!_autosaveStatus) return;
+    _autosaveStatus.textContent = msg;
+    _autosaveStatus.style.color = color || 'var(--text-muted)';
+}
+
+function scheduleAutosave(){
+    clearTimeout(_autosaveTimer);
+    setAutosaveStatus('Unsaved changes…', '#c2410c');
+    _autosaveTimer = setTimeout(doAutosave, 800);
+}
+
+function doAutosave(){
+    if(!_autosaveForm) return;
+    var data = new FormData(_autosaveForm);
+    data.set('_method', 'PATCH');
+    setAutosaveStatus('Saving…', '#6b7280');
+    fetch(AUTOSAVE_URL, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': AUTOSAVE_TOKEN, 'Accept': 'application/json' },
+        body: data,
+    })
+    .then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function(){ setAutosaveStatus('Saved ✓', '#15803d'); })
+    .catch(function(){ setAutosaveStatus('Save failed – click Save Plan to retry', '#b91c1c'); });
+}
 
 /* ── Recalc kJ badges & grand totals ────────────────── */
 /* recalcWithState(map) — shared engine used by both recalc() and recalcLive() */
@@ -947,7 +1164,7 @@ window.confirmModal=function(){
 
 // Close on overlay click or Escape
 document.getElementById('mp-modal-overlay').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
-document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeModal(); if(window.closeItemEdit) closeItemEdit(); } });
 
 /* ── Render modal body ────────────────────────────────── */
 function renderBody(q){
@@ -995,13 +1212,20 @@ function makeRow(it){
     var kcal=toKcal(it);
     var kj=toKj(it);
     var curQty=isChecked?((_sel[val].qty)||1):1;
-    var desc=[kj>0?kj+' kJ':'',it.serving?it.serving:''].filter(Boolean).join(' \u00B7 ');
+
+    function chip(cls,lbl,v){
+        if(v===null||v===undefined||v===''||isNaN(v)) return '';
+        return '<span class="im-macro-chip '+cls+'">'+Math.round(Number(v)*10)/10+'<span class="im-macro-chip-lbl">&thinsp;'+lbl+'</span></span>';
+    }
+    var macroChips=chip('kj','kJ',kj)+chip('cho','CHO',it.cho)+chip('pro','Pro',it.pro)+chip('fat','Fat',it.fat);
+
     var row=document.createElement('label');
     row.className='im-option'+(isChecked?' selected':'');
     row.innerHTML='<input type="checkbox" value="'+esc(val)+'"'+(isChecked?' checked':'')+'>'
         +'<div class="im-option-label">'
         +'<span class="im-option-name">'+esc(it.text)+'</span>'
-        +(desc?'<span class="im-option-desc">'+esc(desc)+'</span>':'')
+        +(it.serving?'<span class="im-option-desc">'+esc(it.serving)+'</span>':'')
+        +(macroChips?'<div class="im-option-macros">'+macroChips+'</div>':'')
         +'</div>'
         +'<div class="im-qty-wrap"'+(isChecked?'':' style="display:none"')+'>'
         +'<button type="button" class="im-qty-btn im-qty-minus">&#x2212;</button>'
@@ -1011,7 +1235,6 @@ function makeRow(it){
     var chk=row.querySelector('input[type=checkbox]');
     var qtyWrap=row.querySelector('.im-qty-wrap');
     var qtyInp=row.querySelector('.im-qty-inp');
-    // Prevent qty stepper clicks from toggling the checkbox via label default behavior
     qtyWrap.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); });
     function updateQty(q){
         q=Math.max(1,Math.min(99,Math.round(q)||1));
@@ -1025,7 +1248,7 @@ function makeRow(it){
     chk.addEventListener('change',function(e){
         if(e.target.checked){
             if(_qty>0&&Object.keys(_sel).length>=_qty){ e.target.checked=false; return; }
-            _sel[val]={id:val,text:it.text,kcal:kcal,kj:kj,group:it.group,exchCat:_catSlug,qty:1};
+            _sel[val]={id:val,text:it.text,kcal:kcal,kj:kj,cho:it.cho||null,pro:it.pro||null,fat:it.fat||null,fib:it.fib||null,group:it.group,exchCat:_catSlug,qty:1};
             row.classList.add('selected'); qtyWrap.style.display='';
         } else {
             delete _sel[val]; row.classList.remove('selected'); qtyWrap.style.display='none';

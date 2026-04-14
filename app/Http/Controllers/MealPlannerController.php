@@ -177,7 +177,7 @@ class MealPlannerController extends Controller
 
         // All meal items grouped by category for the search-and-select UI
         $mealItemsByCategory = MealItem::orderBy('category')->orderBy('name')
-            ->get(['id', 'category', 'name', 'energy_kcal', 'energy_kj', 'serving_size'])
+            ->get(['id', 'category', 'name', 'energy_kcal', 'energy_kj', 'serving_size', 'cho_g', 'protein_g', 'fat_g', 'fiber_g'])
             ->groupBy('category');
 
         // ── Meal plan distribution from the patient's exchange template ──────
@@ -319,6 +319,10 @@ class MealPlannerController extends Controller
                     ]);
                 }
             }
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true]);
         }
 
         return back()->with('success', 'Meal plan saved.');
