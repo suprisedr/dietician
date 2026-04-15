@@ -25,6 +25,15 @@ class DeviceManager
         [$browser, $platform] = $this->parseUserAgent($request->userAgent() ?? '');
         $deviceName = $browser . ' on ' . $platform;
 
+        // If another device row already holds this session_id, clear it first to
+        // avoid a unique constraint violation when we assign it to this device.
+        UserDevice::where('session_id', $sessionId)
+            ->where(function ($q) use ($user, $deviceName) {
+                $q->where('user_id', '!=', $user->id)
+                  ->orWhere('device_name', '!=', $deviceName);
+            })
+            ->update(['session_id' => null]);
+
         UserDevice::updateOrCreate(
             [
                 'user_id'     => $user->id,
