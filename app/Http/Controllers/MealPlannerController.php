@@ -357,7 +357,7 @@ class MealPlannerController extends Controller
             foreach ($slots as $slot) {
                 $kj = 0;
                 foreach ($grid[$d][$slot] as $entry) {
-                    $kj += $entry->mealItem?->energy_kj ?? 0;
+                    $kj += ($entry->mealItem?->energy_kj ?? 0) * max(1, (int)($entry->qty ?? 1));
                 }
                 $cellKj[$d][$slot] = $kj;
                 $dayKj[$d] += $kj;

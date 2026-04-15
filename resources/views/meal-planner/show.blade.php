@@ -68,25 +68,48 @@
 .mp-btn-orange { background:var(--primary); color:#fff; font-size:.82rem; padding:.5rem 1.3rem; }
 .mp-btn-back   { background:transparent; color:var(--primary); font-size:.8rem; padding:.3rem 0; }
 
-/* ── Grand daily kcal bar ─────────────────────────────────── */
-.mp-grand-bar {
-    display:grid; grid-template-columns:120px repeat(7,1fr);
+/* ── Daily macro summary bar ─────────────────────────────── */
+.mp-macro-card {
     background:#fff; border:1px solid var(--border); border-radius:10px;
-    overflow:hidden; margin-bottom:1.25rem;
+    overflow:hidden; margin-bottom:1.25rem; overflow-x:auto; -webkit-overflow-scrolling:touch;
 }
-.mp-grand-label {
-    padding:.55rem .75rem; font-size:.73rem; font-weight:800;
-    color:var(--text-primary); background:#f8fafc;
-    border-right:2px solid var(--border); display:flex; align-items:center;
+.mp-macro-table {
+    width:100%; border-collapse:collapse; min-width:640px;
 }
-.mp-grand-day {
-    padding:.45rem .35rem; text-align:center;
-    font-size:.62rem; font-weight:700; color:var(--text-muted);
-    border-right:1px solid #f0f0f0;
+.mp-macro-th-label {
+    padding:.42rem .75rem; font-size:.7rem; font-weight:800;
+    color:#fff; background:var(--indigo); text-align:left;
+    border-right:2px solid rgba(255,255,255,.2); white-space:nowrap;
 }
-.mp-grand-day:last-child { border-right:none; }
-.grand-kcal       { display:block; font-size:.82rem; font-weight:800; color:var(--text-primary); margin-top:.15rem; }
-.grand-kcal-label { font-size:.6rem; font-weight:600; color:var(--text-muted); display:block; }
+.mp-macro-th-day {
+    padding:.42rem .35rem; font-size:.68rem; font-weight:700;
+    color:#fff; background:var(--indigo); text-align:center;
+    border-right:1px solid rgba(255,255,255,.12);
+}
+.mp-macro-th-day:last-child { border-right:none; }
+.mp-macro-td-label {
+    padding:.28rem .7rem; font-size:.67rem; font-weight:700;
+    color:var(--text-muted); white-space:nowrap; background:#fafafa;
+    border-right:2px solid var(--border); border-top:1px solid #f0f0f0;
+    vertical-align:middle;
+}
+.mp-macro-dot {
+    display:inline-block; width:6px; height:6px; border-radius:50%;
+    margin-right:3px; vertical-align:middle;
+}
+.mp-macro-td {
+    padding:.3rem .35rem; font-size:.72rem; font-weight:700;
+    color:#d1d5db; text-align:center;
+    border-right:1px solid #f0f0f0; border-top:1px solid #f0f0f0;
+    vertical-align:middle;
+}
+.mp-macro-td:last-child { border-right:none; }
+.mp-macro-td.has-val { color:var(--text-primary); }
+.macro-row-kj  .mp-macro-td.has-val { color:#9a3412; }
+.macro-row-cho .mp-macro-td.has-val { color:#92400e; }
+.macro-row-pro .mp-macro-td.has-val { color:#3730a3; }
+.macro-row-fat .mp-macro-td.has-val { color:#0f766e; }
+.macro-row-fib .mp-macro-td.has-val { color:#15803d; }
 
 /* ── Combined table ───────────────────────────────────────── */
 .mp-combined-card {
@@ -462,7 +485,12 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 .mp-monthly-table { width:100%; border-collapse:collapse; min-width:760px; font-size:.74rem; }
 .mp-monthly-table th { padding:.45rem .65rem; background:var(--indigo); color:#fff; text-align:center; font-size:.71rem; font-weight:700; }
 .mp-monthly-table th:first-child,.mp-monthly-table th:nth-child(2){text-align:left;}
-.mp-monthly-table td { padding:.32rem .55rem; border:1px solid #f0f0f0; max-width:110px; vertical-align:top; }
+.mp-monthly-table td { padding:.32rem .4rem; border:1px solid #f0f0f0; max-width:130px; vertical-align:top; }
+.mo-item { margin-bottom:.2rem; line-height:1.35; }
+.mo-item:last-child { margin-bottom:0; }
+.mo-item-name { font-size:.68rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mo-item-serving { font-size:.6rem; font-weight:400; color:var(--text-muted); margin-left:.2rem; }
+.mo-macros { font-size:.59rem; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:.05rem; }
 .mp-flash { padding:.65rem 1rem; background:#dcfce7; color:#15803d; border-radius:8px; font-size:.82rem; font-weight:600; margin-bottom:1.1rem; border:1px solid #86efac; }
 </style>
 
@@ -498,16 +526,50 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         <div class="mp-flash">&#x2713; {{ session('success') }}</div>
     @endif
 
-    {{-- Grand daily kcal totals bar --}}
-    <div class="mp-grand-bar">
-        <div class="mp-grand-label">&#x1F4CA; Daily kJ</div>
-        @foreach($days as $di => $dayName)
-            <div class="mp-grand-day">
-                <span>{{ $dayName }}</span>
-                <span class="grand-kcal" id="grand-kcal-{{ $di }}">0</span>
-                <span class="grand-kcal-label">kJ</span>
-            </div>
-        @endforeach
+    {{-- Daily macro summary bar --}}
+    <div class="mp-macro-card">
+        <table class="mp-macro-table">
+            <thead>
+                <tr>
+                    <th class="mp-macro-th-label">&#x1F4CA; Daily totals</th>
+                    @foreach($days as $di => $dayName)
+                        <th class="mp-macro-th-day">{{ $dayName }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="mp-macro-row macro-row-kj">
+                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#f97316"></span>kJ</td>
+                    @foreach($days as $di => $dayName)
+                        <td class="mp-macro-td" id="grand-kj-{{ $di }}">0</td>
+                    @endforeach
+                </tr>
+                <tr class="mp-macro-row macro-row-cho">
+                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#d97706"></span>CHO (g)</td>
+                    @foreach($days as $di => $dayName)
+                        <td class="mp-macro-td" id="grand-cho-{{ $di }}">0</td>
+                    @endforeach
+                </tr>
+                <tr class="mp-macro-row macro-row-pro">
+                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#6366f1"></span>Protein (g)</td>
+                    @foreach($days as $di => $dayName)
+                        <td class="mp-macro-td" id="grand-pro-{{ $di }}">0</td>
+                    @endforeach
+                </tr>
+                <tr class="mp-macro-row macro-row-fat">
+                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#0d9488"></span>Fat (g)</td>
+                    @foreach($days as $di => $dayName)
+                        <td class="mp-macro-td" id="grand-fat-{{ $di }}">0</td>
+                    @endforeach
+                </tr>
+                <tr class="mp-macro-row macro-row-fib">
+                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#16a34a"></span>Fiber (g)</td>
+                    @foreach($days as $di => $dayName)
+                        <td class="mp-macro-td" id="grand-fib-{{ $di }}">0</td>
+                    @endforeach
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <form id="mp-form" method="POST" action="{{ route('meal-planner.save-entries', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}">
@@ -652,7 +714,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                     ->where('week_start', '<=', $monthEnd->toDateString())
                     ->where('week_start', '>=', $monthStart->copy()->subDays(6)->toDateString())
                     ->orderBy('week_start')
-                    ->get()->load('entries');
+                    ->get()->load('entries.mealItem');
 
                 $prevUrl = request()->fullUrlWithQuery(['month' => $prevMonth]);
                 $nextUrl = request()->fullUrlWithQuery(['month' => $nextMonth]);
@@ -706,9 +768,31 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                 </td>
                                 @foreach(range(0,6) as $d)
                                     @php $cellArr = $wkGrid[$d][$sl] ?? []; @endphp
-                                    <td style="color:{{ $c['text'] }};padding:.3rem .5rem;{{ !$anyEntry ? 'opacity:.35' : '' }}">
+                                    <td style="color:{{ $c['text'] }};padding:.25rem .35rem;{{ !$anyEntry ? 'opacity:.35' : '' }}">
                                         @forelse($cellArr as $ce)
-                                            <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.72rem">{{ $ce->meal_text }}</div>
+                                            @php
+                                                $mi      = $ce->mealItem;
+                                                $qty     = max(1, (int)($ce->qty ?? 1));
+                                                $serving = $mi?->serving_size;
+                                                $kj  = $mi?->energy_kj  ? round($mi->energy_kj  * $qty) : null;
+                                                $cho = $mi?->cho_g      ? round($mi->cho_g      * $qty, 1) : null;
+                                                $pro = $mi?->protein_g  ? round($mi->protein_g  * $qty, 1) : null;
+                                                $fat = $mi?->fat_g      ? round($mi->fat_g      * $qty, 1) : null;
+                                                $fib = $mi?->fiber_g && $mi->fiber_g > 0 ? round($mi->fiber_g * $qty, 1) : null;
+                                                $macroParts = array_filter([
+                                                    $kj  ? $kj.'kJ'       : null,
+                                                    $cho ? $cho.'g C'     : null,
+                                                    $pro ? $pro.'g P'     : null,
+                                                    $fat ? $fat.'g F'     : null,
+                                                    $fib ? $fib.'g Fb'    : null,
+                                                ]);
+                                            @endphp
+                                            <div class="mo-item">
+                                                <div class="mo-item-name">{{ $qty > 1 ? $qty.'× ' : '' }}{{ $ce->meal_text }}@if($serving)<span class="mo-item-serving">({{ $serving }})</span>@endif</div>
+                                                @if($macroParts)
+                                                    <div class="mo-macros">{{ implode(' · ', $macroParts) }}</div>
+                                                @endif
+                                            </div>
                                         @empty
                                             <span style="color:#d1d5db;font-size:.68rem">&mdash;</span>
                                         @endforelse
@@ -757,6 +841,10 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 <div class="fp-nut-cell nut-fat"> <span class="fp-nut-val" id="ie-fat">&#x2014;</span> <span class="fp-nut-lbl">Fat (g)</span></div>
                 <div class="fp-nut-cell nut-fib"> <span class="fp-nut-val" id="ie-fib">&#x2014;</span> <span class="fp-nut-lbl">Fiber (g)</span></div>
             </div>
+            <div class="ie-field-row">
+                <span class="ie-label">Note</span>
+                <input type="text" id="item-edit-note" class="ie-note-inp" placeholder="Optional note&#x2026;" autocomplete="off">
+            </div>
         </div>
         <div id="item-edit-ftr">
             <button type="button" id="item-edit-cancel-btn" onclick="closeItemEdit()">Cancel</button>
@@ -791,7 +879,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 <div class="fp-nut-cell nut-cho">  <span class="fp-nut-val" id="fp-carbs">—</span> <span class="fp-nut-lbl">CHO (g)</span></div>
                 <div class="fp-nut-cell nut-pro">  <span class="fp-nut-val" id="fp-prot">—</span>  <span class="fp-nut-lbl">Protein (g)</span></div>
                 <div class="fp-nut-cell nut-fat">  <span class="fp-nut-val" id="fp-fat">—</span>   <span class="fp-nut-lbl">Fat (g)</span></div>
-                <div class="fp-nut-cell nut-fib">  <span class="fp-nut-val" id="fp-fib">—</span>   <span class="fp-nut-lbl">Fiber (g)</span></div>
             </div>
         </div>
         <div id="fs-portion-ftr">
@@ -912,7 +999,8 @@ function renderCatCell(di, slot, catName, catSlug){
     // Update the card's quota badge
     var badge = document.getElementById('catqty_'+di+'_'+slot+'_'+catSlug);
     if(badge){
-        var used=catItems.length, allowed=parseInt(cellEl.dataset.qty||'0',10);
+        var used=catItems.reduce(function(s,it){ return s+(it.qty||1); },0);
+        var allowed=parseInt(cellEl.dataset.qty||'0',10);
         if(allowed>0){
             badge.textContent=used+'/'+allowed;
             badge.className='cat-card-badge'+(used>=allowed?' full':used>0?' partial':'');
@@ -1060,14 +1148,26 @@ function doAutosave(){
 /* ── Recalc kJ badges & grand totals ────────────────── */
 /* recalcWithState(map) — shared engine used by both recalc() and recalcLive() */
 function recalcWithState(stateMap){
-    var slotTotals={}, dayTotals={};
+    var slotTotals={};
+    var dayMacros={};
+    for(var i=0;i<7;i++) dayMacros[i]={kj:0,cho:0,pro:0,fat:0,fib:0};
     Object.keys(stateMap).forEach(function(key){
-        var parts=key.split('_'), di=parts[0], slot=parts.slice(1).join('_');
-        var kj=stateMap[key].reduce(function(s,it){ return s+toKj(it)*(it.qty||1); },0);
+        var parts=key.split('_'), di=parseInt(parts[0],10), slot=parts.slice(1).join('_');
+        var kj=0;
+        stateMap[key].forEach(function(it){
+            var qty=it.qty||1;
+            var lib=it.id?idToItem[it.id]:null;
+            var itKj=toKj(it);
+            kj+=itKj*qty;
+            dayMacros[di].kj +=itKj*qty;
+            dayMacros[di].cho+=((it.cho!=null?it.cho:(lib?lib.cho:0))||0)*qty;
+            dayMacros[di].pro+=((it.pro!=null?it.pro:(lib?lib.pro:0))||0)*qty;
+            dayMacros[di].fat+=((it.fat!=null?it.fat:(lib?lib.fat:0))||0)*qty;
+            dayMacros[di].fib+=((it.fib!=null?it.fib:(lib?lib.fib:0))||0)*qty;
+        });
         var kdEl=document.getElementById('slot-day-kcal-'+slot+'-'+di);
         if(kdEl){ kdEl.textContent=kj>0?kj:'0'; kdEl.classList.toggle('has-val',kj>0); }
         slotTotals[slot]=(slotTotals[slot]||0)+kj;
-        dayTotals[di]  =(dayTotals[di]  ||0)+kj;
     });
     Object.keys(slotTotals).forEach(function(slot){
         var badge=document.getElementById('slot-badge-'+slot);
@@ -1077,8 +1177,17 @@ function recalcWithState(stateMap){
         badge.classList.toggle('has-kcal',k>0);
     });
     for(var di=0;di<7;di++){
-        var el=document.getElementById('grand-kcal-'+di);
-        if(el) el.textContent=(dayTotals[di]||0);
+        var m=dayMacros[di];
+        var kjEl=document.getElementById('grand-kj-'+di);
+        if(kjEl){ kjEl.textContent=m.kj>0?Math.round(m.kj):0; kjEl.classList.toggle('has-val',m.kj>0); }
+        ['cho','pro','fat','fib'].forEach(function(mac){
+            var el=document.getElementById('grand-'+mac+'-'+di);
+            if(el){
+                var v=Math.round(m[mac]*10)/10;
+                el.textContent=m[mac]>0?v:0;
+                el.classList.toggle('has-val',m[mac]>0);
+            }
+        });
     }
 }
 function recalc(){ recalcWithState(STATE); }
@@ -1131,13 +1240,15 @@ window.openModal=function(cellEl){
     setTimeout(function(){ se.focus(); },60);
 };
 
+function selQtyTotal(){ return Object.values(_sel).reduce(function(s,it){ return s+(it.qty||1); },0); }
+
 function updateQuotaBadge(){
     var quotaWrap  = document.getElementById('mp-modal-quota');
     var badge      = document.getElementById('mp-modal-quota-badge');
     var lbl        = document.getElementById('mp-modal-quota-label');
     if(!_cat||_qty===0){ quotaWrap.style.display='none'; return; }
     quotaWrap.style.display='flex';
-    var n=Object.keys(_sel).length;
+    var n=selQtyTotal();
     lbl.textContent=_cat+':';
     badge.textContent=n+'/'+_qty+' selected';
     badge.className=''; // reset
@@ -1238,8 +1349,13 @@ function makeRow(it){
     qtyWrap.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); });
     function updateQty(q){
         q=Math.max(1,Math.min(99,Math.round(q)||1));
+        // If quota is set, cap so total qty across _sel doesn't exceed it
+        if(_qty>0&&_sel[val]){
+            var others=selQtyTotal()-(_sel[val].qty||1);
+            q=Math.min(q,Math.max(1,_qty-others));
+        }
         qtyInp.value=q;
-        if(_sel[val]){ _sel[val].qty=q; recalcLive(); }
+        if(_sel[val]){ _sel[val].qty=q; updateCount(); updateQuotaBadge(); recalcLive(); }
     }
     row.querySelector('.im-qty-minus').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); updateQty((parseInt(qtyInp.value,10)||1)-1); });
     row.querySelector('.im-qty-plus').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); updateQty((parseInt(qtyInp.value,10)||1)+1); });
@@ -1247,7 +1363,7 @@ function makeRow(it){
     qtyInp.addEventListener('change',function(e){ e.stopPropagation(); updateQty(parseInt(this.value,10)||1); });
     chk.addEventListener('change',function(e){
         if(e.target.checked){
-            if(_qty>0&&Object.keys(_sel).length>=_qty){ e.target.checked=false; return; }
+            if(_qty>0&&selQtyTotal()>=_qty){ e.target.checked=false; return; }
             _sel[val]={id:val,text:it.text,kcal:kcal,kj:kj,cho:it.cho||null,pro:it.pro||null,fat:it.fat||null,fib:it.fib||null,group:it.group,exchCat:_catSlug,qty:1};
             row.classList.add('selected'); qtyWrap.style.display='';
         } else {
@@ -1269,7 +1385,7 @@ window.addCustom=function(){
 };
 
 function updateCount(){
-    var n=Object.keys(_sel).length, cntEl=document.getElementById('mp-sel-count'), cfm=document.getElementById('mp-btn-confirm');
+    var n=selQtyTotal(), cntEl=document.getElementById('mp-sel-count'), cfm=document.getElementById('mp-btn-confirm');
     if(_qty>0){
         var rem=_qty-n;
         if(rem<0){ cntEl.innerHTML='<span style="color:#b91c1c;font-weight:700">'+n+' selected \u2014 over limit of '+_qty+'</span>'; cfm.disabled=true; cfm.style.opacity='.45'; }
@@ -1338,7 +1454,7 @@ function appendFS(body,q){
             if(!e.target.checked){ delete _sel[food.id]; row.classList.remove('selected'); updateCount(); recalcLive(); return; }
             // Uncheck immediately — the portion modal will decide whether to proceed
             e.target.checked=false;
-            if(_qty>0&&Object.keys(_sel).length>=_qty){ return; }
+            if(_qty>0&&selQtyTotal()>=_qty){ return; }
             fsPortion.open(food, function(scaled){
                 var payload=new URLSearchParams({_token:CSRF,name:scaled.name,serving:scaled.serving||'',kcal:scaled.kcal||'',kj:scaled.kj||'',fat:scaled.fat||'',carbs:scaled.carbs||'',protein:scaled.protein||'',fiber:scaled.fiber||''});
                 var confirmBtn=document.getElementById('fs-portion-confirm');
@@ -1355,7 +1471,7 @@ function appendFS(body,q){
                     renderBody(document.getElementById('mp-modal-search').value.trim());
                 })
                 .catch(function(){
-                    var val='_f_'+Date.now(); _sel[val]={id:null,text:scaled.name,kcal:scaled.kcal?Math.round(scaled.kcal):0,kj:scaled.kj?Math.round(scaled.kj):0,group:null,exchCat:_catSlug,qty:1};
+                    var val='_f_'+Date.now(); _sel[val]={id:null,text:scaled.name,kcal:scaled.kcal?Math.round(scaled.kcal):0,kj:scaled.kj?Math.round(scaled.kj):0,cho:scaled.carbs||null,pro:scaled.protein||null,fat:scaled.fat||null,fib:scaled.fiber||null,group:null,exchCat:_catSlug,qty:1};
                     fsPortion.close();
                     updateCount(); recalcLive();
                 });
@@ -1383,7 +1499,6 @@ window.fsPortion=(function(){
         document.getElementById('fp-carbs').textContent= _food.carbs   ? fmt(_food.carbs*m)           : '—';
         document.getElementById('fp-prot').textContent = _food.protein ? fmt(_food.protein*m)         : '—';
         document.getElementById('fp-fat').textContent  = _food.fat     ? fmt(_food.fat*m)             : '—';
-        document.getElementById('fp-fib').textContent  = _food.fiber   ? fmt(_food.fiber*m)           : '—';
     }
 
     multInp.addEventListener('input', function(){
@@ -1489,7 +1604,7 @@ for(var di=0;di<7;di++){
             var parsed=JSON.parse(hidden?hidden.value:'[]');
             STATE[key]=Array.isArray(parsed)?parsed.map(function(it){
                 var lib=it.id?idToItem[it.id]:null;
-                return {id:it.id||null,text:it.text||(lib?lib.text:''),kcal:lib?toKcal(lib):0,kj:lib?toKj(lib):0,group:lib?lib.group:null,exchCat:it.exchCat||null,qty:it.qty||1};
+                return {id:it.id||null,text:it.text||(lib?lib.text:''),kcal:lib?toKcal(lib):0,kj:lib?toKj(lib):0,cho:lib?lib.cho:null,pro:lib?lib.pro:null,fat:lib?lib.fat:null,fib:lib?lib.fib:null,group:lib?lib.group:null,exchCat:it.exchCat||null,qty:it.qty||1};
             }).filter(function(it){ return it.text||it.id; }):[];
         }catch(ex){ STATE[key]=[]; }
         renderAll(di,slot);

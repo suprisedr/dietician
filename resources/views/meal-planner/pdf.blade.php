@@ -22,17 +22,16 @@
   }
   .pdf-header-left  { display: table-cell; vertical-align: middle; }
   .pdf-header-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .pdf-title { font-size: 14pt; font-weight: bold; color: #0f172a; }
-  .pdf-subtitle { font-size: 9pt; color: #475569; margin-top: 2px; }
-  .pdf-meta   { font-size: 7.5pt; color: #64748b; }
+  .pdf-title    { font-size: 14pt; font-weight: bold; color: #0f172a; }
+  .pdf-subtitle { font-size: 9pt;  color: #475569; margin-top: 2px; }
+  .pdf-meta     { font-size: 7.5pt; color: #64748b; }
 
-  /* ── Main grid table ─────────────────────────────────────── */
+  /* ── Grid ───────────────────────────────────────────────── */
   table.plan-grid {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
   }
-
   table.plan-grid th,
   table.plan-grid td {
     border: 1px solid #cbd5e1;
@@ -41,68 +40,62 @@
     word-wrap: break-word;
   }
 
-  /* Column widths: slot label col + 7 day cols */
-  col.slot-col { width: 70px; }
-  col.day-col  { width: auto; }
+  /* Column widths: day label col | 6 slot cols | total col */
+  th.day-th    { width: 48px; }
+  th.total-th  { width: 44px; }
 
-  /* Day header row */
-  thead tr.day-header th {
+  /* Slot header row */
+  thead th {
     text-align: center;
-    font-size: 8pt;
+    font-size: 7.5pt;
     font-weight: bold;
-    background: #1e293b;
-    color: #f8fafc;
     padding: 5px 3px;
   }
-  thead tr.day-header th.slot-label-th {
-    background: #0f172a;
-  }
+  thead th.day-th    { background: #0f172a; color: #f8fafc; }
+  thead th.slot-breakfast { background: #fed7aa; color: #7c2d12; }
+  thead th.slot-snack1    { background: #bbf7d0; color: #14532d; }
+  thead th.slot-lunch     { background: #bfdbfe; color: #1e3a8a; }
+  thead th.slot-snack2    { background: #bbf7d0; color: #14532d; }
+  thead th.slot-dinner    { background: #e9d5ff; color: #4c1d95; }
+  thead th.slot-snack3    { background: #bbf7d0; color: #14532d; }
+  thead th.total-th       { background: #e2e8f0; color: #334155; }
 
-  /* Slot label cells */
-  td.slot-label {
+  /* Day label cells */
+  td.day-label {
     font-weight: bold;
     font-size: 7.5pt;
     vertical-align: middle;
     text-align: center;
+    background: #1e293b;
+    color: #f8fafc;
     border-right: 2px solid #94a3b8;
   }
 
-  /* Meal item text inside each cell */
-  .meal-entry {
-    margin-bottom: 2px;
-    line-height: 1.35;
-  }
-  .meal-entry:last-child { margin-bottom: 0; }
+  /* Meal cells per slot */
+  td.cell-breakfast { background: #fff7ed; }
+  td.cell-snack1    { background: #f0fdf4; }
+  td.cell-lunch     { background: #eff6ff; }
+  td.cell-snack2    { background: #f0fdf4; }
+  td.cell-dinner    { background: #faf5ff; }
+  td.cell-snack3    { background: #f0fdf4; }
 
-  /* Slot colour bands */
-  tr.slot-breakfast td.meal-cell  { background: #fff7ed; }
-  tr.slot-breakfast td.slot-label { background: #fed7aa; color: #7c2d12; }
-  tr.slot-snack1    td.meal-cell  { background: #f0fdf4; }
-  tr.slot-snack1    td.slot-label { background: #bbf7d0; color: #14532d; }
-  tr.slot-lunch     td.meal-cell  { background: #eff6ff; }
-  tr.slot-lunch     td.slot-label { background: #bfdbfe; color: #1e3a8a; }
-  tr.slot-snack2    td.meal-cell  { background: #f0fdf4; }
-  tr.slot-snack2    td.slot-label { background: #bbf7d0; color: #14532d; }
-  tr.slot-dinner    td.meal-cell  { background: #faf5ff; }
-  tr.slot-dinner    td.slot-label { background: #e9d5ff; color: #4c1d95; }
-  tr.slot-snack3    td.meal-cell  { background: #f0fdf4; }
-  tr.slot-snack3    td.slot-label { background: #bbf7d0; color: #14532d; }
-
-  /* kJ row */
-  tr.kj-row td {
+  /* Total column */
+  td.day-total {
     background: #f8fafc;
     font-size: 7pt;
+    font-weight: bold;
     color: #475569;
     text-align: center;
-    padding: 3px 4px;
-    border-top: 2px solid #cbd5e1;
+    vertical-align: middle;
+    border-left: 2px solid #94a3b8;
   }
-  tr.kj-row td.slot-label {
-    font-weight: bold;
-    color: #334155;
-    background: #e2e8f0;
-    border-right: 2px solid #94a3b8;
-  }
+
+  /* Per-item layout inside a cell */
+  .meal-entry { margin-bottom: 3px; line-height: 1.3; }
+  .meal-entry:last-child { margin-bottom: 0; }
+  .entry-name    { font-size: 7pt; font-weight: bold; }
+  .entry-serving { font-size: 6.5pt; color: #64748b; }
+  .entry-macros  { font-size: 6pt; color: #94a3b8; margin-top: 1px; }
 
   /* Footer */
   .pdf-footer {
@@ -117,7 +110,7 @@
 </head>
 <body>
 
-{{-- ── Header ──────────────────────────────────────────────── --}}
+{{-- ── Header ────────────────────────────────────────────── --}}
 <div class="pdf-header">
   <div class="pdf-header-left">
     <div class="pdf-title">Meal Planner — {{ $mealPlanner->label ?: 'Weekly Plan' }}</div>
@@ -132,48 +125,55 @@
   </div>
 </div>
 
-{{-- ── Grid table ───────────────────────────────────────────── --}}
+{{-- ── Grid: days as rows, slots as columns ────────────── --}}
 <table class="plan-grid">
-  <colgroup>
-    <col class="slot-col">
-    @foreach($days as $day)
-      <col class="day-col">
-    @endforeach
-  </colgroup>
-
   <thead>
-    <tr class="day-header">
-      <th class="slot-label-th">Meal</th>
-      @foreach($days as $day)
-        <th>{{ $day }}</th>
+    <tr>
+      <th class="day-th">Day</th>
+      @foreach($slots as $slot)
+        <th class="slot-{{ $slot }}">{{ $slotLabels[$slot] ?? $slot }}</th>
       @endforeach
+      <th class="total-th">Total kJ</th>
     </tr>
   </thead>
-
   <tbody>
-    @foreach($slots as $slot)
-      <tr class="slot-{{ $slot }}">
-        <td class="slot-label">{{ $slotLabels[$slot] ?? $slot }}</td>
-        @foreach($days as $di => $day)
-          <td class="meal-cell">
+    @foreach($days as $di => $dayName)
+      <tr>
+        <td class="day-label">{{ $dayName }}</td>
+        @foreach($slots as $slot)
+          <td class="cell-{{ $slot }}">
             @foreach($grid[$di][$slot] as $entry)
-              <div class="meal-entry">{{ $entry->meal_text }}</div>
+              @php
+                $mi      = $entry->mealItem;
+                $qty     = max(1, (int)($entry->qty ?? 1));
+                $serving = $mi?->serving_size;
+                $kj  = $mi?->energy_kj  ? round($mi->energy_kj  * $qty) : null;
+                $cho = $mi?->cho_g      ? round($mi->cho_g      * $qty, 1) : null;
+                $pro = $mi?->protein_g  ? round($mi->protein_g  * $qty, 1) : null;
+                $fat = $mi?->fat_g      ? round($mi->fat_g      * $qty, 1) : null;
+                $fib = ($mi?->fiber_g && $mi->fiber_g > 0) ? round($mi->fiber_g * $qty, 1) : null;
+                $macroParts = array_filter([
+                    $kj  ? $kj.'kJ'   : null,
+                    $cho ? $cho.'g C'  : null,
+                    $pro ? $pro.'g P'  : null,
+                    $fat ? $fat.'g F'  : null,
+                    $fib ? $fib.'g Fb' : null,
+                ]);
+              @endphp
+              <div class="meal-entry">
+                <span class="entry-name">{{ $qty > 1 ? $qty.'× ' : '' }}{{ $entry->meal_text }}</span>@if($serving)<span class="entry-serving"> ({{ $serving }})</span>@endif
+                @if($macroParts)
+                  <div class="entry-macros">{{ implode(' · ', $macroParts) }}</div>
+                @endif
+              </div>
             @endforeach
           </td>
         @endforeach
+        <td class="day-total">
+          {{ $dayKj[$di] > 0 ? number_format($dayKj[$di]).' kJ' : '—' }}
+        </td>
       </tr>
     @endforeach
-
-    {{-- kJ totals row --}}
-    <tr class="kj-row">
-      <td class="slot-label">Total kJ</td>
-      @foreach($days as $di => $day)
-        <td>
-          @php $total = array_sum(array_column(array_map(fn($s) => ['kj' => $cellKj[$di][$s]], $slots), 'kj')); @endphp
-          {{ $total > 0 ? number_format($total) . ' kJ' : '—' }}
-        </td>
-      @endforeach
-    </tr>
   </tbody>
 </table>
 
