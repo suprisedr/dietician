@@ -25,8 +25,8 @@ class DeviceManager
         [$browser, $platform] = $this->parseUserAgent($request->userAgent() ?? '');
         $deviceName = $browser . ' on ' . $platform;
 
-        // If another device row already holds this session_id, clear it first to
-        // avoid a unique constraint violation when we assign it to this device.
+        // Clear any row that holds this session_id but belongs to a different device/user.
+        // This handles stale sessions from previous logins.
         UserDevice::where('session_id', $sessionId)
             ->where(function ($q) use ($user, $deviceName) {
                 $q->where('user_id', '!=', $user->id)
@@ -34,19 +34,31 @@ class DeviceManager
             })
             ->update(['session_id' => null]);
 
-        UserDevice::updateOrCreate(
-            [
-                'user_id'     => $user->id,
-                'device_name' => $deviceName,
-            ],
-            [
-                'session_id'     => $sessionId,
-                'browser'        => $browser,
-                'platform'       => $platform,
-                'ip_address'     => $request->ip(),
-                'last_active_at' => now(),
-            ]
-        );
+        try {
+            UserDevice::updateOrCreate(
+                [
+                    'user_id'     => $user->id,
+                    'device_name' => $deviceName,
+                ],
+                [
+                    'session_id'     => $sessionId,
+                    'browser'        => $browser,
+                    'platform'       => $platform,
+                    'ip_address'     => $request->ip(),
+                    'last_active_at' => now(),
+                ]
+            );
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // Race condition: two concurrent requests on different dynos both tried to
+            // assign this session_id at the same moment. The session is already registered
+            // by the other request — just update the timestamps on the correct row.
+            UserDevice::where('user_id', $user->id)
+                ->where('device_name', $deviceName)
+                ->update([
+                    'ip_address'     => $request->ip(),
+                    'last_active_at' => now(),
+                ]);
+        }
     }
 
     /**
