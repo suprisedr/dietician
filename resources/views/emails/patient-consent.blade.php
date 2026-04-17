@@ -52,12 +52,34 @@
         <p>Dear <strong>{{ $patient->name }}{{ $patient->surname ? ' ' . $patient->surname : '' }}</strong>,</p>
 
         <p>
-            This notice is to inform you that your personal and health information has been captured by
-            <strong>{{ $dietician->name }}</strong> on the <strong>Mindfulnutrico Dietitians App</strong>
-            as part of your dietetic assessment and ongoing nutritional care.
+            Your dietician, <strong>{{ $dietician->name }}</strong>, has registered your personal and health
+            information on the <strong>Mindfulnutrico Dietitians App</strong> as part of your dietetic
+            assessment and nutritional care programme.
         </p>
 
+        <p>
+            Under the <strong>Protection of Personal Information Act (POPIA)</strong>, we are required to
+            obtain your explicit consent before your information can be used to provide dietetic services.
+            Please review the information below and click <strong>Grant Consent</strong> to confirm you
+            agree to your information being managed on this platform.
+        </p>
+
+        <div class="info-box" style="background:#fff8e1;border-color:#fbc02d;border-left-color:#f57f17;color:#5d4037">
+            &#x23F0; <strong>Action required:</strong> This consent link expires <strong>72 hours</strong> after it was sent.
+            If it has expired, ask your dietician to resend it.
+        </div>
+
+        <div style="text-align:center;margin:1.8rem 0 .8rem">
+            <a href="{{ $consentLink }}" style="display:inline-block;background:#1e5c3d;color:#fff;font-family:'Segoe UI',Arial,sans-serif;font-size:1rem;font-weight:700;text-decoration:none;padding:.9rem 2.4rem;border-radius:8px;letter-spacing:.03em">&#x2714; Grant Consent</a>
+        </div>
+        <p style="text-align:center;font-size:.77rem;color:#64748b">Or copy this link: <a href="{{ $consentLink }}" style="color:#1e5c3d;word-break:break-all">{{ $consentLink }}</a></p>
+
+        <hr class="divider">
+
         <div class="info-box">
+            &#x1F4CB; <strong>Dietician:</strong> {{ $dietician->name }}<br>
+            &#x1F4C5; <strong>Date of capture:</strong> {{ now()->format('d F Y') }}
+        </div>
             📋 <strong>Dietician:</strong> {{ $dietician->name }}<br>
             📅 <strong>Date of capture:</strong> {{ now()->format('d F Y') }}
         </div>
@@ -140,7 +162,8 @@
         <p style="margin:.6rem 0 .2rem">Platform support:</p>
         <a href="mailto:support@mindfulnutrico.co.za" class="support">support@mindfulnutrico.co.za</a>
         <p style="margin:.9rem 0 0;font-size:.72rem;color:#8aaa90">
-            This notice was sent automatically when your records were created in the Mindfulnutrico platform.<br>
+            You received this because your dietician registered your records on the Mindfulnutrico platform.<br>
+            If you did not expect this email, please ignore it or contact your healthcare provider.<br>
             © {{ date('Y') }} Mindfulnutrico · All rights reserved.
         </p>
     </div>

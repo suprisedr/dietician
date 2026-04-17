@@ -110,9 +110,14 @@ class PatientController extends Controller
             'notes'      => 'Initial assessment',
         ]);
 
-        // Send POPIA consent notice to patient if an email address was provided
+        // Send POPIA consent email with a 72-hour action link
         if ($patient->email) {
-            Mail::to($patient->email)->send(new PatientConsentMail($patient, auth()->user()));
+            $token = $patient->issueConsentToken();
+            $link  = route('patient-consent.show', $token);
+            Mail::to($patient->email)->send(new PatientConsentMail($patient, auth()->user(), $link));
+        } else {
+            // No email — treat as consented (verbal/in-person consent assumed)
+            $patient->update(['consent_status' => 'consented', 'consented_at' => now()]);
         }
 
         return redirect()->route('patients.index')->with('success', 'Patient added successfully.');
@@ -134,6 +139,46 @@ class PatientController extends Controller
         }
 
         return view('patients.show', compact('patient'));
+    }
+
+    /**
+     * Resend the POPIA consent email (regenerates a fresh 72-hour token).
+     */
+    public function resendConsent(string $id)
+    {
+        $patient = Patient::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        abort_if(empty($patient->email), 422, 'This patient has no email address on file.');
+        abort_if($patient->hasConsented(), 422, 'This patient has already consented.');
+
+        $token = $patient->issueConsentToken();
+        $link  = route('patient-consent.show', $token);
+        Mail::to($patient->email)->send(new PatientConsentMail($patient, auth()->user(), $link));
+
+        return back()->with('consent_success', 'Consent email resent to ' . $patient->email . '.');
+    }
+
+    /**
+     * Toggle weekly meal plan reminder emails for a patient.
+     */
+    public function toggleWeeklyReminder(Request $request, string $id)
+    {
+        $patient = Patient::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        abort_if(empty($patient->email), 422, 'This patient has no email address on file.');
+
+        $enabled = ! $patient->weekly_reminder_enabled;
+        $patient->update(['weekly_reminder_enabled' => $enabled]);
+
+        $msg = $enabled
+            ? "Weekly meal plan reminders enabled for {$patient->full_name}."
+            : "Weekly meal plan reminders disabled for {$patient->full_name}.";
+
+        return back()->with('reminder_success', $msg);
     }
 
     /**

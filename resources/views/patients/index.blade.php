@@ -83,6 +83,7 @@
                 <thead>
                         <tr>
                             <th>Patient</th>
+                            <th>Consent</th>
                             <th>Gender</th>
                             <th>Age</th>
                             <th>Weight</th>
@@ -111,6 +112,20 @@
                                                    class="edit-mode hidden edit-input" style="max-width:140px">
                                         </div>
                                     </div>
+                                </td>
+                                {{-- Consent status --}}
+                                <td class="display-mode">
+                                    @if(! $patient->email)
+                                        <span style="font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;background:#f3f4f6;color:#6b7280">No email</span>
+                                    @elseif($patient->hasConsented())
+                                        <span style="font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;background:#dcfce7;color:#15803d">&#x2714; Consented</span>
+                                    @elseif($patient->consentDeclined())
+                                        <span style="font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;background:#fee2e2;color:#b91c1c">&#x2717; Declined</span>
+                                    @elseif($patient->consentTokenExpired())
+                                        <span style="font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;background:#fef3c7;color:#92400e">&#x23F0; Link Expired</span>
+                                    @else
+                                        <span style="font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;background:#fef3c7;color:#92400e">&#x23F3; Pending</span>
+                                    @endif
                                 </td>
                                 {{-- Gender --}}
                                 <td>
@@ -194,6 +209,18 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                 View
                                             </a>
+                                            @if($patient->email && !$patient->hasConsented())
+                                            <form id="resend-{{ $patient->id }}" method="POST" action="{{ route('patients.resend-consent', $patient) }}" style="margin:0">
+                                                @csrf
+                                                <button type="submit"
+                                                        onclick="return confirm('Resend consent email to {{ addslashes($patient->email) }}?')"
+                                                        style="display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .9rem;background:none;border:none;font-size:.82rem;font-weight:600;color:#d97706;cursor:pointer;text-align:left"
+                                                        onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='none'">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                    Resend Consent
+                                                </button>
+                                            </form>
+                                            @endif
                                             <div style="border-top:1px solid #f3f4f6"></div>
                                             <button type="button"
                                                     onclick="if(confirm('Delete {{ addslashes($patient->full_name) }}? This cannot be undone.')) document.getElementById('del-{{ $patient->id }}').submit()"
@@ -211,7 +238,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="empty-state">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/></svg>
                                         <p class="font-semibold" style="color:var(--text-primary)">No patients yet</p>

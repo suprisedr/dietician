@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 class Patient extends Model
 {
     protected $fillable = [
@@ -28,6 +27,11 @@ class Patient extends Model
         'use_ibw_weight',
         'exchange_template_id',
         'diet_preset_id',
+        'weekly_reminder_enabled',
+        'consent_status',
+        'consent_token',
+        'consent_token_expires_at',
+        'consented_at',
     ];
 
     protected $casts = [
@@ -35,8 +39,12 @@ class Patient extends Model
         'height'          => 'decimal:2',
         'activity_factor' => 'float',
         'ibw_bmi_target'  => 'integer',
-        'use_ibw_weight'  => 'boolean',
-        'date_of_birth'   => 'date',
+        'use_ibw_weight'           => 'boolean',
+        'date_of_birth'            => 'date',
+        'weekly_reminder_enabled'  => 'boolean',
+        'consent_status'           => 'string',
+        'consent_token_expires_at' => 'datetime',
+        'consented_at'             => 'datetime',
     ];
 
     /**
@@ -257,5 +265,54 @@ class Patient extends Model
     public function visits(): HasMany
     {
         return $this->hasMany(PatientVisit::class)->orderByDesc('visited_at');
+    }
+
+    public function mealPlannerWeeks(): HasMany
+    {
+        return $this->hasMany(MealPlannerWeek::class)->orderByDesc('week_start');
+    }
+
+    // ── Consent helpers ───────────────────────────────────────────────────────
+
+    public function hasConsented(): bool
+    {
+        return $this->consent_status === 'consented';
+    }
+
+    public function consentDeclined(): bool
+    {
+        return $this->consent_status === 'declined';
+    }
+
+    /**
+     * Patients without an email address cannot receive the digital consent link;
+     * they are treated as consented (in-person verbal consent is assumed).
+     */
+    public function canBeManaged(): bool
+    {
+        if (! $this->email) {
+            return true;
+        }
+        return $this->hasConsented();
+    }
+
+    public function consentTokenExpired(): bool
+    {
+        return $this->consent_token_expires_at !== null
+            && $this->consent_token_expires_at->isPast();
+    }
+
+    /**
+     * Generate (or regenerate) a fresh 72-hour consent token and persist it.
+     */
+    public function issueConsentToken(): string
+    {
+        $token = \Illuminate\Support\Str::random(48);
+        $this->update([
+            'consent_token'            => $token,
+            'consent_token_expires_at' => now()->addHours(72),
+            'consent_status'           => 'pending',
+        ]);
+        return $token;
     }
 }

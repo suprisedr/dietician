@@ -19,6 +19,20 @@ Route::get('/pricing', function () {
     return view('pricing');
 })->name('pricing');
 
+// ── Public: Patient food diary (token-based, no auth) ─────────────────────────
+Route::get('diary/{token}', [\App\Http\Controllers\PatientFoodDiaryController::class, 'show'])
+    ->name('food-diary.patient-show');
+Route::post('diary/{token}', [\App\Http\Controllers\PatientFoodDiaryController::class, 'submit'])
+    ->name('food-diary.patient-submit');
+
+// ── Public: Patient consent (token-based, no auth) ────────────────────────────
+Route::get('consent/{token}', [\App\Http\Controllers\PatientConsentController::class, 'show'])
+    ->name('patient-consent.show');
+Route::post('consent/{token}/accept', [\App\Http\Controllers\PatientConsentController::class, 'accept'])
+    ->name('patient-consent.accept');
+Route::post('consent/{token}/decline', [\App\Http\Controllers\PatientConsentController::class, 'decline'])
+    ->name('patient-consent.decline');
+
 // ── Public: Team invite acceptance ───────────────────────────────────────────
 Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('team.accept');
 
@@ -97,6 +111,11 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     Route::get('patients/{patient}/report/pdf', [\App\Http\Controllers\PatientController::class, 'reportPdf'])
         ->name('patients.report.pdf')
         ->middleware('plan:package_1');
+    Route::patch('patients/{patient}/weekly-reminder', [\App\Http\Controllers\PatientController::class, 'toggleWeeklyReminder'])
+        ->name('patients.weekly-reminder.toggle')
+        ->middleware('plan:package_1');
+    Route::post('patients/{patient}/resend-consent', [\App\Http\Controllers\PatientController::class, 'resendConsent'])
+        ->name('patients.resend-consent');
     Route::get('reports', [\App\Http\Controllers\ReportController::class, 'index'])
         ->name('reports.index')
         ->middleware('plan:package_1');
@@ -185,6 +204,17 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
         Route::post('pantry', [\App\Http\Controllers\PantryController::class, 'store'])->name('pantry.store');
         Route::patch('pantry/{pantryItem}', [\App\Http\Controllers\PantryController::class, 'update'])->name('pantry.update');
         Route::delete('pantry/{pantryItem}', [\App\Http\Controllers\PantryController::class, 'destroy'])->name('pantry.destroy');
+
+        // Daily Food Diary
+        Route::get('food-diary', [\App\Http\Controllers\FoodDiaryController::class, 'index'])->name('food-diary.index');
+        Route::get('food-diary/create', [\App\Http\Controllers\FoodDiaryController::class, 'create'])->name('food-diary.create');
+        Route::post('food-diary', [\App\Http\Controllers\FoodDiaryController::class, 'store'])->name('food-diary.store');
+        Route::post('food-diary/send-invite', [\App\Http\Controllers\FoodDiaryController::class, 'sendInvite'])->name('food-diary.send-invite');
+        Route::get('food-diary/{foodDiary}', [\App\Http\Controllers\FoodDiaryController::class, 'show'])->name('food-diary.show');
+        Route::get('food-diary/{foodDiary}/edit', [\App\Http\Controllers\FoodDiaryController::class, 'edit'])->name('food-diary.edit');
+        Route::put('food-diary/{foodDiary}', [\App\Http\Controllers\FoodDiaryController::class, 'update'])->name('food-diary.update');
+        Route::delete('food-diary/{foodDiary}', [\App\Http\Controllers\FoodDiaryController::class, 'destroy'])->name('food-diary.destroy');
+        Route::get('food-diary/{foodDiary}/pdf', [\App\Http\Controllers\FoodDiaryController::class, 'pdf'])->name('food-diary.pdf');
     });
 
     // ════════════════════════════════════════════════════════════════════════

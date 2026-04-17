@@ -110,9 +110,82 @@
     </div>
 
     {{-- ═══════════════════════════════════════════
+         CONSENT STATUS BANNER
+    ═══════════════════════════════════════════ --}}
+    @if($patient->email)
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+
+        @if(session('consent_success'))
+            <div style="padding:.6rem 1rem;background:#dcfce7;border:1px solid #86efac;border-radius:8px;color:#15803d;font-size:.85rem;font-weight:600;margin-bottom:.75rem">
+                &#x2713; {{ session('consent_success') }}
+            </div>
+        @endif
+
+        @if($patient->hasConsented())
+            {{-- Consented: subtle green bar --}}
+            <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:.82rem;color:#15803d;font-weight:600">
+                <span style="font-size:1rem">&#x2705;</span>
+                Consent granted on {{ $patient->consented_at?->format('d M Y \a\t H:i') ?? 'file' }}. This patient can be fully managed.
+            </div>
+
+        @elseif($patient->consentDeclined())
+            {{-- Declined: red warning --}}
+            <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:1rem 1.25rem">
+                <div style="display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap">
+                    <div style="flex:1;min-width:0">
+                        <p style="font-weight:700;color:#b91c1c;margin:0 0 .25rem;font-size:.92rem">&#x274C; Consent Declined</p>
+                        <p style="font-size:.82rem;color:#7f1d1d;margin:0;line-height:1.5">
+                            {{ $patient->full_name }} declined consent. This patient cannot be managed through the system
+                            unless they change their decision. Ask them to contact you, then resend the consent link.
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ route('patients.resend-consent', $patient) }}">
+                        @csrf
+                        <button type="submit" style="padding:.45rem 1rem;background:#dc2626;color:#fff;font-size:.8rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">
+                            Resend Consent Link
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        @else
+            {{-- Pending: amber warning --}}
+            <div style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0;padding:1rem 1.25rem">
+                <div style="display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap">
+                    <div style="flex:1;min-width:0">
+                        <p style="font-weight:700;color:#92400e;margin:0 0 .25rem;font-size:.92rem">
+                            &#x23F0; Consent Pending
+                            @if($patient->consentTokenExpired())
+                                &mdash; <span style="color:#dc2626">Link Expired</span>
+                            @elseif($patient->consent_token_expires_at)
+                                &mdash; expires {{ $patient->consent_token_expires_at->diffForHumans() }}
+                            @endif
+                        </p>
+                        <p style="font-size:.82rem;color:#78350f;margin:0;line-height:1.5">
+                            A consent email was sent to <strong>{{ $patient->email }}</strong>.
+                            Clinical features are restricted until the patient grants consent.
+                            @if($patient->consentTokenExpired())
+                                The link has expired &mdash; please resend.
+                            @endif
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ route('patients.resend-consent', $patient) }}">
+                        @csrf
+                        <button type="submit" style="padding:.45rem 1rem;background:#d97706;color:#fff;font-size:.8rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">
+                            Resend Consent Link
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endif
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════
          FLOATING METRIC CARDS
     ═══════════════════════════════════════════ --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 metric-cards-row">
+    @if($patient->canBeManaged())
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 metric-cards-row" @if($patient->email) style="margin-top:1.5rem" @endif>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
 
             <div class="metric-card">
@@ -1197,6 +1270,55 @@
     </div>
 
     {{-- ═══════════════════════════════════════════
+         WEEKLY MEAL PLAN REMINDERS
+    ═══════════════════════════════════════════ --}}
+    @if(auth()->user()->canAccessPlan('package_1'))
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div class="dash-card" style="padding:1.25rem 1.5rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+                <div style="display:flex;align-items:center;gap:.7rem">
+                    <span style="font-size:1.3rem">&#x1F514;</span>
+                    <div>
+                        <p style="font-weight:700;font-size:.92rem;color:var(--text-primary);margin:0">Weekly Meal Plan Reminders</p>
+                        <p style="font-size:.78rem;color:var(--text-muted);margin:.15rem 0 0">
+                            @if($patient->weekly_reminder_enabled)
+                                &#x2705; Enabled &mdash; patient receives a reminder every <strong>Monday at 08:00</strong>.
+                            @else
+                                &#x274C; Disabled &mdash; no reminder emails are being sent.
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                @if($patient->email)
+                    <form method="POST" action="{{ route('patients.weekly-reminder.toggle', $patient) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit"
+                                style="padding:.45rem 1.15rem;font-size:.82rem;font-weight:700;border:none;border-radius:7px;cursor:pointer;
+                                       {{ $patient->weekly_reminder_enabled
+                                           ? 'background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5'
+                                           : 'background:#dcfce7;color:#15803d;border:1px solid #86efac' }}">
+                            {{ $patient->weekly_reminder_enabled ? 'Disable Reminders' : 'Enable Reminders' }}
+                        </button>
+                    </form>
+                @else
+                    <span style="font-size:.78rem;color:#f59e0b;background:#fffbeb;border:1px solid #fde68a;padding:.35rem .75rem;border-radius:6px;font-weight:600">
+                        &#x26A0; No email on file &mdash; <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;text-decoration:underline">add one</a> to enable.
+                    </span>
+                @endif
+            </div>
+
+            @if(session('reminder_success'))
+                <div style="margin-top:.85rem;padding:.5rem .9rem;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;color:#15803d;font-size:.82rem;font-weight:600">
+                    &#x2713; {{ session('reminder_success') }}
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════
          VISIT HISTORY / MONITORING
     ═══════════════════════════════════════════ --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-10">
@@ -1889,5 +2011,34 @@
         // submit always allowed — partial saves are permitted
     })();
     </script>
+
+    @else
+    {{-- ═══════════════════════════════════════════
+         CONSENT NOT YET GIVEN — BLOCKED STATE
+    ═══════════════════════════════════════════ --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10" style="margin-top:1.5rem;position:relative;z-index:11">
+        <div style="background:#fffbeb;border:2px dashed #fde68a;border-radius:12px;padding:3rem 2rem;text-align:center">
+            <div style="font-size:3rem;margin-bottom:1rem">&#x1F512;</div>
+            <h2 style="font-size:1.25rem;font-weight:800;color:#92400e;margin:0 0 .5rem">Clinical Access Restricted</h2>
+            <p style="font-size:.92rem;color:#78350f;max-width:480px;margin:0 auto .5rem;line-height:1.7">
+                {{ $patient->full_name }} has
+                @if($patient->consentDeclined())
+                    <strong>declined consent</strong>. They cannot be managed on this platform until they grant consent.
+                @else
+                    <strong>not yet granted consent</strong>. All clinical features are locked until the consent email is accepted.
+                @endif
+            </p>
+            @if(!$patient->consentDeclined())
+            <p style="font-size:.82rem;color:#92400e;margin:.25rem 0 0">
+                @if($patient->consentTokenExpired())
+                    The consent link has <strong>expired</strong> &mdash; use the resend button above.
+                @elseif($patient->consent_token_expires_at)
+                    Link expires {{ $patient->consent_token_expires_at->diffForHumans() }}.
+                @endif
+            </p>
+            @endif
+        </div>
+    </div>
+    @endif
 
 </x-app-layout>

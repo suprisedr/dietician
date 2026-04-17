@@ -3,107 +3,108 @@
 <head>
 <meta charset="utf-8">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page {
+    background-color: #f3e9e9;
+  }
+  html, body {
+    background-color: #f3e9e9;
+  }
   body {
-    font-family: 'DejaVu Sans', sans-serif;
+    font-family: 'DejaVu Serif', serif;
     font-size: 8pt;
-    color: #1e293b;
-    padding: 12px 14px;
-    background: #fff;
+    color: #2d5a43;
+    background-color: #f3e9e9;
+    margin: 0;
+    padding: 20px 24px;
   }
 
-  /* ── Header ─────────────────────────────────────────────── */
-  .pdf-header {
-    display: table;
+  /* ── Header layout table ─────────────────────────────── */
+  table.hdr {
     width: 100%;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 6px;
+    border-collapse: collapse;
+    margin-bottom: 18px;
+    border-bottom: 2px solid #2d5a43;
+    padding-bottom: 8px;
   }
-  .pdf-header-left  { display: table-cell; vertical-align: middle; }
-  .pdf-header-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .pdf-title    { font-size: 14pt; font-weight: bold; color: #0f172a; }
-  .pdf-subtitle { font-size: 9pt;  color: #475569; margin-top: 2px; }
-  .pdf-meta     { font-size: 7.5pt; color: #64748b; }
+  td.hdr-left  { vertical-align: middle; background-color: #f3e9e9; }
+  td.hdr-right { vertical-align: middle; text-align: right; width: 230px; background-color: #f3e9e9; }
 
-  /* ── Grid ───────────────────────────────────────────────── */
+  .plan-title-em  { font-size: 28pt; font-style: italic; color: #2d5a43; font-weight: normal; }
+  .plan-title-str { font-size: 28pt; font-weight: bold;  color: #2d5a43; letter-spacing: 4px; }
+
+  .hdr-patient {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #2d5a43;
+    border-bottom: 2px solid #2d5a43;
+    padding-bottom: 3px;
+    margin-bottom: 4px;
+  }
+  .hdr-week { font-size: 8pt; color: #2d5a43; }
+  .hdr-gen  { font-size: 7pt;  color: #5a8a70; margin-top: 2px; }
+
+  /* ── Plan grid ───────────────────────────────────────── */
   table.plan-grid {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
   }
-  table.plan-grid th,
-  table.plan-grid td {
-    border: 1px solid #cbd5e1;
-    vertical-align: top;
-    padding: 4px 5px;
-    word-wrap: break-word;
-  }
 
-  /* Column widths: day label col | 6 slot cols | total col */
-  th.day-th    { width: 48px; }
-  th.total-th  { width: 44px; }
-
-  /* Slot header row */
-  thead th {
+  table.plan-grid th {
+    color: #2d5a43;
+    padding: 7px 3px;
     text-align: center;
-    font-size: 7.5pt;
-    font-weight: bold;
-    padding: 5px 3px;
-  }
-  thead th.day-th    { background: #0f172a; color: #f8fafc; }
-  thead th.slot-breakfast { background: #fed7aa; color: #7c2d12; }
-  thead th.slot-snack1    { background: #bbf7d0; color: #14532d; }
-  thead th.slot-lunch     { background: #bfdbfe; color: #1e3a8a; }
-  thead th.slot-snack2    { background: #bbf7d0; color: #14532d; }
-  thead th.slot-dinner    { background: #e9d5ff; color: #4c1d95; }
-  thead th.slot-snack3    { background: #bbf7d0; color: #14532d; }
-  thead th.total-th       { background: #e2e8f0; color: #334155; }
-
-  /* Day label cells */
-  td.day-label {
-    font-weight: bold;
-    font-size: 7.5pt;
-    vertical-align: middle;
-    text-align: center;
-    background: #1e293b;
-    color: #f8fafc;
-    border-right: 2px solid #94a3b8;
-  }
-
-  /* Meal cells per slot */
-  td.cell-breakfast { background: #fff7ed; }
-  td.cell-snack1    { background: #f0fdf4; }
-  td.cell-lunch     { background: #eff6ff; }
-  td.cell-snack2    { background: #f0fdf4; }
-  td.cell-dinner    { background: #faf5ff; }
-  td.cell-snack3    { background: #f0fdf4; }
-
-  /* Total column */
-  td.day-total {
-    background: #f8fafc;
     font-size: 7pt;
     font-weight: bold;
-    color: #475569;
-    text-align: center;
-    vertical-align: middle;
-    border-left: 2px solid #94a3b8;
+    border-bottom: 2px solid #2d5a43;
+    background-color: #f3e9e9;
   }
 
-  /* Per-item layout inside a cell */
-  .meal-entry { margin-bottom: 3px; line-height: 1.3; }
-  .meal-entry:last-child { margin-bottom: 0; }
-  .entry-name    { font-size: 7pt; font-weight: bold; }
-  .entry-serving { font-size: 6.5pt; color: #64748b; }
-  .entry-macros  { font-size: 6pt; color: #94a3b8; margin-top: 1px; }
+  table.plan-grid td {
+    padding: 5px 4px;
+    vertical-align: top;
+    border: 1px solid #c8ddd6;
+    border-bottom: 2px solid #2d5a43;
+    height: 54px;
+    background-color: #f3e9e9;
+  }
+
+  td.day-col, th.day-col {
+    width: 40px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    font-size: 7.5pt;
+    border-right: 2px solid #2d5a43;
+    border-left: none;
+    color: #2d5a43;
+  }
+
+  td.total-col, th.total-col {
+    width: 46px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 7pt;
+    font-weight: bold;
+    color: #2d5a43;
+    border-right: none;
+  }
+
+  td.fluids-col, th.fluids-col { width: 54px; }
+
+  /* Per-item layout */
+  .meal-entry  { margin-bottom: 2px; line-height: 1.3; }
+  .entry-name  { font-size: 6.5pt; font-weight: bold; color: #1a3d2b; }
+  .entry-serv  { font-size: 6pt; color: #4a7a60; }
+  .entry-mac   { font-size: 6pt; color: #6b9c80; margin-top: 1px; }
 
   /* Footer */
   .pdf-footer {
     margin-top: 8px;
     font-size: 7pt;
-    color: #94a3b8;
+    color: #5a8a70;
     text-align: right;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #c8ddd6;
     padding-top: 4px;
   }
 </style>
@@ -111,37 +112,38 @@
 <body>
 
 {{-- ── Header ────────────────────────────────────────────── --}}
-<div class="pdf-header">
-  <div class="pdf-header-left">
-    <div class="pdf-title">Meal Planner — {{ $mealPlanner->label ?: 'Weekly Plan' }}</div>
-    <div class="pdf-subtitle">
-      Patient: <strong>{{ $mealPlanner->patient?->name ?? '—' }}</strong>
-      &nbsp;|&nbsp;
-      Week of {{ $mealPlanner->week_start->format('d M Y') }}
-    </div>
-  </div>
-  <div class="pdf-header-right">
-    <div class="pdf-meta">Generated {{ now()->format('d M Y, H:i') }}</div>
-  </div>
-</div>
+<table class="hdr" cellpadding="0" cellspacing="0">
+  <tr>
+    <td class="hdr-left">
+      <span class="plan-title-em">Meal</span>
+      <span class="plan-title-str"> PLAN</span>
+    </td>
+    <td class="hdr-right">
+      <div class="hdr-patient">{{ $mealPlanner->patient?->name ?? 'Patient' }}</div>
+      <div class="hdr-week">Week: {{ $mealPlanner->week_start->format('d M Y') }} &#8211; {{ $mealPlanner->week_start->copy()->addDays(6)->format('d M Y') }}</div>
+      <div class="hdr-gen">Generated {{ now()->format('d M Y') }}</div>
+    </td>
+  </tr>
+</table>
 
-{{-- ── Grid: days as rows, slots as columns ────────────── --}}
-<table class="plan-grid">
+{{-- ── Grid ────────────────────────────────────────────── --}}
+<table class="plan-grid" cellpadding="0" cellspacing="0">
   <thead>
     <tr>
-      <th class="day-th">Day</th>
+      <th class="day-col">DAY</th>
       @foreach($slots as $slot)
-        <th class="slot-{{ $slot }}">{{ $slotLabels[$slot] ?? $slot }}</th>
+        <th>{{ strtoupper($slotLabels[$slot] ?? $slot) }}</th>
       @endforeach
-      <th class="total-th">Total kJ</th>
+      <th class="fluids-col">FLUIDS</th>
+      <th class="total-col">TOTAL kJ</th>
     </tr>
   </thead>
   <tbody>
     @foreach($days as $di => $dayName)
       <tr>
-        <td class="day-label">{{ $dayName }}</td>
+        <td class="day-col">{{ strtoupper(substr($dayName, 0, 3)) }}</td>
         @foreach($slots as $slot)
-          <td class="cell-{{ $slot }}">
+          <td>
             @foreach($grid[$di][$slot] as $entry)
               @php
                 $mi      = $entry->mealItem;
@@ -153,32 +155,31 @@
                 $fat = $mi?->fat_g      ? round($mi->fat_g      * $qty, 1) : null;
                 $fib = ($mi?->fiber_g && $mi->fiber_g > 0) ? round($mi->fiber_g * $qty, 1) : null;
                 $macroParts = array_filter([
-                    $kj  ? $kj.'kJ'   : null,
-                    $cho ? $cho.'g C'  : null,
-                    $pro ? $pro.'g P'  : null,
-                    $fat ? $fat.'g F'  : null,
-                    $fib ? $fib.'g Fb' : null,
+                    $kj  ? $kj.'kJ'  : null,
+                    $cho ? $cho.'g C' : null,
+                    $pro ? $pro.'g P' : null,
+                    $fat ? $fat.'g F' : null,
+                    $fib ? $fib.'g Fb': null,
                 ]);
               @endphp
               <div class="meal-entry">
-                <span class="entry-name">{{ $qty > 1 ? $qty.'× ' : '' }}{{ $entry->meal_text }}</span>@if($serving)<span class="entry-serving"> ({{ $serving }})</span>@endif
+                <span class="entry-name">@if($qty > 1){{ $qty }}x @endif{{ $entry->meal_text }}</span>@if($serving)<span class="entry-serv"> ({{ $serving }})</span>@endif
                 @if($macroParts)
-                  <div class="entry-macros">{{ implode(' · ', $macroParts) }}</div>
+                  <div class="entry-mac">{!! implode(' · ', $macroParts) !!}</div>
                 @endif
               </div>
             @endforeach
           </td>
         @endforeach
-        <td class="day-total">
-          {{ $dayKj[$di] > 0 ? number_format($dayKj[$di]).' kJ' : '—' }}
-        </td>
+        <td class="fluids-col"></td>
+        <td class="total-col">{{ $dayKj[$di] > 0 ? number_format($dayKj[$di]) : '—' }}</td>
       </tr>
     @endforeach
   </tbody>
 </table>
 
 <div class="pdf-footer">
-  {{ config('app.name') }} &bull; Confidential &bull; For clinical use only
+  {{ config('app.name') }} &#183; Confidential &#183; For clinical use only
 </div>
 
 </body>

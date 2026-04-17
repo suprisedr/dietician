@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Patient;
+use App\Models\FoodDiary;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -10,31 +10,30 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PatientConsentMail extends Mailable
+class FoodDiaryInviteMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public Patient $patient,
-        public User    $dietician,
-        public string  $consentLink,
+        public FoodDiary $diary,
+        public User      $dietician,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Action Required: Consent to Manage Your Health Information',
+            subject: 'Your Daily Food Diary — ' . config('app.name'),
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.patient-consent',
+            view: 'emails.food-diary-invite',
             with: [
-                'patient'     => $this->patient,
-                'dietician'   => $this->dietician,
-                'consentLink' => $this->consentLink,
+                'diary'     => $this->diary,
+                'dietician' => $this->dietician,
+                'link'      => route('food-diary.patient-show', $this->diary->patient_token),
             ],
         );
     }
