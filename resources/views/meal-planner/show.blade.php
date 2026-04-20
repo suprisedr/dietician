@@ -230,6 +230,52 @@
     align-items:center; justify-content:center;
 }
 #mp-modal-overlay.open { display:flex; }
+
+/* ── PDF Preview Modal ───────────────────────────────────── */
+#pdf-preview-overlay {
+    display:none; position:fixed; inset:0; z-index:10100;
+    background:rgba(0,0,0,.6); backdrop-filter:blur(3px);
+    align-items:center; justify-content:center;
+}
+#pdf-preview-overlay.open { display:flex; }
+#pdf-preview-modal {
+    background:#1e1e2e; border-radius:14px;
+    width:min(960px,96vw); height:min(86vh,820px);
+    display:flex; flex-direction:column;
+    box-shadow:0 32px 80px rgba(0,0,0,.5);
+    overflow:hidden; animation:modalIn .18s ease;
+}
+#pdf-preview-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.65rem 1rem; background:#2d2d3f; flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+#pdf-preview-hdr-title {
+    font-size:.82rem; font-weight:700; color:#e2e8f0;
+    display:flex; align-items:center; gap:.5rem;
+}
+#pdf-preview-hdr-actions { display:flex; align-items:center; gap:.5rem; }
+.pdf-preview-dl-btn {
+    background:#4f46e5; color:#fff; border:none; border-radius:7px;
+    font-size:.78rem; font-weight:700; padding:.35rem .85rem;
+    cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:.35rem;
+    transition:background .15s;
+}
+.pdf-preview-dl-btn:hover { background:#4338ca; color:#fff; }
+#pdf-preview-close {
+    background:none; border:none; cursor:pointer; font-size:1.3rem;
+    color:#94a3b8; padding:.1rem .3rem; border-radius:6px; transition:background .15s; line-height:1;
+}
+#pdf-preview-close:hover { background:rgba(255,255,255,.1); color:#e2e8f0; }
+#pdf-preview-frame {
+    flex:1; width:100%; border:none; background:#525659;
+}
+#pdf-preview-loading {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:#1e1e2e; color:#94a3b8; font-size:.85rem; gap:.6rem;
+    pointer-events:none;
+}
+#pdf-preview-frame-wrap { position:relative; flex:1; display:flex; flex-direction:column; }
 #mp-modal {
     background:#fff; border-radius:16px;
     width:min(600px,97vw); max-height:84vh;
@@ -517,8 +563,8 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                     <button type="submit" class="mp-btn mp-btn-indigo">&#x1F6D2; Generate Grocery List</button>
                 </form>
             @endif
-            <a href="{{ route('meal-planner.pdf', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}"
-               class="mp-btn mp-btn-indigo" target="_blank">&#x1F4C4; Download PDF</a>
+            <button type="button" class="mp-btn mp-btn-indigo"
+                onclick="openPdfPreview('{{ route('meal-planner.pdf-preview', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}','{{ route('meal-planner.pdf', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}')">&#x1F441; Preview PDF</button>
         </div>
     </div>
 
@@ -1621,6 +1667,67 @@ document.getElementById('mp-form').addEventListener('submit',function(){
     }
 });
 
+}());
+</script>
+
+{{-- ── PDF Preview Modal ─────────────────────────────────────── --}}
+<div id="pdf-preview-overlay" role="dialog" aria-modal="true" aria-label="PDF Preview">
+    <div id="pdf-preview-modal">
+        <div id="pdf-preview-hdr">
+            <span id="pdf-preview-hdr-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Meal Plan Preview
+            </span>
+            <div id="pdf-preview-hdr-actions">
+                <a id="pdf-preview-download-btn" href="#" target="_blank" class="pdf-preview-dl-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download PDF
+                </a>
+                <button type="button" id="pdf-preview-close" onclick="closePdfPreview()" aria-label="Close preview">&times;</button>
+            </div>
+        </div>
+        <div id="pdf-preview-frame-wrap">
+            <div id="pdf-preview-loading">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Loading preview…
+            </div>
+            <iframe id="pdf-preview-frame" title="PDF Preview"></iframe>
+        </div>
+    </div>
+</div>
+<style>
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+<script>
+(function(){
+    var overlay  = document.getElementById('pdf-preview-overlay');
+    var frame    = document.getElementById('pdf-preview-frame');
+    var loading  = document.getElementById('pdf-preview-loading');
+    var dlBtn    = document.getElementById('pdf-preview-download-btn');
+
+    window.openPdfPreview = function(previewUrl, downloadUrl) {
+        dlBtn.href = downloadUrl;
+        loading.style.display = 'flex';
+        frame.src = '';
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        frame.onload = function() { loading.style.display = 'none'; };
+        frame.src = previewUrl;
+    };
+
+    window.closePdfPreview = function() {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+        frame.src = '';
+    };
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) closePdfPreview();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closePdfPreview();
+    });
 }());
 </script>
 </x-app-layout>

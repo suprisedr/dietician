@@ -375,4 +375,41 @@ class MealPlannerController extends Controller
 
         return $pdf->download($filename);
     }
+
+    public function pdfPreview(string $patient, MealPlannerWeek $mealPlanner)
+    {
+        abort_if($mealPlanner->user_id !== auth()->id(), 403);
+        abort_if((int) $patient !== (int) ($mealPlanner->patient_id ?? 0), 404);
+
+        $mealPlanner->load(['entries.mealItem', 'patient']);
+
+        $days       = \App\Models\MealPlannerWeek::DAYS;
+        $slots      = \App\Models\MealPlannerWeek::MEAL_SLOTS;
+        $slotLabels = \App\Models\MealPlannerWeek::SLOT_LABELS;
+        $grid       = $mealPlanner->grid;
+
+        $dayKj  = array_fill(0, 7, 0);
+        $cellKj = [];
+        foreach (range(0, 6) as $d) {
+            foreach ($slots as $slot) {
+                $kj = 0;
+                foreach ($grid[$d][$slot] as $entry) {
+                    $kj += ($entry->mealItem?->energy_kj ?? 0) * max(1, (int)($entry->qty ?? 1));
+                }
+                $cellKj[$d][$slot] = $kj;
+                $dayKj[$d] += $kj;
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('meal-planner.pdf', compact(
+            'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj'
+        ))->setPaper('a4', 'landscape');
+
+        $label    = $mealPlanner->label ?: $mealPlanner->week_start->format('Y-m-d');
+        $patient  = $mealPlanner->patient;
+        $nameSlug = $patient ? \Illuminate\Support\Str::slug($patient->name) : 'plan';
+        $filename = 'meal-plan-' . $nameSlug . '-' . \Illuminate\Support\Str::slug($label) . '.pdf';
+
+        return $pdf->stream($filename);
+    }
 }

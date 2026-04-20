@@ -169,7 +169,8 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
         Route::post('meal-planner',                                         [\App\Http\Controllers\MealPlannerController::class, 'store'])  ->name('meal-planner.store');
         Route::get ('meal-planner/food-search',                             [\App\Http\Controllers\MealPlannerController::class, 'foodSearch'])->name('meal-planner.food-search');
         Route::get ('meal-planner/{patient}/{mealPlanner}',                 [\App\Http\Controllers\MealPlannerController::class, 'show'])   ->name('meal-planner.show');
-        Route::get ('meal-planner/{patient}/{mealPlanner}/pdf',              [\App\Http\Controllers\MealPlannerController::class, 'pdf'])    ->name('meal-planner.pdf');
+        Route::get ('meal-planner/{patient}/{mealPlanner}/pdf',              [\App\Http\Controllers\MealPlannerController::class, 'pdf'])        ->name('meal-planner.pdf');
+        Route::get ('meal-planner/{patient}/{mealPlanner}/pdf/preview',     [\App\Http\Controllers\MealPlannerController::class, 'pdfPreview']) ->name('meal-planner.pdf-preview');
         Route::patch('meal-planner/{patient}/{mealPlanner}/entries',        [\App\Http\Controllers\MealPlannerController::class, 'saveEntries']) ->name('meal-planner.save-entries');
         Route::delete('meal-planner/{patient}/{mealPlanner}',               [\App\Http\Controllers\MealPlannerController::class, 'destroy']) ->name('meal-planner.destroy');
 
