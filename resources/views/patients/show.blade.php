@@ -1815,6 +1815,9 @@
                 row.dataset.nu = nu;
                 const input = row.querySelector('.nu-input');
                 if (input) input.value = nu;
+                // sync disabled state of − button
+                const decBtn = row.querySelector('.nu-form [name="delta"][value="-1"]')?.closest('.nu-form')?.querySelector('.nu-btn');
+                if (decBtn) decBtn.disabled = nu <= 0;
                 recalcRow(row);
                 recalcTotals();
                 syncMealPlanNo(row.dataset.itemId, nu);
@@ -1838,7 +1841,10 @@
                 const row = this.closest('tr');
                 const old = Number(row.dataset.nu) || 0;
                 const nu = Math.max(0, Number(this.value) || 0);
+                this.value = nu;
                 row.dataset.nu = nu;
+                const decBtn = row.querySelector('.nu-form [name="delta"][value="-1"]')?.closest('.nu-form')?.querySelector('.nu-btn');
+                if (decBtn) decBtn.disabled = nu <= 0;
                 recalcRow(row);
                 recalcTotals();
                 syncMealPlanNo(row.dataset.itemId, nu);

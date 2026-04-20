@@ -126,7 +126,7 @@
 }
 .mis-row {
     display:grid;
-    grid-template-columns: 1fr 80px repeat(5, 54px) auto;
+    grid-template-columns: 1fr 80px repeat(4, 54px) auto;
     align-items:center; gap:.3rem .6rem;
     padding:.52rem .85rem; border-bottom:1px solid #f0f0f0;
     transition:background .12s;
@@ -322,7 +322,6 @@
                         <th class="col-num" style="color:#0f766e">Fat (g)</th>
                         <th class="col-num" style="color:#c2410c">Carbs (g)</th>
                         <th class="col-num" style="color:#4338ca">Prot (g)</th>
-                        <th class="col-num" style="color:#15803d">Fiber (g)</th>
                         <th style="width:90px"></th>
                     </tr>
                 </thead>
@@ -331,7 +330,7 @@
                         @php $col = $catColors[$catName] ?? ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8']; @endphp
                         {{-- Category divider row --}}
                         <tr>
-                            <td colspan="9" style="padding:.45rem .85rem;background:{{ $col['bg'] }};border-bottom:1px solid {{ $col['dot'] }}20;border-top:2px solid {{ $col['dot'] }}40">
+                            <td colspan="8" style="padding:.45rem .85rem;background:{{ $col['bg'] }};border-bottom:1px solid {{ $col['dot'] }}20;border-top:2px solid {{ $col['dot'] }}40">
                                 <span style="display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:{{ $col['text'] }}">
                                     <span style="width:.5rem;height:.5rem;border-radius:50%;background:{{ $col['dot'] }};flex-shrink:0;display:inline-block"></span>
                                     {{ $catName }}
@@ -353,7 +352,6 @@
                                 <td class="col-num" style="color:#0f766e;font-weight:600">{{ $item->fat_g ?? '—' }}</td>
                                 <td class="col-num" style="color:#c2410c;font-weight:600">{{ $item->cho_g ?? '—' }}</td>
                                 <td class="col-num" style="color:#4338ca;font-weight:600">{{ $item->protein_g ?? '—' }}</td>
-                                <td class="col-num" style="color:#15803d;font-weight:600">{{ $item->fiber_g ?? '—' }}</td>
                                 <td style="white-space:nowrap">
                                     <a href="{{ route('meal-items.edit', $item) }}" class="mi-action-edit">Edit</a>
                                     <form method="POST" action="{{ route('meal-items.destroy', $item) }}"
@@ -367,7 +365,7 @@
                         @endforeach
                     @empty
                         <tr>
-                            <td colspan="9">
+                            <td colspan="8">
                                 <div class="mi-empty">
                                     <div class="mi-empty-icon">🍽️</div>
                                     No items found{{ $search ? ' for "'.e($search).'"' : '' }}{{ $category ? ' in '.$category : '' }}.
@@ -486,7 +484,6 @@
             + '<div class="mis-num" style="color:#0f766e">' + (food.fat   ?? '—') + '</div>'
             + '<div class="mis-num" style="color:#c2410c">' + (food.carbs ?? '—') + '</div>'
             + '<div class="mis-num" style="color:#4338ca">' + (food.protein ?? '—') + '</div>'
-            + '<div class="mis-num" style="color:#15803d">' + (food.fiber  ?? '—') + '</div>'
             + '<div>' + action + '</div>'
             + '</div>';
     }
@@ -498,7 +495,6 @@
         + '<div style="text-align:right;color:#0f766e">Fat</div>'
         + '<div style="text-align:right;color:#c2410c">Carbs</div>'
         + '<div style="text-align:right;color:#4338ca">Protein</div>'
-        + '<div style="text-align:right;color:#15803d">Fiber</div>'
         + '<div></div></div>';
 
     function renderResults(q, db, fs) {
