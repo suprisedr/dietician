@@ -289,12 +289,14 @@ class PatientController extends Controller
             }
         }
 
+        $letterhead = auth()->user()->letterheadBase64();
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('patients.report-pdf', compact(
             'patient', 'teeKj', 'teeKcal', 'bmrKj', 'isObese',
             'choPct', 'proPct', 'fatPct',
             'recCho_g', 'recPro_g', 'recFat_g',
             'recCho_kj', 'recPro_kj', 'recFat_kj',
-            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj'
+            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj', 'letterhead'
         ))->setPaper('a4', 'portrait');
 
         $filename = 'report-' . \Illuminate\Support\Str::slug($patient->name) . '-' . now()->format('Y-m-d') . '.pdf';

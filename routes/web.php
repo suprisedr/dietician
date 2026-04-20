@@ -60,6 +60,9 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/letterhead', [ProfileController::class, 'updateLetterhead'])->name('profile.letterhead.update');
+    Route::delete('/profile/letterhead', [ProfileController::class, 'removeLetterhead'])->name('profile.letterhead.remove');
+    Route::get('/profile/letterhead/preview', [ProfileController::class, 'previewLetterhead'])->name('profile.letterhead.preview');
 
     // ── Subscription / Billing ───────────────────────────────────────────────
     Route::get('billing', [SubscriptionController::class, 'billing'])->name('billing');
@@ -216,6 +219,10 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
         Route::put('food-diary/{foodDiary}', [\App\Http\Controllers\FoodDiaryController::class, 'update'])->name('food-diary.update');
         Route::delete('food-diary/{foodDiary}', [\App\Http\Controllers\FoodDiaryController::class, 'destroy'])->name('food-diary.destroy');
         Route::get('food-diary/{foodDiary}/pdf', [\App\Http\Controllers\FoodDiaryController::class, 'pdf'])->name('food-diary.pdf');
+
+        // Weekly Food Diary
+        Route::get('food-diary-weekly',     [\App\Http\Controllers\WeeklyFoodDiaryController::class, 'show'])->name('food-diary.weekly');
+        Route::get('food-diary-weekly/pdf', [\App\Http\Controllers\WeeklyFoodDiaryController::class, 'pdf']) ->name('food-diary.weekly.pdf');
     });
 
     // ════════════════════════════════════════════════════════════════════════

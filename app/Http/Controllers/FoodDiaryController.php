@@ -146,7 +146,9 @@ class FoodDiaryController extends Controller
         abort_if($foodDiary->user_id !== auth()->id(), 403);
         $foodDiary->load('patient');
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('food-diary.pdf', compact('foodDiary'))
+        $letterhead = auth()->user()->letterheadBase64();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('food-diary.pdf', compact('foodDiary', 'letterhead'))
             ->setPaper('a4', 'portrait');
 
         $date     = $foodDiary->diary_date->format('Y-m-d');

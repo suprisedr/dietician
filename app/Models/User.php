@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -21,6 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'dietician_number',
+        'letterhead_path',
         'password',
         'pricing_package_slug',
         'owner_id',
@@ -53,6 +55,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdminVerified(): bool
     {
         return $this->admin_verified_at !== null;
+    }
+
+    public function letterheadBase64(): ?string
+    {
+        if (! $this->letterhead_path) return null;
+        $fullPath = Storage::disk('local')->path($this->letterhead_path);
+        if (! file_exists($fullPath)) return null;
+        $mime = mime_content_type($fullPath);
+        $data = base64_encode(file_get_contents($fullPath));
+        return "data:{$mime};base64,{$data}";
     }
 
     public function hasTwoFactorEnabled(): bool

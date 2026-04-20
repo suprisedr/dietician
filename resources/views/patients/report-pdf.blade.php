@@ -249,6 +249,16 @@
 </head>
 <body>
 
+@if(!empty($letterhead))
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px">
+  <tr>
+    <td style="text-align:center;background-color:#ffffff">
+      <img src="{{ $letterhead }}" style="width:100%;height:auto;display:block">
+    </td>
+  </tr>
+</table>
+@endif
+
 {{-- ── HEADER ── --}}
 <div class="header">
     <table class="header-top" cellpadding="0" cellspacing="0">

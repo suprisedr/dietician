@@ -364,8 +364,10 @@ class MealPlannerController extends Controller
             }
         }
 
+        $letterhead = auth()->user()->letterheadBase64();
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('meal-planner.pdf', compact(
-            'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj'
+            'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj', 'letterhead'
         ))->setPaper('a4', 'landscape');
 
         $label    = $mealPlanner->label ?: $mealPlanner->week_start->format('Y-m-d');
@@ -401,8 +403,10 @@ class MealPlannerController extends Controller
             }
         }
 
+        $letterhead = auth()->user()->letterheadBase64();
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('meal-planner.pdf', compact(
-            'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj'
+            'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj', 'letterhead'
         ))->setPaper('a4', 'landscape');
 
         $label    = $mealPlanner->label ?: $mealPlanner->week_start->format('Y-m-d');

@@ -95,6 +95,16 @@
 </head>
 <body>
 
+@if(!empty($letterhead))
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;border-bottom:1.5px solid #c8ddd6;padding-bottom:10px">
+  <tr>
+    <td style="text-align:center;background-color:#f3e9e9">
+      <img src="{{ $letterhead }}" style="width:100%;height:auto;display:block">
+    </td>
+  </tr>
+</table>
+@endif
+
 {{-- ── Header ────────────────────────────────── --}}
 <table class="hdr" cellpadding="0" cellspacing="0">
   <tr>

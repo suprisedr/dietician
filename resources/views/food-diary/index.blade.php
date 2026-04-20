@@ -8,6 +8,10 @@
                 <p style="font-size:.82rem;color:var(--text-muted);margin:.25rem 0 0">Daily food records for your patients</p>
             </div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <a href="{{ route('food-diary.weekly') }}"
+                   style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.25rem;background:#2d5a43;color:#fff;font-weight:700;font-size:.85rem;border-radius:6px;text-decoration:none">
+                    &#x1F4C5; Weekly View
+                </a>
                 <a href="{{ route('food-diary.create') }}"
                    style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.25rem;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;border-radius:6px;text-decoration:none">
                     + New Entry (Manual)
