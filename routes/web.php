@@ -159,6 +159,13 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
             [\App\Http\Controllers\PatientController::class, 'saveMealPlan'])
             ->name('patients.meal-plan.save');
 
+        // Recipes
+        Route::get ('recipes/search',                                  [\App\Http\Controllers\RecipeController::class, 'search'])          ->name('recipes.search');
+        Route::post('recipes/import-fatsecret',                        [\App\Http\Controllers\RecipeController::class, 'importFatSecret'])->name('recipes.import-fatsecret');
+        Route::post('recipes/{recipe}/send',                           [\App\Http\Controllers\RecipeController::class, 'sendToPatient'])  ->name('recipes.send');
+        Route::resource('recipes', \App\Http\Controllers\RecipeController::class)
+            ->only(['index', 'show', 'destroy']);
+
         // Meal Items library
         Route::get ('meal-items/search',           [\App\Http\Controllers\MealItemController::class, 'search'])          ->name('meal-items.search');
         Route::post('meal-items/import-fatsecret', [\App\Http\Controllers\MealItemController::class, 'importFatSecret'])->name('meal-items.import-fatsecret');

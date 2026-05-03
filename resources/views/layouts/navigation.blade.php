@@ -49,7 +49,7 @@
                     <div style="position:relative" x-data="{ open: false }" @click.outside="open = false">
                         <button @click="open = !open"
                                 style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;background:none;border:none;cursor:pointer;
-                                       {{ request()->routeIs('meal-planner.*','pantry.*','grocery-lists.*','food-diary.*') ? 'background:#d8ede6;color:var(--secondary-dark)' : 'color:var(--text-muted)' }}">
+                                       {{ request()->routeIs('meal-planner.*','pantry.*','grocery-lists.*','food-diary.*','recipes.*') ? 'background:#d8ede6;color:var(--secondary-dark)' : 'color:var(--text-muted)' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
@@ -61,6 +61,7 @@
                         <div x-show="open" x-transition
                              style="position:absolute;top:calc(100% + .35rem);left:0;background:#fff;border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 28px rgba(13,31,12,.13);z-index:50;overflow:hidden">
                              <a href="{{ route('meal-planner.index') }}"  class="mn-dd-link">🗓️ Weekly Plans</a>
+                            <a href="{{ route('recipes.index') }}"       class="mn-dd-link">🍽️ Recipes</a>
                             <a href="{{ route('grocery-lists.index') }}" class="mn-dd-link">🛒 Grocery Lists</a>
                             <a href="{{ route('food-diary.index') }}"    class="mn-dd-link">📓 Food Diaries</a>
                         </div>
