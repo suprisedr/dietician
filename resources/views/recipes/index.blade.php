@@ -157,10 +157,6 @@
 
         {{-- FatSecret results --}}
         <div id="rcp-fs-section" style="display:none">
-            <div class="rcp-section-head" style="margin-top:1.1rem">
-                Online (FatSecret)
-                <span class="rcp-section-badge" id="rcp-fs-count">0</span>
-            </div>
             <div class="rcp-grid" id="rcp-fs-grid"></div>
         </div>
 
@@ -230,7 +226,6 @@
     const dbGrid   = document.getElementById('rcp-db-grid');
     const fsGrid   = document.getElementById('rcp-fs-grid');
     const dbCount  = document.getElementById('rcp-db-count');
-    const fsCount  = document.getElementById('rcp-fs-count');
     const noResults = document.getElementById('rcp-no-results');
     const toast    = document.getElementById('rcp-toast');
 
@@ -309,7 +304,6 @@
 
         // ── FatSecret recipes ─────────────────────────────────────────────────
         if (fs.length) {
-            fsCount.textContent = fs.length;
             fs.forEach(r => fsGrid.appendChild(makeCard(r, false)));
             fsSection.style.display = '';
         }
@@ -346,7 +340,6 @@
                             data-url="${esc(r.source_url || '')}">
                         + Save Recipe
                     </button>
-                    ${r.source_url ? `<a href="${esc(r.source_url)}" target="_blank" class="rcp-btn-view">View</a>` : ''}
                 </div>`;
         }
 
