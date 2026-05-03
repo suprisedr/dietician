@@ -105,6 +105,14 @@
                     <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit Patient
                 </a>
+                @if(auth()->user()->canAccessPlan('package_3'))
+                <a href="{{ route('patients.enteral-nutrition.index', $patient->id) }}"
+                   style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
+                   onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
+                    Calculations
+                </a>
+                @endif
             </div>
         </div>
     </div>
@@ -2017,6 +2025,9 @@
         // submit always allowed — partial saves are permitted
     })();
     </script>
+
+        </div>{{-- /space-y-6 --}}
+    </div>{{-- /py-8 --}}
 
     @else
     {{-- ═══════════════════════════════════════════

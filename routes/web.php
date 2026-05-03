@@ -227,10 +227,12 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
 
     // ════════════════════════════════════════════════════════════════════════
     // PACKAGE 3+ FEATURES  (Only top-tier users)
-    // Add enteral feed / daily monitoring routes here when ready.
+    // Enteral Nutrition Calculator
     // ════════════════════════════════════════════════════════════════════════
     Route::middleware('plan:package_3')->group(function () {
-        // Route::resource('enteral-feeds', EnteralFeedController::class);
+        Route::get ('patients/{patient}/enteral-nutrition',                 [\App\Http\Controllers\EnteralNutritionController::class, 'index'])  ->name('patients.enteral-nutrition.index');
+        Route::post('patients/{patient}/enteral-nutrition',                 [\App\Http\Controllers\EnteralNutritionController::class, 'store'])  ->name('patients.enteral-nutrition.store');
+        Route::delete('patients/{patient}/enteral-nutrition/{calculation}', [\App\Http\Controllers\EnteralNutritionController::class, 'destroy'])->name('patients.enteral-nutrition.destroy');
     });
     }); // end admin.approved group
 

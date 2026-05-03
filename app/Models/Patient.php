@@ -272,6 +272,11 @@ class Patient extends Model
         return $this->hasMany(MealPlannerWeek::class)->orderByDesc('week_start');
     }
 
+    public function enteralNutritionCalculations(): HasMany
+    {
+        return $this->hasMany(EnteralNutritionCalculation::class)->orderByDesc('created_at');
+    }
+
     // ── Consent helpers ───────────────────────────────────────────────────────
 
     public function hasConsented(): bool
