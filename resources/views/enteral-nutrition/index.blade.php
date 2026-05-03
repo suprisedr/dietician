@@ -72,6 +72,16 @@
             <div style="margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
                 <span style="padding:.3rem .7rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.9)">SASPEN / ESPEN</span>
                 <span style="padding:.3rem .7rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.9)">Package 3</span>
+                @if($calculations->isNotEmpty())
+                <a href="{{ route('patients.enteral-nutrition.pdf', $patient) }}"
+                   target="_blank"
+                   style="display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .95rem;background:#fff;color:#15803d;font-size:.78rem;font-weight:700;border-radius:6px;text-decoration:none;border:1.5px solid rgba(255,255,255,.6);">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download PDF
+                </a>
+                @endif
             </div>
         </div>
     </div>

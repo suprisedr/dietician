@@ -239,6 +239,7 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     Route::middleware('plan:package_3')->group(function () {
         Route::get ('patients/{patient}/enteral-nutrition',                 [\App\Http\Controllers\EnteralNutritionController::class, 'index'])  ->name('patients.enteral-nutrition.index');
         Route::post('patients/{patient}/enteral-nutrition',                 [\App\Http\Controllers\EnteralNutritionController::class, 'store'])  ->name('patients.enteral-nutrition.store');
+        Route::get ('patients/{patient}/enteral-nutrition/pdf',             [\App\Http\Controllers\EnteralNutritionController::class, 'pdf'])    ->name('patients.enteral-nutrition.pdf');
         Route::delete('patients/{patient}/enteral-nutrition/{calculation}', [\App\Http\Controllers\EnteralNutritionController::class, 'destroy'])->name('patients.enteral-nutrition.destroy');
     });
     }); // end admin.approved group

@@ -6,6 +6,7 @@ use App\Models\EnteralNutritionCalculation;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class EnteralNutritionController extends Controller
 {
@@ -89,6 +90,27 @@ class EnteralNutritionController extends Controller
         return redirect()
             ->route('patients.enteral-nutrition.index', $patient)
             ->with('success', 'Enteral nutrition calculation saved.');
+    }
+
+    /**
+     * Download a PDF of all saved calculations for a patient.
+     */
+    public function pdf(Patient $patient)
+    {
+        abort_unless($patient->user_id === Auth::id(), 403);
+
+        $calculations = $patient->enteralNutritionCalculations()->latest()->get();
+
+        $letterhead = auth()->user()->letterheadBase64();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'enteral-nutrition.pdf',
+            compact('patient', 'calculations', 'letterhead')
+        )->setPaper('a4', 'portrait');
+
+        $filename = 'enteral-nutrition-' . Str::slug($patient->full_name) . '-' . now()->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     /**
