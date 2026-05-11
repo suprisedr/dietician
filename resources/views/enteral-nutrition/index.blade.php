@@ -194,21 +194,27 @@
                         <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-muted)">— subtracts estimated excess fluid from dosing weight</span>
                     </label>
                     <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                        @php
+                            $initOedema = old('oedema_adjustment_kg') !== null
+                                ? (float) old('oedema_adjustment_kg')
+                                : ($patient->oedema ? 2 : 0);
+                        @endphp
                         <select id="oedema-select" class="en-input" style="max-width:300px" onchange="updateOedema(this.value)">
-                            <option value="0">None — no oedema / fluid overload</option>
-                            <option value="2">Mild — approx. 2 kg excess fluid</option>
-                            <option value="5">Moderate — approx. 5 kg excess fluid</option>
-                            <option value="10">Severe — approx. 10 kg excess fluid</option>
-                            <option value="custom">Custom — enter amount below</option>
+                            <option value="0"  {{ $initOedema == 0 ? 'selected' : '' }}>None &mdash; no oedema / fluid overload</option>
+                            <option value="2"  {{ $initOedema == 2 ? 'selected' : '' }}>Mild &mdash; approx. 2 kg excess fluid</option>
+                            <option value="5"  {{ $initOedema == 5 ? 'selected' : '' }}>Moderate &mdash; approx. 5 kg excess fluid</option>
+                            <option value="10" {{ $initOedema == 10 ? 'selected' : '' }}>Severe &mdash; approx. 10 kg excess fluid</option>
+                            <option value="custom" {{ ($initOedema > 0 && !in_array($initOedema, [2,5,10])) ? 'selected' : '' }}>Custom &mdash; enter amount below</option>
                         </select>
-                        <div id="oedema-custom-wrap" style="display:none">
+                        <div id="oedema-custom-wrap" style="display:{{ ($initOedema > 0 && !in_array($initOedema, [2,5,10])) ? '' : 'none' }}">
                             <input type="number" id="oedema-custom-input" min="0" max="40" step="0.5"
+                                   value="{{ ($initOedema > 0 && !in_array($initOedema, [2,5,10])) ? $initOedema : '' }}"
                                    placeholder="kg excess" class="en-input" style="max-width:150px"
                                    oninput="applyOedema()">
                         </div>
                     </div>
-                    <input type="hidden" name="oedema_adjustment_kg" id="oedema-adj-input" value="{{ old('oedema_adjustment_kg', 0) }}">
-                    <p id="oedema-hint" style="display:none;font-size:.72rem;color:#92400e;margin-top:.35rem;padding:.45rem .65rem;background:#fffbeb;border:1px solid #fde68a;line-height:1.6">
+                    <input type="hidden" name="oedema_adjustment_kg" id="oedema-adj-input" value="{{ $initOedema }}">
+                    <p id="oedema-hint" style="display:{{ $initOedema > 0 ? 'block' : 'none' }};font-size:.72rem;color:#92400e;margin-top:.35rem;padding:.45rem .65rem;background:#fffbeb;border:1px solid #fde68a;line-height:1.6">
                         Estimated dry weight for dosing: <strong id="oedema-dry-weight">&mdash;</strong>
                         &mdash; oedema/fluid weight excluded from energy &amp; protein target calculations per ASPEN/ESPEN.
                     </p>
@@ -826,34 +832,97 @@ select.en-input { cursor: pointer; }
 
     // ── Print / Download PDF ─────────────────────────────────────
     window.printResults = function () {
-        var panel  = document.getElementById('results-panel');
-        var hero   = document.querySelector('.dash-hero');
-        var heroHtml = hero
-            ? '<div style="padding:.75rem 0 1.25rem;border-bottom:2px solid #16a34a;margin-bottom:1rem">'
-              + '<strong style="font-size:1rem;color:#111">Enteral Nutrition — Tube Feed Recommendations</strong><br>'
-              + '<span style="font-size:.82rem;color:#555">{{ $patient->full_name }} &middot; {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }}&nbsp;yrs &middot; {{ $patient->weight }}&nbsp;kg &middot; BMI&nbsp;{{ $patient->bmi ? number_format($patient->bmi,1) : "—" }}</span>'
-              + '</div>'
-            : '';
-        var printWin = window.open('', '_blank', 'width=900,height=700');
-        printWin.document.write(
-            '<!DOCTYPE html><html><head><title>EN Results — {{ $patient->full_name }}</title>'
+        function tv(id) { var e = document.getElementById(id); return e ? e.textContent : ''; }
+        var patientInfo = '{{ addslashes($patient->full_name) }} &middot; {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }}&nbsp;yrs &middot; {{ $patient->weight }}&nbsp;kg &middot; BMI&nbsp;{{ $patient->bmi ? number_format($patient->bmi,1) : "\u2014" }}';
+        var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            + '<title>EN Results — {{ addslashes($patient->full_name) }}</title>'
             + '<style>'
-            + 'body{font-family:sans-serif;font-size:13px;padding:1.5rem 2rem;color:#111}'
-            + '.dash-section-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem .25rem;border-bottom:2px solid #16a34a;margin-bottom:.75rem}'
-            + '.dash-section-title{font-weight:800;font-size:.95rem}'
-            + 'dt{font-size:.72rem;color:#666;margin-bottom:.1rem}'
-            + 'dd{font-size:1rem;font-weight:700;margin:0 0 .5rem}'
-            + 'table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.5rem}'
-            + 'th,td{padding:.35rem .5rem;text-align:left;border-bottom:1px solid #e5e7eb}'
-            + 'th{font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:700}'
-            + '#btn-print-results,button{display:none!important}'
-            + '@media print{@page{margin:1cm}}'
+            + '*{box-sizing:border-box;margin:0;padding:0}'
+            + 'body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;padding:1.5cm 2cm}'
+            + 'h1{font-size:14px;font-weight:800;margin-bottom:2px}'
+            + '.subtitle{font-size:11px;color:#555;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #16a34a}'
+            + '.section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#374151;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid #e5e7eb}'
+            + '.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid #e5e7eb;border-radius:4px;margin-bottom:12px;overflow:hidden}'
+            + '.grid3>div{padding:10px 12px;border-right:1px solid #e5e7eb}'
+            + '.grid3>div:last-child{border-right:none}'
+            + '.col-head{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin-bottom:8px}'
+            + 'dt{font-size:10px;color:#6b7280;margin-bottom:1px}'
+            + 'dd{font-size:13px;font-weight:700;color:#111;margin:0 0 6px}'
+            + 'dd.primary{color:#16a34a}'
+            + '.sub{font-size:10px;color:#6b7280;margin-top:-5px;margin-bottom:6px}'
+            + '.banner{background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #16a34a;border-radius:4px;padding:10px 12px;margin-bottom:12px}'
+            + '.banner strong{font-size:12px;font-weight:800;color:#15803d;display:block;margin-bottom:6px}'
+            + '.banner li{font-size:11px;color:#166534;margin-left:14px;margin-bottom:2px}'
+            + 'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}'
+            + 'th{text-align:left;padding:4px 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;border-bottom:2px solid #e5e7eb}'
+            + 'th:not(:first-child),td:not(:first-child){text-align:right}'
+            + 'td{padding:4px 6px;border-bottom:1px solid #f3f4f6;color:#374151}'
+            + 'td strong{color:#111}'
+            + '.adequacy{font-size:11px;font-weight:700;padding:4px 8px;margin-bottom:12px}'
+            + '.note{font-size:9px;color:#9ca3af;margin-top:4px;line-height:1.5}'
+            + '@media print{@page{margin:1.5cm}button{display:none!important}}'
             + '</style></head><body>'
-            + heroHtml
-            + panel.innerHTML
-            + '<script>window.onload=function(){window.print();window.close();}<\/script>'
-            + '</body></html>'
-        );
+            + '<h1>Enteral Nutrition &mdash; Tube Feed Recommendations</h1>'
+            + '<p class="subtitle">' + patientInfo + '</p>';
+
+        // Banner
+        var bannerFml   = tv('res-banner-formula');
+        var bannerProt  = tv('res-banner-protein');
+        var bannerFlush = tv('res-banner-flush');
+        if (bannerFml) {
+            html += '<div class="banner"><strong>' + bannerFml + '</strong><ul>'
+                + '<li>Start at 20 mL/hr, titrate by 10–20 mL/hr every 4 hours to goal rate</li>'
+                + '<li>' + bannerProt  + '</li>'
+                + '<li>' + bannerFlush + '</li>'
+                + '</ul></div>';
+        }
+
+        // 3-col grid
+        html += '<div class="grid3">';
+        // Macronutrients
+        html += '<div><div class="col-head">Macronutrients</div><dl>'
+            + '<div><dt>Feed Calories</dt><dd>' + tv('res-kcal') + '</dd><div class="sub">' + tv('res-kcal-sub') + '</div></div>'
+            + '<div><dt>Total Protein</dt><dd>' + tv('res-protein-goal') + '</dd><div class="sub">' + tv('res-protein-sub') + '</div></div>'
+            + '<div><dt>Total Carbohydrates</dt><dd>' + tv('res-fml-carbs') + '</dd></div>'
+            + '<div><dt>Total Fat</dt><dd>' + tv('res-fml-fat') + '</dd></div>'
+            + '</dl></div>';
+        // Fluid
+        html += '<div><div class="col-head">Fluid</div><dl>'
+            + '<div><dt>Total Fluids</dt><dd class="primary">' + tv('res-total-fluid') + '</dd><div class="sub">' + tv('res-total-fluid-sub') + '</div></div>'
+            + '<div><dt>Daily Needs (35 mL/kg)</dt><dd>' + tv('res-fluid-std') + '</dd><div class="sub">35 mL/kg/day</div></div>'
+            + '</dl></div>';
+        // Anthropometrics
+        var ibd = '{{ $devineIbw > 0 ? number_format($devineIbw,1)." kg" : "\u2014" }}';
+        var abw = '{{ $actualWt > 0 ? number_format($actualWt,1)." kg" : "\u2014" }}';
+        var bmiV= '{{ $bmi > 0 ? number_format($bmi,1)." kg/m\u00b2" : "\u2014" }}';
+        html += '<div><div class="col-head">Anthropometrics</div><dl>'
+            + '<div><dt>Ideal Body Weight (Devine)</dt><dd>' + ibd + '</dd></div>'
+            + '<div><dt>Actual Body Weight</dt><dd>' + abw + '</dd></div>'
+            + '<div><dt>Nutritional Weight Used</dt><dd class="primary">' + tv('res-nutri-wt') + '</dd><div class="sub">' + tv('res-nutri-wt-type') + '</div></div>'
+            + '<div><dt>BMI</dt><dd>' + bmiV + '</dd></div>'
+            + '</dl></div>';
+        html += '</div>';
+
+        // Formula table
+        html += '<div class="section-title">Formula Information &mdash; ' + tv('res-formula-label') + '</div>';
+        html += '<table><thead><tr><th>Macronutrient</th><th>Per 1 000 mL</th><th>Daily Total</th></tr></thead><tbody>'
+            + '<tr><td>Energy</td><td>' + tv('res-ftbl-kcal-ml') + '</td><td><strong>' + tv('res-kcal2') + '</strong></td></tr>'
+            + '<tr><td>Protein</td><td>' + tv('res-ftbl-pro-ml') + '</td><td><strong>' + tv('res-fml-protein') + '</strong></td></tr>'
+            + '<tr><td>Carbohydrates</td><td>' + tv('res-ftbl-carbs-ml') + '</td><td><strong>' + tv('res-ftbl-carbs-daily') + '</strong></td></tr>'
+            + '<tr><td>Fat</td><td>' + tv('res-ftbl-fat-ml') + '</td><td><strong>' + tv('res-ftbl-fat-daily') + '</strong></td></tr>'
+            + '</tbody></table>';
+        var adeqEl = document.getElementById('res-protein-adequacy');
+        if (adeqEl && adeqEl.textContent) {
+            html += '<p class="adequacy" style="color:' + (adeqEl.style.color || '#111') + '">' + adeqEl.textContent + '</p>';
+        }
+        html += '<p class="note">Nutrition information based on generic formula data per 1 000 mL; verify against the manufacturer&rsquo;s current product data sheet.</p>';
+
+        html += '<script>window.onload=function(){window.print();};<\/script>';
+        html += '</body></html>';
+
+        var printWin = window.open('', '_blank', 'width=900,height=700');
+        if (!printWin) { alert('Please allow pop-ups to download the PDF.'); return; }
+        printWin.document.write(html);
         printWin.document.close();
     };
 
@@ -879,8 +948,17 @@ select.en-input { cursor: pointer; }
         if (dot) { dot.style.border = '2px solid var(--primary)'; dot.style.background = 'var(--primary)'; }
         if (row) { row.style.border = '1.5px solid var(--primary)'; row.style.background = '#f0fdf4'; }
     }
-    updateMSJ();   // refresh oedema hint on load
+    updateMSJ();
     updatePatientSummary();
+    // Pre-initialise oedema from patient record
+    (function () {
+        var oSel = document.getElementById('oedema-select');
+        if (oSel && oSel.value !== '0' && oSel.value !== 'custom') {
+            updateOedema(oSel.value);
+        } else if (oSel && oSel.value === 'custom') {
+            updateOedema('custom');
+        }
+    })();
 })();
 </script>
 

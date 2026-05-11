@@ -352,6 +352,25 @@
                         @error('appetite')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
                     </div>
 
+                    {{-- Oedema --}}
+                    <div style="margin-bottom:1.5rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Oedema / Fluid Overload</label>
+                        @php $hasOedema = old('oedema', $patient->oedema ? '1' : '0') === '1'; @endphp
+                        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+                            <label style="display:flex;align-items:center;gap:.4rem;padding:.45rem .875rem;border:1.5px solid {{ !$hasOedema ? 'var(--primary)' : '#d1d5db' }};border-radius:6px;cursor:pointer;font-size:.875rem;font-weight:600;color:{{ !$hasOedema ? 'var(--primary)' : 'var(--text-muted)' }};background:{{ !$hasOedema ? 'rgba(103,159,95,.07)' : '#fff' }}">
+                                <input type="radio" name="oedema" value="0" {{ !$hasOedema ? 'checked' : '' }} style="accent-color:var(--primary)">
+                                No oedema
+                            </label>
+                            <label style="display:flex;align-items:center;gap:.4rem;padding:.45rem .875rem;border:1.5px solid {{ $hasOedema ? '#f59e0b' : '#d1d5db' }};border-radius:6px;cursor:pointer;font-size:.875rem;font-weight:600;color:{{ $hasOedema ? '#92400e' : 'var(--text-muted)' }};background:{{ $hasOedema ? '#fffbeb' : '#fff' }}">
+                                <input type="radio" name="oedema" value="1" {{ $hasOedema ? 'checked' : '' }} style="accent-color:#f59e0b">
+                                Oedema present
+                            </label>
+                        </div>
+                        @if($patient->oedema_changed_at)
+                            <p style="font-size:.7rem;color:var(--text-muted);margin:.35rem 0 0">Last changed {{ $patient->oedema_changed_at->diffForHumans() }}</p>
+                        @endif
+                    </div>
+
                     <div style="display:flex;justify-content:flex-end;padding-top:.5rem;border-top:1px solid var(--border)">
                         <button type="submit"
                             style="display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.35rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;transition:background .15s"

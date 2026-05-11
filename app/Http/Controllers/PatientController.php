@@ -518,9 +518,21 @@ class PatientController extends Controller
             'allergies'             => 'nullable|string|max:1000',
             'dietary_history'       => 'nullable|string|max:2000',
             'appetite'              => 'nullable|in:good,fair,poor',
+            'oedema'                => 'nullable|boolean',
         ]);
 
-        $patient->update($data);
+        $oedema = isset($data['oedema']) ? (bool) $data['oedema'] : $patient->oedema;
+        unset($data['oedema']);
+
+        $updateData = $data;
+        if ($oedema !== (bool) $patient->oedema) {
+            $updateData['oedema']            = $oedema;
+            $updateData['oedema_changed_at'] = now();
+        } else {
+            $updateData['oedema'] = $oedema;
+        }
+
+        $patient->update($updateData);
 
         return redirect()->route('patients.edit', $patient->id)
             ->with('success', 'Clinical assessment updated.');
