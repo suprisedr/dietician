@@ -2,468 +2,646 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Patient Report — {{ $patient->name }}</title>
+<title>Dietetic Assessment &amp; Care Plan — {{ $patient->name }}</title>
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
         font-family: DejaVu Sans, sans-serif;
-        font-size: 10px;
+        font-size: 9.5px;
         color: #0d1f0c;
-        line-height: 1.5;
+        line-height: 1.45;
         background: #fff;
     }
 
-    /* ── HEADER ── */
-    .header {
-        background-color: #1a4a36;
-        color: #fff;
-        padding: 18px 22px 14px;
-        margin-bottom: 16px;
+    .page-header { width: 100%; margin-bottom: 12px; border-collapse: collapse; }
+    .page-header td { vertical-align: top; }
+    .logo-cell { width: 80px; }
+    .logo-cell img { max-width: 80px; max-height: 70px; }
+    .title-cell { text-align: center; padding: 0 10px; }
+    .doc-title {
+        font-size: 16px; font-weight: bold; color: #002d58;
+        text-transform: uppercase; letter-spacing: .5px;
     }
-    .header-top {
-        width: 100%;
-        margin-bottom: 8px;
+    .doc-subtitle { font-size: 8px; font-weight: bold; color: #555; margin-top: 3px; letter-spacing: .5px; }
+    .contact-cell { text-align: right; font-size: 8px; line-height: 1.6; color: #333; }
+    .contact-cell strong { font-size: 9px; }
+
+    hr { border: none; border-top: 1.5px solid #002d58; margin: 6px 0 10px 0; }
+
+    .pi-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .pi-table td { vertical-align: top; padding: 0 6px 0 0; font-size: 8.5px; }
+    .field { display: block; border-bottom: 1px solid #ccc; margin-bottom: 4px; padding-bottom: 1px; }
+    .field-label { font-weight: bold; font-size: 8px; }
+    .field-value { color: #1a1a1a; }
+    .abcd-box {
+        border: 1px solid #006442; border-radius: 4px; padding: 6px 8px;
+        font-size: 8px; background-color: #f0fff4; line-height: 1.7;
     }
-    .header-top td { vertical-align: top; }
-    .header-title {
-        font-size: 18px;
-        font-weight: bold;
-        color: #fff;
-        letter-spacing: -0.3px;
+    .abcd-box strong { color: #002d58; font-size: 8.5px; }
+
+    .section-header {
+        color: white; padding: 4px 8px; font-size: 9.5px; font-weight: bold;
+        border-radius: 3px 3px 0 0; margin-bottom: 0;
     }
-    .header-subtitle {
-        font-size: 8px;
-        color: rgba(255,255,255,0.6);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 4px;
+    .circle-label {
+        display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+        background: white; text-align: center; line-height: 16px;
+        font-weight: 900; font-size: 9px; margin-right: 6px;
     }
-    .header-right {
-        text-align: right;
-    }
-    .header-right .brand {
-        font-size: 7px;
-        color: rgba(255,255,255,0.45);
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-    }
-    .header-right .date {
-        font-size: 9px;
-        color: rgba(255,255,255,0.7);
-        margin-top: 3px;
-    }
-    .header-badges { margin-top: 6px; }
-    .badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 7.5px;
-        font-weight: bold;
-        background-color: rgba(255,255,255,0.15);
-        color: #b0dba8;
-        border: 1px solid rgba(255,255,255,0.2);
-        margin-right: 4px;
-    }
-    .badge-alert {
-        background-color: rgba(180,30,40,0.25);
-        border-color: rgba(200,50,60,0.4);
-        color: #fca5a5;
+    .bg-a { background-color: #002d58; }
+    .bg-b { background-color: #1d3557; }
+    .bg-c { background-color: #006442; }
+    .circle-a { color: #002d58; }
+    .circle-b { color: #1d3557; }
+    .circle-c { color: #006442; }
+
+    .content-box {
+        border: 1px solid #d1d8e0; border-top: none;
+        padding: 8px 9px; margin-bottom: 10px; font-size: 8.5px;
     }
 
-    /* ── SECTION ── */
-    .section { margin-bottom: 14px; }
-    .section-title {
-        font-size: 7.5px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.9px;
-        color: #3a6b50;
-        border-bottom: 1.5px solid #b8ddb4;
-        padding-bottom: 4px;
-        margin-bottom: 8px;
+    .sub-header {
+        color: #2d6a4f; font-weight: bold; font-size: 8px;
+        text-transform: uppercase; letter-spacing: .5px;
+        border-bottom: 1px solid #eee; margin: 7px 0 4px 0; padding-bottom: 2px;
     }
+    .sub-header:first-child { margin-top: 0; }
 
-    /* ── METRIC GRID ── */
-    .metric-table { width: 100%; border-collapse: collapse; }
-    .metric-table td { padding: 0 4px 0 0; vertical-align: top; width: 11.1%; }
-    .metric-box {
-        background-color: #f0f7ef;
-        border: 1px solid #c8e0c4;
-        border-radius: 4px;
-        padding: 6px 7px;
-        margin-bottom: 0;
+    .f-row-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
+    .f-row-table td { vertical-align: top; padding: 0; }
+    .fl { font-weight: bold; width: 38%; color: #555; font-size: 8px; }
+    .fv { color: #0d1f0c; }
+
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 8px; }
+    .data-table th {
+        background-color: #f2f4f7; border: 1px solid #ddd; padding: 3px 5px;
+        text-align: left; font-size: 7.5px; font-weight: bold;
     }
-    .metric-box.hi {
-        background-color: #e0f2ee;
-        border-color: #8fcf8a;
-    }
-    .metric-label {
-        font-size: 6.5px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        color: #4a7060;
-        margin-bottom: 2px;
-    }
-    .metric-value {
-        font-size: 13px;
-        font-weight: bold;
-        color: #0d1f0c;
-        line-height: 1.1;
-    }
-    .metric-unit {
-        font-size: 6.5px;
-        color: #4a7060;
-        margin-top: 1px;
-    }
+    .data-table td { border: 1px solid #ddd; padding: 3px 5px; }
+    .data-table th.r, .data-table td.r { text-align: right; }
+    .data-table th.c, .data-table td.c { text-align: center; }
+    .data-table tr.tot td { background: #f2f4f7; font-weight: bold; border-top: 1.5px solid #aaa; }
+
+    .metric-grid { width: 100%; border-collapse: collapse; }
+    .metric-grid td { width: 33.3%; padding: 0 3px 3px 0; vertical-align: top; }
+    .metric-grid td:last-child { padding-right: 0; }
+    .m-box { background: #f0f4f8; border: 1px solid #c8d8ea; border-radius: 4px; padding: 5px 7px; }
+    .m-box.hi { background: #e8f5e9; border-color: #a5d6a7; }
+    .m-label { font-size: 6.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; color: #445; margin-bottom: 1px; }
+    .m-val { font-size: 13px; font-weight: bold; color: #0d1f0c; line-height: 1.1; }
+    .m-unit { font-size: 6.5px; color: #555; margin-top: 1px; }
     .bmi-pill {
-        display: inline-block;
-        padding: 1px 5px;
-        border-radius: 8px;
-        font-size: 6.5px;
-        font-weight: bold;
-        margin-top: 2px;
+        display: inline-block; padding: 1px 5px; border-radius: 8px;
+        font-size: 6.5px; font-weight: bold; margin-top: 2px;
     }
-    .bmi-underweight { background-color: #fef9c3; color: #854d0e; }
-    .bmi-normal      { background-color: #dcfce7; color: #166534; }
-    .bmi-overweight  { background-color: #ffedd5; color: #9a3412; }
-    .bmi-obese       { background-color: #fee2e2; color: #991b1b; }
+    .bmi-underweight { background: #fef9c3; color: #854d0e; }
+    .bmi-normal      { background: #dcfce7; color: #166534; }
+    .bmi-overweight  { background: #ffedd5; color: #9a3412; }
+    .bmi-obese       { background: #fee2e2; color: #991b1b; }
 
-    /* ── OBESITY NOTE ── */
+    .macro-grid { width: 100%; border-collapse: collapse; }
+    .macro-grid td { width: 33.3%; padding: 0 3px 0 0; vertical-align: top; }
+    .macro-grid td:last-child { padding-right: 0; }
+    .macro-box { border-radius: 4px; padding: 5px 7px; border: 1px solid; }
+    .macro-cho { background: #fef9c3; border-color: #fde68a; }
+    .macro-pro { background: #fce7f3; border-color: #f9a8d4; }
+    .macro-fat { background: #e0f2fe; border-color: #7dd3fc; }
+    .macro-label { font-size: 6.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; color: #374151; margin-bottom: 2px; }
+    .macro-pct { font-size: 15px; font-weight: bold; color: #0d1f0c; line-height: 1; }
+    .macro-row { font-size: 7.5px; color: #374151; margin-top: 1px; }
+
+    .en-grid { width: 100%; border-collapse: collapse; }
+    .en-grid td { width: 50%; padding: 0 3px 3px 0; vertical-align: top; }
+    .en-grid td:last-child { padding-right: 0; }
+    .en-box { background: #f0fff4; border: 1px solid #86efac; border-radius: 4px; padding: 5px 7px; }
+    .en-label { font-size: 6.5px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; color: #166534; margin-bottom: 1px; }
+    .en-val { font-size: 13px; font-weight: bold; color: #0d1f0c; line-height: 1.1; }
+    .en-unit { font-size: 6.5px; color: #555; margin-top: 1px; }
+
     .obese-note {
-        background-color: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 4px;
-        padding: 5px 8px;
-        font-size: 8px;
-        color: #b91c1c;
-        margin-top: 6px;
+        background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px;
+        padding: 4px 7px; font-size: 7.5px; color: #b91c1c; margin-top: 5px;
     }
 
-    /* ── MACRO GRID ── */
-    .macro-table { width: 100%; border-collapse: collapse; }
-    .macro-table td { width: 33.3%; padding: 0 4px 0 0; vertical-align: top; }
-    .macro-box {
-        border-radius: 4px;
-        padding: 7px 8px;
-        border: 1px solid;
-    }
-    .macro-cho { background-color: #fef9c3; border-color: #fde68a; }
-    .macro-pro { background-color: #fce7f3; border-color: #f9a8d4; }
-    .macro-fat { background-color: #e0f2fe; border-color: #7dd3fc; }
-    .macro-label {
-        font-size: 6.5px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        color: #374151;
-        margin-bottom: 3px;
-    }
-    .macro-pct {
-        font-size: 16px;
-        font-weight: bold;
-        color: #0d1f0c;
-        line-height: 1;
-    }
-    .macro-row {
-        font-size: 7.5px;
-        color: #374151;
-        margin-top: 2px;
-    }
-    .macro-row strong { font-weight: bold; }
+    .two-col { width: 100%; border-collapse: collapse; }
+    .two-col > tbody > tr > td { width: 50%; vertical-align: top; padding: 0; }
+    .two-col > tbody > tr > td:first-child { padding-right: 8px; }
 
-    /* ── TOTAL BAR ── */
-    .tee-bar {
-        background-color: #f0f7ef;
-        border: 1px solid #b8ddb4;
-        border-radius: 4px;
-        padding: 5px 9px;
-        font-size: 8px;
-        color: #2e6e56;
-        margin-top: 6px;
+    .stamp {
+        border: 2px solid #002d58; border-radius: 6px;
+        padding: 8px 12px; text-align: center; font-size: 8px;
+        color: #002d58; width: 180px;
+    }
+    .stamp-name { font-size: 10px; font-weight: bold; color: #002d58; margin-bottom: 3px; }
+    .stamp-line { border-top: 1px solid #002d58; margin: 5px 0 4px; }
+    .stamp-reg { font-size: 7.5px; color: #444; }
+    .stamp-watermark {
+        font-size: 18px; font-weight: bold; color: rgba(0,45,88,.07);
+        letter-spacing: 3px; text-transform: uppercase;
+        white-space: nowrap;
     }
 
-    /* ── EXCHANGE TABLE ── */
-    .et-table { width: 100%; border-collapse: collapse; font-size: 8px; }
-    .et-table th {
-        background-color: #f0f7ef;
-        padding: 4px 6px;
-        text-align: left;
-        font-size: 7px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        color: #4a7060;
-        border-bottom: 1.5px solid #b8ddb4;
-    }
-    .et-table th.r, .et-table td.r { text-align: right; }
-    .et-table td {
-        padding: 4px 6px;
-        border-bottom: 1px solid #edf5ec;
-        color: #0d1f0c;
-    }
-    .et-table tr:last-child td { border-bottom: none; }
-    .et-table .tot td {
-        background-color: #f0f7ef;
-        border-top: 1.5px solid #b8ddb4;
-        font-weight: bold;
-        font-size: 7.5px;
-    }
-    .et-name { font-weight: bold; }
-    .et-nu   { text-align: center; font-weight: bold; color: #2e6e56; }
-    .et-kj   { color: #2e6e56; font-weight: bold; }
-
-    /* ── DETAILS TABLE ── */
-    .details-table { width: 100%; border-collapse: collapse; }
-    .details-table td {
-        padding: 4px 7px;
-        border-bottom: 1px solid #edf5ec;
-        font-size: 8.5px;
-        vertical-align: top;
-    }
-    .details-table tr:last-child td { border-bottom: none; }
-    .details-table td:first-child {
-        font-weight: bold;
-        color: #4a7060;
-        width: 40%;
-        font-size: 7.5px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .footer-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .footer-table td { vertical-align: top; font-size: 8px; }
+    .footer-note { color: #555; font-size: 7.5px; }
+    .confidential-bar {
+        text-align: center; font-size: 7.5px; color: #888;
+        margin-top: 8px; padding-top: 6px; border-top: 1px solid #e5e7eb;
     }
 
-    /* ── FOOTER ── */
-    .footer {
-        background-color: #f0f7ef;
-        border-top: 1px solid #b8ddb4;
-        padding: 7px 22px;
-        margin-top: 14px;
-        width: 100%;
-    }
-    .footer-table { width: 100%; }
-    .footer-note { font-size: 7px; color: #4a7060; }
-    .footer-brand { font-size: 7px; font-weight: bold; color: #2e6e56; text-align: right; }
-
-    /* ── PAGE ── */
-    @page { margin: 14mm 14mm 14mm 14mm; size: A4 portrait; }
+    @page { margin: 12mm 14mm 12mm 14mm; size: A4 portrait; }
 </style>
 </head>
 <body>
 
+@php
+    $user      = auth()->user();
+    $genDate   = now()->format('d M Y');
+    $genTime   = now()->format('H:i');
+    $lastVisit = $patient->visits()->latest('visited_at')->first();
+    $bmiCatClass = strtolower(str_replace([' ', '/', '(', ')'], ['_', '_', '', ''], $patient->bmi_category ?? 'normal'));
+@endphp
+
+{{-- LETTERHEAD --}}
 @if(!empty($letterhead))
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px">
   <tr>
-    <td style="text-align:center;background-color:#ffffff">
+    <td style="text-align:center">
       <img src="{{ $letterhead }}" style="width:100%;height:auto;display:block">
     </td>
   </tr>
 </table>
 @endif
 
-{{-- ── HEADER ── --}}
-<div class="header">
-    <table class="header-top" cellpadding="0" cellspacing="0">
-        <tr>
-            <td>
-                <div class="header-subtitle">Patient Clinical Report</div>
-                <div class="header-title">{{ $patient->name }}</div>
-                <div class="header-badges">
-                    <span class="badge">{{ ucfirst($patient->gender) }}</span>
-                    <span class="badge">Age {{ $patient->age }} yrs</span>
-                    <span class="badge">{{ $patient->weight }} kg &middot; {{ $patient->height }} cm</span>
-                    <span class="badge">AF {{ $patient->activity_factor }}</span>
-                    @if($isObese)<span class="badge badge-alert">BMI &ge; 30 &mdash; Obesity adj. applied</span>@endif
+{{-- PAGE HEADER --}}
+<table class="page-header" cellpadding="0" cellspacing="0">
+    <tr>
+        <td class="logo-cell">
+            @if(empty($letterhead))
+                <div style="width:70px;height:60px;border:1.5px dashed #bbb;font-size:7px;color:#aaa;text-align:center;padding:20px 4px">
+                    Practice<br>Logo
                 </div>
-            </td>
-            <td class="header-right">
-                <div class="brand">Panamarex Outpatient Clinical Nutrition Toolkit</div>
-                <div class="date">{{ now()->format('d M Y') }}</div>
-            </td>
-        </tr>
-    </table>
-</div>
+            @endif
+        </td>
+        <td class="title-cell">
+            <div class="doc-title">Dietetic Assessment &amp; Care Plan</div>
+            <div class="doc-subtitle">ABC Assessment Framework &mdash; Patient Report</div>
+        </td>
+        <td class="contact-cell">
+            <strong>{{ $user->name }}</strong><br>
+            @if($user->dietician_number)Dietitian Reg.: {{ $user->dietician_number }}<br>@endif
+            {{ $user->email }}<br>
+            <span style="color:#888">{{ $genDate }}</span>
+        </td>
+    </tr>
+</table>
 
-{{-- ── SECTION 1: Anthropometrics & Energy ── --}}
-<div class="section">
-    <div class="section-title">Anthropometry &amp; Energy</div>
-    @php $bmiCat = strtolower($patient->bmi_category ?? 'normal'); @endphp
-    <table class="metric-table" cellpadding="0" cellspacing="0">
-        <tr>
-            <td>
-                <div class="metric-box">
-                    <div class="metric-label">BMI</div>
-                    <div class="metric-value">{{ $patient->bmi ? number_format($patient->bmi, 2) : '—' }}</div>
-                    <div class="metric-unit">kg/m&sup2;</div>
-                    <span class="bmi-pill bmi-{{ $bmiCat }}">{{ $patient->bmi_category }}</span>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box">
-                    <div class="metric-label">Ideal Body Weight (IBW)</div>
-                    <div class="metric-value">{{ $patient->ibw ? number_format($patient->ibw, 1) : '—' }}</div>
-                    <div class="metric-unit">kg</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box">
-                    <div class="metric-label">ABW</div>
-                    <div class="metric-value">{{ $patient->abw ? number_format($patient->abw, 1) : '—' }}</div>
-                    <div class="metric-unit">kg</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box">
-                    <div class="metric-label">Weight</div>
-                    <div class="metric-value">{{ $patient->weight }}</div>
-                    <div class="metric-unit">kg (actual)</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box">
-                    <div class="metric-label">Height</div>
-                    <div class="metric-value">{{ $patient->height }}</div>
-                    <div class="metric-unit">cm</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box">
-                    <div class="metric-label">Act. Factor</div>
-                    <div class="metric-value">{{ $patient->activity_factor ?? '—' }}</div>
-                    <div class="metric-unit">multiplier</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box hi">
-                    <div class="metric-label">BMR</div>
-                    <div class="metric-value">{{ $bmrKj ? number_format($bmrKj) : '—' }}</div>
-                    <div class="metric-unit">kJ/day</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box hi">
-                    <div class="metric-label">TEE</div>
-                    <div class="metric-value">{{ $teeKj ? number_format(round($teeKj)) : '—' }}</div>
-                    <div class="metric-unit">kJ/day</div>
-                </div>
-            </td>
-            <td>
-                <div class="metric-box hi">
-                    <div class="metric-label">TEE</div>
-                    <div class="metric-value">{{ $teeKcal ? number_format($teeKcal) : '—' }}</div>
-                    <div class="metric-unit">kcal/day</div>
-                </div>
-            </td>
-        </tr>
-    </table>
-    @if($isObese)
-    <div class="obese-note">
-        <strong>Obesity adjustment active (BMI {{ number_format($patient->bmi, 2) }} &ge; 30):</strong>
-        BMR calculated using adjusted body weight (IBW + 0.4 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg) rather than actual weight to avoid overestimating energy needs.
+<hr>
+
+{{-- PATIENT INFO GRID --}}
+<table class="pi-table" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="width:55%;padding-right:10px">
+            <span class="field">
+                <span class="field-label">Patient Name: </span>
+                <span class="field-value">{{ $patient->name }}</span>
+            </span>
+            <span class="field">
+                <span class="field-label">DOB: </span>
+                <span class="field-value">{{ $patient->date_of_birth?->format('d M Y') ?? '—' }}</span>
+                &nbsp;&nbsp;
+                <span class="field-label">Age: </span>
+                <span class="field-value">{{ $patient->age }}</span>
+                &nbsp;&nbsp;
+                <span class="field-label">Gender: </span>
+                <span class="field-value">{{ ucfirst($patient->gender) }}</span>
+            </span>
+            <span class="field">
+                <span class="field-label">{{ $patient->id_type === 'passport' ? 'Passport No.' : 'SA ID Number' }}: </span>
+                <span class="field-value">{{ $patient->id_number ?? '—' }}</span>
+            </span>
+            <span class="field">
+                <span class="field-label">Contact / Email: </span>
+                <span class="field-value">{{ $patient->email ?? '—' }}</span>
+            </span>
+        </td>
+        <td style="width:45%">
+            <span class="field">
+                <span class="field-label">Date of Assessment: </span>
+                <span class="field-value">{{ $lastVisit?->visited_at->format('d M Y H:i') ?? '—' }}</span>
+            </span>
+            <span class="field">
+                <span class="field-label">Report Date: </span>
+                <span class="field-value">{{ $genDate }}</span>
+            </span>
+            <span class="field">
+                <span class="field-label">Reason for Assessment: </span>
+                <span class="field-value">{{ $patient->reason_for_assessment ?? '—' }}</span>
+            </span>
+            <div class="abcd-box" style="margin-top:6px">
+                <strong>ABC FRAMEWORK</strong><br>
+                <strong>A</strong> &mdash; Assessment (Subjective + Patient Details)<br>
+                <strong>B</strong> &mdash; Body Composition &amp; Energy Calculations<br>
+                <strong>C</strong> &mdash; Calculation of Requirements (Enteral Feed)
+            </div>
+        </td>
+    </tr>
+</table>
+
+{{-- TWO-COLUMN LAYOUT --}}
+<table class="two-col" cellpadding="0" cellspacing="0">
+<tbody><tr>
+
+{{-- ══ LEFT COLUMN ══ --}}
+<td>
+
+    {{-- SECTION A --}}
+    <div class="section-header bg-a">
+        <span class="circle-label circle-a">A</span> ASSESSMENT
     </div>
-    @endif
-</div>
+    <div class="content-box">
+        <div class="sub-header">Subjective Assessment</div>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Chief Complaint:</td>
+                <td class="fv">{{ $patient->reason_for_assessment ?? '—' }}</td>
+            </tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Oedema:</td>
+                <td class="fv">
+                    @if($patient->oedema)
+                        <strong style="color:#92400e">Present</strong>
+                        @if($patient->oedema_changed_at)<span style="font-size:7px;color:#888"> (since {{ $patient->oedema_changed_at->format('d M Y') }})</span>@endif
+                    @else
+                        <strong style="color:#15803d">No Oedema</strong>
+                        @if($patient->oedema_changed_at)<span style="font-size:7px;color:#888"> (since {{ $patient->oedema_changed_at->format('d M Y') }})</span>@endif
+                    @endif
+                </td>
+            </tr>
+        </table>
 
-{{-- ── SECTION 2: Macronutrient Distribution ── --}}
-@if($patient->macronutrients->count())
-<div class="section">
-    <div class="section-title">Macronutrient Distribution</div>
-    <table class="macro-table" cellpadding="0" cellspacing="4">
-        <tr>
-            @php
-                $macros = [
-                    ['key'=>'carbohydrates','label'=>'Carbohydrates','cls'=>'cho','g'=>$recCho_g,'kj'=>$recCho_kj,'pct'=>$choPct],
-                    ['key'=>'protein',      'label'=>'Protein',      'cls'=>'pro','g'=>$recPro_g,'kj'=>$recPro_kj,'pct'=>$proPct],
-                    ['key'=>'fats',         'label'=>'Fat',          'cls'=>'fat','g'=>$recFat_g,'kj'=>$recFat_kj,'pct'=>$fatPct],
-                ];
-            @endphp
-            @foreach($macros as $m)
-            @php $macro = $patient->macronutrients->firstWhere('type', $m['key']); @endphp
-            <td>
-                <div class="macro-box macro-{{ $m['cls'] }}">
-                    <div class="macro-label">{{ $m['label'] }}</div>
-                    <div class="macro-pct">{{ $m['pct'] !== null ? $m['pct'].'%' : '—' }}</div>
-                    <div class="macro-row">Grams/day: <strong>{{ $m['g'] !== null ? $m['g'].'g' : '—' }}</strong></div>
-                    <div class="macro-row">Energy: <strong>{{ $m['kj'] !== null ? number_format($m['kj']).' kJ' : '—' }}</strong></div>
-                    @if($macro)<div class="macro-row">Range: <strong>{{ (int)$macro->range_min }}–{{ (int)$macro->range_max }}%</strong></div>@endif
-                </div>
-            </td>
-            @endforeach
-        </tr>
-    </table>
-    <div class="tee-bar">
-        <strong>Total TEE:</strong> {{ $teeKj ? number_format(round($teeKj)).' kJ' : '—' }} &nbsp;/&nbsp; {{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}
-        &nbsp;&nbsp;&nbsp;
-        <strong>Distribution:</strong> CHO {{ $choPct ?? '—' }}% &middot; PRO {{ $proPct ?? '—' }}% &middot; FAT {{ $fatPct ?? '—' }}%
+        <div class="sub-header">Patient Details</div>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Full Name:</td><td class="fv">{{ $patient->name }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Date of Birth:</td><td class="fv">{{ $patient->date_of_birth?->format('d M Y') ?? '—' }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Age / Gender:</td><td class="fv">{{ $patient->age }} years &middot; {{ ucfirst($patient->gender) }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">{{ $patient->id_type === 'passport' ? 'Passport No.' : 'SA ID Number' }}:</td>
+                <td class="fv">{{ $patient->id_number ?? '—' }}</td>
+            </tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Email / Contact:</td><td class="fv">{{ $patient->email ?? '—' }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Address:</td><td class="fv">{{ $patient->address ?? '—' }}</td></tr>
+        </table>
+
+        @if($lastVisit)
+        <div class="sub-header">Latest Visit</div>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Date:</td><td class="fv">{{ $lastVisit->visited_at->format('d M Y H:i') }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Weight at Visit:</td><td class="fv">{{ number_format($lastVisit->weight, 1) }} kg</td></tr>
+        </table>
+        @if($lastVisit->notes)
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Notes:</td><td class="fv">{{ $lastVisit->notes }}</td></tr>
+        </table>
+        @endif
+        @endif
     </div>
-</div>
-@endif
 
-{{-- ── SECTION 3: Exchange Food Item Package ── --}}
-@if($patient->exchangeTemplate && $patient->exchangeTemplate->items->count())
-<div class="section">
-    <div class="section-title">Exchange Food Item Package &mdash; {{ $patient->exchangeTemplate->name }}</div>
-    <table class="et-table" cellpadding="0" cellspacing="0">
-        <thead>
+    {{-- SECTION B --}}
+    <div class="section-header bg-b">
+        <span class="circle-label circle-b">B</span> BODY COMPOSITION &amp; ENERGY
+    </div>
+    <div class="content-box">
+        <div class="sub-header">Anthropometrics</div>
+        <table class="metric-grid" cellpadding="0" cellspacing="0">
             <tr>
-                <th style="min-width:110px">Exchange Item</th>
-                <th style="text-align:center;width:40px">Units</th>
-                <th class="r">CHO (g)</th>
-                <th class="r">Protein (g)</th>
-                <th class="r">Fat (g)</th>
-                <th class="r">kJ</th>
+                <td>
+                    <div class="m-box">
+                        <div class="m-label">BMI</div>
+                        <div class="m-val">{{ $patient->bmi ? number_format($patient->bmi, 1) : '—' }}</div>
+                        <div class="m-unit">kg/m&sup2;</div>
+                        @if($patient->bmi_category)
+                        <span class="bmi-pill bmi-{{ $bmiCatClass }}">{{ $patient->bmi_category }}</span>
+                        @endif
+                    </div>
+                </td>
+                <td>
+                    <div class="m-box">
+                        <div class="m-label">Weight</div>
+                        <div class="m-val">{{ $patient->weight }}</div>
+                        <div class="m-unit">kg (actual)</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="m-box">
+                        <div class="m-label">Height</div>
+                        <div class="m-val">{{ $patient->height }}</div>
+                        <div class="m-unit">cm</div>
+                    </div>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($patient->exchangeTemplate->items as $item)
-            @php $nu = $item->nu; @endphp
+        </table>
+        <table class="metric-grid" cellpadding="0" cellspacing="0" style="margin-top:3px">
             <tr>
-                <td class="et-name">{{ $item->name }}</td>
-                <td class="et-nu">{{ $nu }}</td>
-                <td class="r">{{ $item->cho_g !== null ? number_format($nu * $item->cho_g, 1) : '—' }}</td>
-                <td class="r">{{ $item->protein_min_g !== null ? number_format($nu * $item->protein_min_g, 1) : '—' }}</td>
-                <td class="r">{{ $item->fat_min_g !== null ? number_format($nu * $item->fat_min_g, 1) : '—' }}</td>
-                <td class="r et-kj">{{ $item->kj !== null ? number_format($nu * $item->kj) : '—' }}</td>
+                <td>
+                    <div class="m-box">
+                        <div class="m-label">IBW</div>
+                        <div class="m-val">{{ $patient->ibw ? number_format($patient->ibw, 1) : '—' }}</div>
+                        <div class="m-unit">kg</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="m-box">
+                        <div class="m-label">ABW</div>
+                        <div class="m-val">{{ $patient->abw ? number_format($patient->abw, 1) : '—' }}</div>
+                        <div class="m-unit">kg</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="m-box">
+                        <div class="m-label">Activity Factor</div>
+                        <div class="m-val">{{ $patient->activity_factor ?? '—' }}</div>
+                        <div class="m-unit">multiplier</div>
+                    </div>
+                </td>
             </tr>
-            @endforeach
-        </tbody>
-        <tbody class="tot">
-            <tr class="tot">
-                <td colspan="2" style="color:#4a7060;font-size:7px;text-transform:uppercase;letter-spacing:.5px">Total</td>
-                <td class="r">{{ $etTotCho ? number_format($etTotCho, 1) : '—' }}</td>
-                <td class="r">{{ $etTotPro ? number_format($etTotPro, 1) : '—' }}</td>
-                <td class="r">{{ $etTotFat ? number_format($etTotFat, 1) : '—' }}</td>
-                <td class="r et-kj">{{ $etTotKj ? number_format($etTotKj) : '—' }}</td>
+        </table>
+
+        <div class="sub-header" style="margin-top:7px">Energy Requirements</div>
+        <table class="data-table" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th class="r">kJ/day</th>
+                    <th class="r">kcal/day</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>BMR (Mifflin-St Jeor{{ $isObese ? ', ABW adj.' : '' }})</td>
+                    <td class="r">{{ $bmrKj ? number_format($bmrKj) : '—' }}</td>
+                    <td class="r">{{ $bmrKj ? number_format(round($bmrKj / 4.184)) : '—' }}</td>
+                </tr>
+                <tr class="tot">
+                    <td>TEE (BMR &times; AF {{ $patient->activity_factor }})</td>
+                    <td class="r">{{ $teeKj ? number_format(round($teeKj)) : '—' }}</td>
+                    <td class="r">{{ $teeKcal ? number_format($teeKcal) : '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        @if($isObese)
+        <div class="obese-note">
+            <strong>Obesity adjustment:</strong> BMR calculated using ABW
+            (IBW + 0.4 &times; (actual &minus; IBW) = {{ number_format($patient->weight_for_bmr, 1) }} kg)
+        </div>
+        @endif
+
+        @if($patient->macronutrients->count())
+        <div class="sub-header" style="margin-top:7px">Macronutrient Distribution</div>
+        @php
+            $macros = [
+                ['key'=>'carbohydrates','label'=>'CHO','cls'=>'cho','g'=>$recCho_g,'kj'=>$recCho_kj,'pct'=>$choPct],
+                ['key'=>'protein',      'label'=>'PRO','cls'=>'pro','g'=>$recPro_g,'kj'=>$recPro_kj,'pct'=>$proPct],
+                ['key'=>'fats',         'label'=>'FAT','cls'=>'fat','g'=>$recFat_g,'kj'=>$recFat_kj,'pct'=>$fatPct],
+            ];
+        @endphp
+        <table class="macro-grid" cellpadding="0" cellspacing="4">
+            <tr>
+                @foreach($macros as $m)
+                <td>
+                    <div class="macro-box macro-{{ $m['cls'] }}">
+                        <div class="macro-label">{{ $m['label'] }}</div>
+                        <div class="macro-pct">{{ $m['pct'] !== null ? $m['pct'].'%' : '—' }}</div>
+                        <div class="macro-row">Grams: <strong>{{ $m['g'] !== null ? $m['g'].'g' : '—' }}</strong></div>
+                        <div class="macro-row">Energy: <strong>{{ $m['kj'] !== null ? number_format($m['kj']).' kJ' : '—' }}</strong></div>
+                    </div>
+                </td>
+                @endforeach
             </tr>
-        </tbody>
-    </table>
-</div>
-@endif
+        </table>
+        @endif
 
-{{-- ── SECTION 4: Patient Details ── --}}
-<div class="section">
-    <div class="section-title">Patient Details</div>
-    <table class="details-table" cellpadding="0" cellspacing="0">
-        <tr><td>Full Name</td><td>{{ $patient->name }}</td></tr>
-        <tr><td>Gender</td><td>{{ ucfirst($patient->gender) }}</td></tr>
-        <tr><td>Age</td><td>{{ $patient->age }} years</td></tr>
-        <tr><td>Actual Weight</td><td>{{ $patient->weight }} kg</td></tr>
-        <tr><td>Height</td><td>{{ $patient->height }} cm</td></tr>
-        <tr><td>Activity Factor</td><td>{{ $patient->activity_factor }}</td></tr>
-        <tr><td>BMI</td><td>{{ $patient->bmi ? number_format($patient->bmi, 2).' kg/m²' : '—' }} — {{ $patient->bmi_category }}</td></tr>
-        <tr><td>Ideal Body Weight (IBW)</td><td>{{ $patient->ibw ? number_format($patient->ibw, 1).' kg' : '—' }}</td></tr>
-        <tr><td>Adjusted Body Weight (ABW)</td><td>{{ $patient->abw ? number_format($patient->abw, 1).' kg' : '—' }}</td></tr>
-        <tr><td>BMR (Mifflin-St Jeor)</td><td>{{ $bmrKj ? number_format($bmrKj).' kJ/day' : '—' }}</td></tr>
-        <tr><td>Total Energy Expenditure (TEE)</td><td>{{ $teeKj ? number_format(round($teeKj)).' kJ/day' : '—' }}{{ $teeKcal ? ' ('.number_format($teeKcal).' kcal/day)' : '' }}</td></tr>
-    </table>
-</div>
+        @if($patient->exchangeTemplate && $patient->exchangeTemplate->items->count())
+        <div class="sub-header" style="margin-top:7px">Exchange Package &mdash; {{ $patient->exchangeTemplate->name }}</div>
+        <table class="data-table" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th class="c">U</th>
+                    <th class="r">CHO</th>
+                    <th class="r">Prot</th>
+                    <th class="r">Fat</th>
+                    <th class="r">kJ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($patient->exchangeTemplate->items as $item)
+                @php $nu = $item->nu; @endphp
+                <tr>
+                    <td>{{ $item->name }}</td>
+                    <td class="c" style="font-weight:bold;color:#006442">{{ $nu }}</td>
+                    <td class="r">{{ $item->cho_g !== null ? number_format($nu*$item->cho_g,1) : '—' }}</td>
+                    <td class="r">{{ $item->protein_min_g !== null ? number_format($nu*$item->protein_min_g,1) : '—' }}</td>
+                    <td class="r">{{ $item->fat_min_g !== null ? number_format($nu*$item->fat_min_g,1) : '—' }}</td>
+                    <td class="r" style="color:#006442;font-weight:bold">{{ $item->kj !== null ? number_format($nu*$item->kj) : '—' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tbody>
+                <tr class="tot">
+                    <td colspan="2" style="font-size:7px;color:#555;text-transform:uppercase;letter-spacing:.4px">Total</td>
+                    <td class="r">{{ $etTotCho ? number_format($etTotCho,1) : '—' }}</td>
+                    <td class="r">{{ $etTotPro ? number_format($etTotPro,1) : '—' }}</td>
+                    <td class="r">{{ $etTotFat ? number_format($etTotFat,1) : '—' }}</td>
+                    <td class="r" style="color:#006442">{{ $etTotKj ? number_format($etTotKj) : '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        @endif
+    </div>
 
-{{-- ── FOOTER ── --}}
-<div class="footer">
-    <table class="footer-table" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="footer-note">Generated {{ now()->format('d M Y \a\t H:i') }} &middot; Confidential patient record</td>
-            <td class="footer-brand">Panamarex Outpatient Clinical Nutrition Toolkit</td>
-        </tr>
-    </table>
+</td>
+
+{{-- ══ RIGHT COLUMN ══ --}}
+<td>
+
+    {{-- SECTION C --}}
+    <div class="section-header bg-c">
+        <span class="circle-label circle-c">C</span> CALCULATION OF REQUIREMENTS
+    </div>
+    <div class="content-box">
+
+        @if($enteral)
+        <div class="sub-header">Enteral Feed Calculation &mdash; {{ $enteral->label ?: 'Latest Calculation' }}</div>
+
+        @if($enteral->clinical_condition)
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Clinical Condition:</td>
+                <td class="fv">{{ \App\Models\EnteralNutritionCalculation::CONDITIONS[$enteral->clinical_condition] ?? $enteral->clinical_condition }}</td>
+            </tr>
+        </table>
+        @endif
+
+        <div class="sub-header" style="margin-top:6px">Energy &amp; Protein Targets</div>
+        <table class="en-grid" cellpadding="0" cellspacing="0">
+            <tr>
+                <td>
+                    <div class="en-box">
+                        <div class="en-label">Energy Target</div>
+                        <div class="en-val">{{ $enteral->energy_target_kcal ? number_format($enteral->energy_target_kcal) : '—' }}</div>
+                        <div class="en-unit">kcal/day</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="en-box">
+                        <div class="en-label">Energy per kg</div>
+                        <div class="en-val">{{ $enteral->energy_kcal_per_kg ?? '—' }}</div>
+                        <div class="en-unit">kcal/kg/day</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="en-box">
+                        <div class="en-label">Protein Target</div>
+                        <div class="en-val">{{ $enteral->protein_target_g ? number_format($enteral->protein_target_g,1) : '—' }}</div>
+                        <div class="en-unit">g/day</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="en-box">
+                        <div class="en-label">Protein per kg</div>
+                        <div class="en-val">{{ $enteral->protein_g_per_kg ?? '—' }}</div>
+                        <div class="en-unit">g/kg/day</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="sub-header" style="margin-top:6px">Feed Delivery</div>
+        <table class="data-table" cellpadding="0" cellspacing="0">
+            <tbody>
+                <tr>
+                    <td>Weight Used ({{ $enteral->weight_type ?? 'actual' }})</td>
+                    <td class="r">{{ $enteral->weight_kg ? number_format($enteral->weight_kg,1).' kg' : '—' }}</td>
+                </tr>
+                <tr>
+                    <td>Formula Density</td>
+                    <td class="r">{{ $enteral->formula_density ? $enteral->formula_density.' kcal/mL' : '—' }}</td>
+                </tr>
+                <tr>
+                    <td>Daily Volume</td>
+                    <td class="r">{{ $enteral->daily_volume_ml ? number_format($enteral->daily_volume_ml).' mL/day' : '—' }}</td>
+                </tr>
+                <tr>
+                    <td>Feeding Hours</td>
+                    <td class="r">{{ $enteral->feeding_hours_per_day ? $enteral->feeding_hours_per_day.' hr/day' : '—' }}</td>
+                </tr>
+                <tr class="tot">
+                    <td>Rate</td>
+                    <td class="r">{{ $enteral->rate_ml_per_hour ? number_format($enteral->rate_ml_per_hour,1).' mL/hr' : '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sub-header" style="margin-top:6px">Fluid Requirements</div>
+        <table class="data-table" cellpadding="0" cellspacing="0">
+            <tbody>
+                <tr>
+                    <td>Total Fluid Requirement</td>
+                    <td class="r">{{ $enteral->fluid_requirement_ml ? number_format($enteral->fluid_requirement_ml).' mL' : '—' }}</td>
+                </tr>
+                <tr>
+                    <td>Free Water from Formula</td>
+                    <td class="r">{{ $enteral->free_water_from_formula_ml ? number_format($enteral->free_water_from_formula_ml).' mL' : '—' }}</td>
+                </tr>
+                <tr class="tot">
+                    <td>Additional Water Needed</td>
+                    <td class="r">{{ $enteral->additional_water_ml ? number_format($enteral->additional_water_ml).' mL' : '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        @if($enteral->notes)
+        <div class="sub-header" style="margin-top:6px">Clinical Notes</div>
+        <p style="font-size:8px;color:#333;line-height:1.5">{{ $enteral->notes }}</p>
+        @endif
+
+        @else
+        <p style="font-size:8.5px;color:#888;padding:10px 0;text-align:center">
+            No enteral feed calculation recorded for this patient.<br>
+            <span style="font-size:7.5px">Use the Enteral Feed Calculation tool to generate requirements.</span>
+        </p>
+        @endif
+
+    </div>
+
+    {{-- DIGITAL STAMP --}}
+    <div style="margin-top:10px">
+        <div style="font-size:7.5px;font-weight:bold;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">
+            Dietitian Signature &amp; Stamp
+        </div>
+        <div class="stamp">
+            <div class="stamp-name">{{ $user->name }}</div>
+            @if($user->dietician_number)
+            <div class="stamp-reg">Reg. No. {{ $user->dietician_number }}</div>
+            @endif
+            <div class="stamp-line"></div>
+            <div style="font-size:7px;color:#006442;font-weight:bold">REGISTERED DIETITIAN</div>
+            <div style="font-size:7px;color:#555;margin-top:2px">Date: {{ $genDate }}</div>
+            <div style="font-size:6.5px;color:#888;margin-top:4px">&#x2713; Digitally Verified</div>
+        </div>
+        <div class="stamp-watermark" style="margin-top:4px">SIGNED</div>
+    </div>
+
+    {{-- CONSENT --}}
+    <div style="margin-top:10px;padding:6px 8px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;font-size:7.5px">
+        <strong style="font-size:8px">POPIA Consent:</strong>
+        @if($patient->hasConsented())
+            <span style="color:#15803d;font-weight:bold">&#x2713; Consented</span>
+            @if($patient->consented_at) on {{ $patient->consented_at->format('d M Y') }} @endif
+        @elseif($patient->consentDeclined())
+            <span style="color:#b91c1c;font-weight:bold">&#x2715; Declined</span>
+        @else
+            <span style="color:#d97706;font-weight:bold">Pending</span>
+        @endif
+        <br><span style="color:#888">Patient data protected under POPIA.</span>
+    </div>
+
+</td>
+</tr></tbody>
+</table>
+
+{{-- FOOTER --}}
+<table class="footer-table" cellpadding="0" cellspacing="0">
+    <tr>
+        <td class="footer-note">
+            {{ $patient->name }} &middot; Dietetic Assessment &amp; Care Plan &middot; Generated {{ $genDate }} at {{ $genTime }}
+        </td>
+        <td style="text-align:right;font-size:7.5px;color:#888">
+            Confidential &mdash; For authorised healthcare use only
+        </td>
+    </tr>
+</table>
+<div class="confidential-bar">
+    This report is confidential and intended for the use of the patient and healthcare team only.
 </div>
 
 </body>

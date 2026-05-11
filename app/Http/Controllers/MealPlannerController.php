@@ -338,6 +338,75 @@ class MealPlannerController extends Controller
             ->with('success', 'Planner week deleted.');
     }
 
+    // ── Repeat a week forward N weeks ─────────────────────────────────────────
+    public function repeat(Request $request, string $patient, MealPlannerWeek $mealPlanner)
+    {
+        abort_if($mealPlanner->user_id !== auth()->id(), 403);
+        abort_if((int) $patient !== (int) ($mealPlanner->patient_id ?? 0), 404);
+
+        $data = $request->validate([
+            'weeks' => ['required', 'integer', 'min:1', 'max:52'],
+        ]);
+
+        $mealPlanner->load('entries');
+
+        $created = 0;
+        $skipped = [];
+
+        for ($offset = 1; $offset <= $data['weeks']; $offset++) {
+            $newStart = $mealPlanner->week_start->copy()->addWeeks($offset);
+
+            // Skip if a plan already exists for this patient + week_start
+            $exists = MealPlannerWeek::where('user_id', auth()->id())
+                ->where('patient_id', $mealPlanner->patient_id)
+                ->whereDate('week_start', $newStart)
+                ->exists();
+
+            if ($exists) {
+                $skipped[] = $newStart->format('d M Y');
+                continue;
+            }
+
+            $newWeek = MealPlannerWeek::create([
+                'user_id'    => auth()->id(),
+                'patient_id' => $mealPlanner->patient_id,
+                'week_start' => $newStart,
+                'label'      => $mealPlanner->label,
+            ]);
+
+            foreach ($mealPlanner->entries as $entry) {
+                MealPlannerEntry::create([
+                    'week_id'           => $newWeek->id,
+                    'day_of_week'       => $entry->day_of_week,
+                    'meal_slot'         => $entry->meal_slot,
+                    'exchange_category' => $entry->exchange_category,
+                    'sort_order'        => $entry->sort_order,
+                    'qty'               => $entry->qty,
+                    'meal_text'         => $entry->meal_text,
+                    'meal_item_id'      => $entry->meal_item_id,
+                    'notes'             => $entry->notes,
+                ]);
+            }
+
+            $created++;
+        }
+
+        $msg = $created === 1
+            ? 'Plan repeated for 1 upcoming week.'
+            : "Plan repeated for {$created} upcoming week(s).";
+
+        if (!empty($skipped)) {
+            $msg .= ' Skipped ' . count($skipped) . ' week(s) that already had a plan.';
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'created' => $created,
+            'skipped' => $skipped,
+            'message' => $msg,
+        ]);
+    }
+
     public function pdf(string $patient, MealPlannerWeek $mealPlanner)
     {
         abort_if($mealPlanner->user_id !== auth()->id(), 403);

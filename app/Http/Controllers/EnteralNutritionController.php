@@ -43,10 +43,13 @@ class EnteralNutritionController extends Controller
     {
         abort_unless($patient->user_id === Auth::id(), 403);
 
+        $validConditions = implode(',', array_keys(EnteralNutritionCalculation::CONDITIONS));
+
         $data = $request->validate([
+            'clinical_condition'     => 'required|in:' . $validConditions,
             'weight_type'            => 'required|in:actual,ibw,abw',
             'weight_kg'              => 'required|numeric|min:1|max:300',
-            'energy_kcal_per_kg'     => 'required|numeric|min:15|max:35',
+            'energy_kcal_per_kg'     => 'required|numeric|min:15|max:40',
             'protein_g_per_kg'       => 'required|numeric|min:0.5|max:2.5',
             'formula_density'        => 'required|in:1.0,1.2,1.5',
             'feeding_hours_per_day'  => 'required|integer|min:1|max:24',
@@ -72,6 +75,7 @@ class EnteralNutritionController extends Controller
         EnteralNutritionCalculation::create([
             'patient_id'                 => $patient->id,
             'user_id'                    => Auth::id(),
+            'clinical_condition'         => $data['clinical_condition'],
             'weight_type'                => $data['weight_type'],
             'weight_kg'                  => $weightKg,
             'energy_kcal_per_kg'         => $kcalPerKg,

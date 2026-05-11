@@ -39,8 +39,9 @@ Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('tea
 // ── Dashboard (auth + verified + admin approved) ─────────────────────────────
 
 Route::get('/dashboard', function () {
-    $patients = \App\Models\Patient::where('user_id', Auth::id())->get();
-    return view('dashboard', compact('patients'));
+    $allPatients = \App\Models\Patient::where('user_id', Auth::id())->get();
+    $patients    = $allPatients->take(10);
+    return view('dashboard', compact('patients', 'allPatients'));
 })->middleware(['auth', 'two-factor', 'verified', 'admin.approved'])->name('dashboard');
 
 // ── Pending admin approval holding page ───────────────────────────────────────
@@ -99,10 +100,18 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     Route::resource('patients', \App\Http\Controllers\PatientController::class);
 
     // Patient visit history (monitoring)
+    Route::get('patients/{patient}/visits', [\App\Http\Controllers\PatientVisitController::class, 'index'])
+        ->name('patients.visits.index');
+    Route::get('patients/{patient}/visits/pdf', [\App\Http\Controllers\PatientVisitController::class, 'pdf'])
+        ->name('patients.visits.pdf');
     Route::post('patients/{patient}/visits', [\App\Http\Controllers\PatientVisitController::class, 'store'])
         ->name('patients.visits.store');
     Route::delete('patients/{patient}/visits/{visit}', [\App\Http\Controllers\PatientVisitController::class, 'destroy'])
         ->name('patients.visits.destroy');
+
+    // Clinical assessment fields (subjective assessment)
+    Route::patch('patients/{patient}/clinical-assessment', [\App\Http\Controllers\PatientController::class, 'updateClinicalAssessment'])
+        ->name('patients.clinical-assessment.update');
 
     // IBW BMI target selector
     Route::patch('patients/{patient}/ibw-target', [\App\Http\Controllers\PatientController::class, 'updateIbwTarget'])
@@ -182,6 +191,7 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
         Route::get ('meal-planner/{patient}/{mealPlanner}/pdf',              [\App\Http\Controllers\MealPlannerController::class, 'pdf'])        ->name('meal-planner.pdf');
         Route::get ('meal-planner/{patient}/{mealPlanner}/pdf/preview',     [\App\Http\Controllers\MealPlannerController::class, 'pdfPreview']) ->name('meal-planner.pdf-preview');
         Route::patch('meal-planner/{patient}/{mealPlanner}/entries',        [\App\Http\Controllers\MealPlannerController::class, 'saveEntries']) ->name('meal-planner.save-entries');
+        Route::post ('meal-planner/{patient}/{mealPlanner}/repeat',         [\App\Http\Controllers\MealPlannerController::class, 'repeat'])      ->name('meal-planner.repeat');
         Route::delete('meal-planner/{patient}/{mealPlanner}',               [\App\Http\Controllers\MealPlannerController::class, 'destroy']) ->name('meal-planner.destroy');
 
         // Grocery Lists
@@ -242,6 +252,21 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
         Route::get ('patients/{patient}/enteral-nutrition/pdf',             [\App\Http\Controllers\EnteralNutritionController::class, 'pdf'])    ->name('patients.enteral-nutrition.pdf');
         Route::delete('patients/{patient}/enteral-nutrition/{calculation}', [\App\Http\Controllers\EnteralNutritionController::class, 'destroy'])->name('patients.enteral-nutrition.destroy');
     });
+
+        // ── Email template preview ────────────────────────────────────────────
+        Route::get('email-preview',            [\App\Http\Controllers\EmailPreviewController::class, 'index'])->name('email-preview.index');
+        Route::get('email-preview/{template}', [\App\Http\Controllers\EmailPreviewController::class, 'show'])->name('email-preview.show');
+
+        // ── Email Templates (newsletter-style customisation) ─────────────────
+        Route::prefix('email-templates')->name('email-templates.')->middleware('plan:package_1')->group(function () {
+            Route::get ('/',              [\App\Http\Controllers\EmailTemplateController::class, 'index'])          ->name('index');
+            Route::get ('/{type}/edit',   [\App\Http\Controllers\EmailTemplateController::class, 'edit'])           ->name('edit');
+            Route::put ('/{type}',        [\App\Http\Controllers\EmailTemplateController::class, 'update'])         ->name('update');
+            Route::get ('/{type}/preview',[\App\Http\Controllers\EmailTemplateController::class, 'preview'])        ->name('preview');
+            Route::post('/{type}/test',   [\App\Http\Controllers\EmailTemplateController::class, 'sendTest'])       ->name('send-test');
+            Route::patch('/schedule',     [\App\Http\Controllers\EmailTemplateController::class, 'updateSchedule']) ->name('schedule.update');
+        });
+
     }); // end admin.approved group
 
 }); // end auth group

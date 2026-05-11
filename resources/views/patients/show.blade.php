@@ -49,70 +49,125 @@
         }
     @endphp
 
-    <div class="dash-hero">
+    <div class="dash-hero" style="padding:1.25rem 2rem 3.75rem">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {{-- Back nav --}}
-            <a href="{{ route('patients.index') }}" class="btn-back mb-5 inline-flex">
+            <a href="{{ route('patients.index') }}" class="btn-back mb-3 inline-flex">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 All Patients
             </a>
 
             {{-- Patient identity --}}
-            <div class="flex items-center gap-4 flex-wrap">
-                <div class="patient-avatar-lg {{ $patient->gender }}">{{ $initials }}</div>
-                <div style="flex:1;min-width:0">
-                    <h1 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-.03em;line-height:1.1">
-                        {{ $patient->full_name }}
-                    </h1>
-                    <p style="opacity:.7;font-size:.9rem;margin-top:.2rem">
-                        {{ ucfirst($patient->gender) }} · {{ $patient->age }} years · Registered {{ $patient->created_at->format('M d, Y') }}
-                    </p>
-                    @if($patient->date_of_birth)
-                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
-                            🗓 DOB: {{ $patient->date_of_birth->format('d M Y') }}
+            <div class="flex flex-col lg:flex-row gap-4 items-start">
+
+                {{-- LEFT: Avatar + Name + badges + actions --}}
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                    <div class="patient-avatar-lg {{ $patient->gender }}" style="flex-shrink:0;width:3.75rem;height:3.75rem;font-size:1.2rem">{{ $initials }}</div>
+                    <div style="min-width:0">
+                        <h1 style="font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0">
+                            {{ $patient->full_name }}
+                        </h1>
+                        <p style="opacity:.7;font-size:.8rem;margin-top:.15rem">
+                            {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }} years &middot; Registered {{ $patient->created_at->format('M d, Y') }}
                         </p>
-                    @endif
-                    @if($patient->email)
-                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
-                            ✉ {{ $patient->email }}
-                        </p>
-                    @endif
-                    @if($patient->id_number)
-                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
-                            🪪 {{ $patient->id_type === 'passport' ? 'Passport' : 'SA ID' }}: {{ $patient->id_number }}
-                        </p>
-                    @endif
-                    @if($patient->address)
-                        <p style="opacity:.8;font-size:.82rem;margin-top:.2rem">
-                            📍 {{ $patient->address }}
-                        </p>
-                    @endif
-                    @if($patient->reason_for_assessment)
-                        <p style="opacity:.85;font-size:.82rem;margin-top:.3rem;font-style:italic">
-                            📋 {{ $patient->reason_for_assessment }}
-                        </p>
-                    @endif
+
+                        {{-- Status chips --}}
+                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem">
+                            {{-- BMI chip --}}
+                            @if($patient->bmi)
+                                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:.72rem;font-weight:700;color:#fff">
+                                    BMI {{ number_format($patient->bmi, 1) }} &bull; {{ $patient->bmi_category }}
+                                </span>
+                            @endif
+                            {{-- Consent chip --}}
+                            @if($patient->email)
+                                @if($patient->hasConsented())
+                                    <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(21,128,61,.35);border:1px solid rgba(134,239,172,.4);border-radius:999px;font-size:.72rem;font-weight:700;color:#bbf7d0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width:.7rem;height:.7rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        Consent granted
+                                    </span>
+                                @elseif($patient->consentDeclined())
+                                    <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(185,28,28,.3);border:1px solid rgba(252,165,165,.3);border-radius:999px;font-size:.72rem;font-weight:700;color:#fecaca">
+                                        Consent declined
+                                    </span>
+                                @else
+                                    <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(217,119,6,.3);border:1px solid rgba(253,211,77,.3);border-radius:999px;font-size:.72rem;font-weight:700;color:#fde68a">
+                                        Consent pending
+                                    </span>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
                 </div>
-                <a href="{{ route('patients.report', $patient->id) }}" target="_blank"
-                   style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
-                   onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
-                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 0 0 2-2V9.414a1 1 0 0 0-.293-.707l-5.414-5.414A1 1 0 0 0 12.586 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/></svg>
-                    Patient Report
-                </a>
-                <a href="{{ route('patients.edit', $patient->id) }}"
-                   style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
-                   onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
-                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    Edit Patient
-                </a>
-                @if(auth()->user()->canAccessPlan('package_3'))
-                <a href="{{ route('patients.enteral-nutrition.index', $patient->id) }}"
-                   style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:7px;color:#fff;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s"
-                   onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
-                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.95rem;height:.95rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
-                    Calculations
-                </a>
-                @endif
+
+                {{-- RIGHT: Detail card --}}
+                <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:.75rem 1rem;min-width:240px;max-width:340px;width:100%">
+                    <p style="font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.5rem">Patient Details</p>
+                    <div style="display:flex;flex-direction:column;gap:.4rem">
+
+                        @if($patient->date_of_birth)
+                        <div style="display:flex;align-items:center;gap:.65rem">
+                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
+                            </span>
+                            <div>
+                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Date of Birth</p>
+                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.4">{{ $patient->date_of_birth->format('d M Y') }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($patient->email)
+                        <div style="display:flex;align-items:center;gap:.65rem">
+                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
+                            </span>
+                            <div style="min-width:0">
+                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Email</p>
+                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $patient->email }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($patient->id_number)
+                        <div style="display:flex;align-items:center;gap:.65rem">
+                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 1 1 4 0v1m-4 0a2 2 0 0 0 4 0m-5 8a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/></svg>
+                            </span>
+                            <div>
+                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">{{ $patient->id_type === 'passport' ? 'Passport No.' : 'SA ID Number' }}</p>
+                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.4;font-family:monospace;letter-spacing:.04em">{{ $patient->id_number }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($patient->address)
+                        <div style="display:flex;align-items:flex-start;gap:.65rem">
+                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0;margin-top:.1rem">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
+                            </span>
+                            <div>
+                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Address</p>
+                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.5">{{ $patient->address }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($patient->reason_for_assessment)
+                        <div style="display:flex;align-items:flex-start;gap:.65rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.12)">
+                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0;margin-top:.1rem">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
+                            </span>
+                            <div>
+                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Reason for Assessment</p>
+                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.5">{{ $patient->reason_for_assessment }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -186,6 +241,114 @@
                 </div>
             </div>
         @endif
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════
+         QUICK ACTIONS BAR
+    ═══════════════════════════════════════════ --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div style="display:flex;flex-wrap:wrap;gap:.6rem">
+
+            {{-- Patient Report --}}
+            <a href="{{ route('patients.report', $patient->id) }}" target="_blank"
+               style="display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.82rem;font-weight:700;text-decoration:none;transition:border-color .15s,box-shadow .15s"
+               onmouseover="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(103,159,95,.12)'"
+               onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;color:var(--primary)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 0 0 2-2V9.414a1 1 0 0 0-.293-.707l-5.414-5.414A1 1 0 0 0 12.586 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/></svg>
+                Patient Report
+            </a>
+
+            {{-- Edit Patient --}}
+            <a href="{{ route('patients.edit', $patient->id) }}"
+               style="display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.82rem;font-weight:700;text-decoration:none;transition:border-color .15s,box-shadow .15s"
+               onmouseover="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(103,159,95,.12)'"
+               onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;color:var(--primary)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Edit Patient
+            </a>
+
+            {{-- Enteral Feed Calculation --}}
+            @if(auth()->user()->canAccessPlan('package_3'))
+                <a href="{{ route('patients.enteral-nutrition.index', $patient->id) }}"
+                   style="display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.82rem;font-weight:700;text-decoration:none;transition:border-color .15s,box-shadow .15s"
+                   onmouseover="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(103,159,95,.12)'"
+                   onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;color:var(--primary)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
+                    Enteral Feed Calculation
+                </a>
+            @else
+                @php $pkg3 = \App\Models\PricingPackage::where('slug','package_3')->first(); @endphp
+                <button type="button"
+                   onclick="window.dispatchEvent(new CustomEvent('open-upgrade-modal', { detail: {
+                       slug: '{{ $pkg3?->slug }}',
+                       planName: '{{ $pkg3?->name }}',
+                       price: 'R{{ number_format($pkg3?->price_zar ?? 0) }}/mo',
+                       isFree: {{ ($pkg3?->price_zar ?? 1) == 0 ? 'true' : 'false' }},
+                       features: {!! json_encode($pkg3?->features ?? []) !!},
+                       checkoutUrl: '{{ $pkg3 ? route('subscription.checkout', $pkg3->slug) : '' }}'
+                   }}))"
+                   style="display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.82rem;font-weight:700;cursor:pointer;transition:border-color .15s,box-shadow .15s"
+                   onmouseover="this.style.borderColor='#f59e0b';this.style.boxShadow='0 0 0 3px rgba(245,158,11,.1)'"
+                   onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;color:#f59e0b" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
+                    Enteral Feed Calculation
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.75rem;height:.75rem;color:#f59e0b" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg>
+                </button>
+            @endif
+
+        </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════════
+         WEEKLY MEAL PLAN REMINDERS
+    ═══════════════════════════════════════════ --}}
+    @if(auth()->user()->canAccessPlan('package_1'))
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div class="dash-card" style="padding:.75rem 1.25rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                <div style="display:flex;align-items:center;gap:.6rem">
+                    <span style="font-size:1.1rem;line-height:1">&#x1F514;</span>
+                    <span style="font-weight:700;font-size:.88rem;color:var(--text-primary)">Email Reminders</span>
+                    @if($patient->weekly_reminder_enabled)
+                        <span style="font-size:.72rem;font-weight:700;color:#15803d;background:#dcfce7;border:1px solid #86efac;border-radius:999px;padding:.1rem .5rem">ON</span>
+                    @else
+                        <span style="font-size:.72rem;font-weight:700;color:#6b7280;background:#f3f4f6;border:1px solid #d1d5db;border-radius:999px;padding:.1rem .5rem">OFF</span>
+                    @endif
+                </div>
+
+                @if($patient->email)
+                    <form method="POST" action="{{ route('patients.weekly-reminder.toggle', $patient) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" title="{{ $patient->weekly_reminder_enabled ? 'Disable reminders' : 'Enable reminders' }}"
+                                style="display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .9rem;font-size:.8rem;font-weight:700;border-radius:7px;cursor:pointer;transition:opacity .15s;
+                                       {{ $patient->weekly_reminder_enabled
+                                           ? 'background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5'
+                                           : 'background:#dcfce7;color:#15803d;border:1px solid #86efac' }}"
+                                onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+                            @if($patient->weekly_reminder_enabled)
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                Turn Off
+                            @else
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                Turn On
+                            @endif
+                        </button>
+                    </form>
+                @else
+                    <span style="font-size:.76rem;color:#f59e0b;background:#fffbeb;border:1px solid #fde68a;padding:.3rem .7rem;border-radius:6px;font-weight:600">
+                        <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;text-decoration:underline">Add email</a> to enable
+                    </span>
+                @endif
+            </div>
+
+            @if(session('reminder_success'))
+                <div style="margin-top:.6rem;padding:.4rem .9rem;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;color:#15803d;font-size:.8rem;font-weight:600">
+                    &#x2713; {{ session('reminder_success') }}
+                </div>
+            @endif
+        </div>
     </div>
     @endif
 
@@ -1278,55 +1441,6 @@
     </div>
 
     {{-- ═══════════════════════════════════════════
-         WEEKLY MEAL PLAN REMINDERS
-    ═══════════════════════════════════════════ --}}
-    @if(auth()->user()->canAccessPlan('package_1'))
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div class="dash-card" style="padding:1.25rem 1.5rem">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
-                <div style="display:flex;align-items:center;gap:.7rem">
-                    <span style="font-size:1.3rem">&#x1F514;</span>
-                    <div>
-                        <p style="font-weight:700;font-size:.92rem;color:var(--text-primary);margin:0">Weekly Meal Plan Reminders</p>
-                        <p style="font-size:.78rem;color:var(--text-muted);margin:.15rem 0 0">
-                            @if($patient->weekly_reminder_enabled)
-                                &#x2705; Enabled &mdash; patient receives a reminder every <strong>Monday at 08:00</strong>.
-                            @else
-                                &#x274C; Disabled &mdash; no reminder emails are being sent.
-                            @endif
-                        </p>
-                    </div>
-                </div>
-
-                @if($patient->email)
-                    <form method="POST" action="{{ route('patients.weekly-reminder.toggle', $patient) }}">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit"
-                                style="padding:.45rem 1.15rem;font-size:.82rem;font-weight:700;border:none;border-radius:7px;cursor:pointer;
-                                       {{ $patient->weekly_reminder_enabled
-                                           ? 'background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5'
-                                           : 'background:#dcfce7;color:#15803d;border:1px solid #86efac' }}">
-                            {{ $patient->weekly_reminder_enabled ? 'Disable Reminders' : 'Enable Reminders' }}
-                        </button>
-                    </form>
-                @else
-                    <span style="font-size:.78rem;color:#f59e0b;background:#fffbeb;border:1px solid #fde68a;padding:.35rem .75rem;border-radius:6px;font-weight:600">
-                        &#x26A0; No email on file &mdash; <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;text-decoration:underline">add one</a> to enable.
-                    </span>
-                @endif
-            </div>
-
-            @if(session('reminder_success'))
-                <div style="margin-top:.85rem;padding:.5rem .9rem;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;color:#15803d;font-size:.82rem;font-weight:600">
-                    &#x2713; {{ session('reminder_success') }}
-                </div>
-            @endif
-        </div>
-    </div>
-    @endif
-
-    {{-- ═══════════════════════════════════════════
          VISIT HISTORY / MONITORING
     ═══════════════════════════════════════════ --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-10">
@@ -1348,19 +1462,11 @@
             </div>
 
             {{-- Add visit form (hidden by default, shown if validation errors) --}}
-            <div id="add-visit-form" class="{{ $errors->has('visited_at') || $errors->has('weight') || $errors->has('height') || $errors->has('notes') ? '' : 'hidden' }}" style="background:#f8faf8;border:1px solid #d1d5db;border-radius:8px;padding:1.1rem;margin-bottom:1.5rem">
-                <p style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.9rem">New Visit Entry</p>
+            <div id="add-visit-form" class="{{ $errors->has('weight') || $errors->has('height') || $errors->has('notes') || $errors->has('oedema') ? '' : 'hidden' }}" style="background:#f8faf8;border:1px solid #d1d5db;border-radius:8px;padding:1.1rem;margin-bottom:1.5rem">
+                <p style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:.9rem">New Visit Entry <span style="font-size:.7rem;font-weight:400;text-transform:none">— timestamped automatically on save</span></p>
                 <form method="POST" action="{{ route('patients.visits.store', $patient) }}">
                     @csrf
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem;margin-bottom:.9rem">
-                        <div>
-                            <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Date *</label>
-                            <input type="date" name="visited_at" required
-                                   value="{{ old('visited_at', date('Y-m-d')) }}"
-                                   style="width:100%;padding:.45rem .7rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;box-sizing:border-box"
-                                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#d1d5db'">
-                            @error('visited_at') <p style="color:#dc2626;font-size:.72rem;margin-top:.2rem">{{ $message }}</p> @enderror
-                        </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:.9rem">
                         <div>
                             <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Weight (kg) *</label>
                             <input type="number" name="weight" required min="1" max="500" step="0.1"
@@ -1388,6 +1494,23 @@
                                   onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#d1d5db'">{{ old('notes') }}</textarea>
                         @error('notes') <p style="color:#dc2626;font-size:.72rem;margin-top:.2rem">{{ $message }}</p> @enderror
                     </div>
+                    {{-- Oedema --}}
+                    <div style="margin-bottom:.9rem">
+                        <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem">Oedema Status</label>
+                        <div style="display:flex;gap:.6rem">
+                            <label style="display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border:1px solid {{ old('oedema','0') !== '1' ? 'var(--primary)' : '#d1d5db' }};border-radius:6px;cursor:pointer;font-size:.82rem;background:{{ old('oedema','0') !== '1' ? 'rgba(103,159,95,.07)' : '#fff' }}">
+                                <input type="radio" name="oedema" value="0" {{ old('oedema','0') !== '1' ? 'checked' : '' }} style="accent-color:var(--primary)">
+                                No Oedema
+                            </label>
+                            <label style="display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border:1px solid {{ old('oedema') === '1' ? '#f59e0b' : '#d1d5db' }};border-radius:6px;cursor:pointer;font-size:.82rem;background:{{ old('oedema') === '1' ? '#fffbeb' : '#fff' }}">
+                                <input type="radio" name="oedema" value="1" {{ old('oedema') === '1' ? 'checked' : '' }} style="accent-color:#f59e0b">
+                                <span style="color:#92400e">Oedema Present</span>
+                            </label>
+                        </div>
+                        <p style="font-size:.7rem;color:var(--text-muted);margin-top:.25rem">
+                            Current: @if($patient->oedema) <strong style="color:#92400e">Oedema Present</strong> since {{ $patient->oedema_changed_at?->format('d M Y H:i') ?? '—' }} @else <strong style="color:var(--primary-dark)">No Oedema</strong> since {{ $patient->oedema_changed_at?->format('d M Y H:i') ?? '—' }} @endif
+                        </p>
+                    </div>
                     <div style="display:flex;gap:.6rem">
                         <button type="submit"
                                 style="padding:.45rem 1.2rem;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer">
@@ -1408,31 +1531,35 @@
                 </p>
             @else
                 @php
-                    $visits = $patient->visits;   // already sorted desc by visited_at
+                    $allVisits    = $patient->visits;   // sorted desc by visited_at
+                    $recentVisits = $allVisits->take(5);
+                    $totalVisits  = $allVisits->count();
                 @endphp
-                <div style="max-height:420px;overflow-y:auto;border-radius:8px;border:1px solid #e5e7eb">
+                <div style="border-radius:8px;border:1px solid #e5e7eb;overflow:hidden">
                     <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem">
                         <thead>
-                            <tr style="background:#f9fafb;position:sticky;top:0;z-index:1">
-                                <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Date</th>
+                            <tr style="background:#f9fafb">
+                                <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Date &amp; Time</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight&nbsp;(kg)</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Height&nbsp;(cm)</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI</th>
                                 <th style="padding:.55rem .9rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Change</th>
+                                <th style="padding:.55rem .9rem;text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Oedema</th>
                                 <th style="padding:.55rem .9rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Notes</th>
                                 <th style="padding:.55rem .9rem;border-bottom:1px solid #e5e7eb"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($visits as $vi => $visit)
+                            @foreach($recentVisits as $vi => $visit)
                                 @php
-                                    $prevVisit  = $visits->get($vi + 1);   // next in desc order = previous chronologically
+                                    $prevVisit  = $allVisits->get($vi + 1);   // next in desc order = previous chronologically
                                     $weightDiff = $prevVisit ? round($visit->weight - $prevVisit->weight, 1) : null;
                                     $bmi        = $visit->bmi;   // uses PatientVisit::getBmiAttribute()
                                 @endphp
                                 <tr style="{{ $vi % 2 === 0 ? 'background:#fff' : 'background:#f9fafb' }}">
-                                    <td style="padding:.6rem .9rem;font-weight:600;color:var(--text-primary);border-bottom:1px solid #f3f4f6">
-                                        {{ $visit->visited_at->format('d M Y') }}
+                                    <td style="padding:.6rem .9rem;font-weight:600;color:var(--text-primary);border-bottom:1px solid #f3f4f6;white-space:nowrap">
+                                        <span style="display:block">{{ $visit->visited_at->format('d M Y') }}</span>
+                                        <span style="font-size:.7rem;font-weight:400;color:var(--text-muted)">{{ $visit->visited_at->format('H:i') }}</span>
                                     </td>
                                     <td style="padding:.6rem .9rem;text-align:right;font-weight:700;color:var(--text-primary);border-bottom:1px solid #f3f4f6">
                                         {{ number_format($visit->weight, 1) }}
@@ -1456,9 +1583,24 @@
                                             <span style="color:var(--text-muted)">—</span>
                                         @endif
                                     </td>
-                                    <td style="padding:.6rem .9rem;color:var(--text-muted);max-width:260px;border-bottom:1px solid #f3f4f6">
+                                    <td style="padding:.6rem .9rem;text-align:center;border-bottom:1px solid #f3f4f6">
+                                        @if($visit->oedema === null)
+                                            <span style="color:var(--text-muted);font-size:.75rem">—</span>
+                                        @elseif($visit->oedema)
+                                            <span title="Since {{ $visit->oedema_changed_at?->format('d M Y H:i') ?? '—' }}"
+                                                  style="display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:700;padding:.15rem .5rem;background:#fef3c7;color:#92400e;border-radius:999px;cursor:default">
+                                                &#9679; Yes
+                                            </span>
+                                        @else
+                                            <span title="Since {{ $visit->oedema_changed_at?->format('d M Y H:i') ?? '—' }}"
+                                                  style="display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:700;padding:.15rem .5rem;background:#dcfce7;color:#15803d;border-radius:999px;cursor:default">
+                                                &#9679; No
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:.6rem .9rem;color:var(--text-muted);max-width:200px;border-bottom:1px solid #f3f4f6">
                                         <span title="{{ $visit->notes }}">
-                                            {{ $visit->notes ? \Illuminate\Support\Str::limit($visit->notes, 60) : '—' }}
+                                            {{ $visit->notes ? \Illuminate\Support\Str::limit($visit->notes, 50) : '—' }}
                                         </span>
                                     </td>
                                     <td style="padding:.6rem .9rem;text-align:right;border-bottom:1px solid #f3f4f6">
@@ -1476,21 +1618,31 @@
                         </tbody>
                     </table>
                 </div>
-                <p style="font-size:.72rem;color:var(--text-muted);margin-top:.5rem">
-                    {{ $patient->visits->count() }} visit{{ $patient->visits->count() === 1 ? '' : 's' }} recorded
-                    &nbsp;·&nbsp; Weight change overall:
-                    @php
-                        $first = $visits->last();
-                        $last  = $visits->first();
-                        $total = ($first && $last) ? round($last->weight - $first->weight, 1) : null;
-                    @endphp
-                    @if($total !== null)
-                        <strong style="color:{{ $total <= 0 ? '#15803d' : '#b91c1c' }}">
-                            {{ $total > 0 ? '+' : '' }}{{ $total }} kg
-                        </strong>
-                        since {{ $first->visited_at->format('d M Y') }}
+                {{-- Footer: stats + view all --}}
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.5rem;flex-wrap:wrap;gap:.5rem">
+                    <p style="font-size:.72rem;color:var(--text-muted);margin:0">
+                        @php
+                            $first = $allVisits->last();
+                            $last  = $allVisits->first();
+                            $total = ($first && $last) ? round($last->weight - $first->weight, 1) : null;
+                        @endphp
+                        {{ $totalVisits }} visit{{ $totalVisits === 1 ? '' : 's' }} recorded
+                        @if($total !== null)
+                            &nbsp;·&nbsp; Overall weight change:
+                            <strong style="color:{{ $total <= 0 ? '#15803d' : '#b91c1c' }}">
+                                {{ $total > 0 ? '+' : '' }}{{ $total }} kg
+                            </strong>
+                            since {{ $first->visited_at->format('d M Y') }}
+                        @endif
+                    </p>
+                    @if($totalVisits > 5)
+                        <a href="{{ route('patients.visits.index', $patient) }}"
+                           style="font-size:.78rem;font-weight:700;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:.3rem">
+                            View all {{ $totalVisits }} visits
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </a>
                     @endif
-                </p>
+                </div>
             @endif
 
         </div>

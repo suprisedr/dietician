@@ -32,6 +32,14 @@ class Patient extends Model
         'consent_token',
         'consent_token_expires_at',
         'consented_at',
+        'oedema',
+        'oedema_changed_at',
+        'allergies',
+        'medical_history',
+        'medications',
+        'dietary_history',
+        'appetite',
+        'referred_by',
     ];
 
     protected $casts = [
@@ -45,6 +53,8 @@ class Patient extends Model
         'consent_status'           => 'string',
         'consent_token_expires_at' => 'datetime',
         'consented_at'             => 'datetime',
+        'oedema'                   => 'boolean',
+        'oedema_changed_at'        => 'datetime',
     ];
 
     /**

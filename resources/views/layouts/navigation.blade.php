@@ -45,6 +45,16 @@
                         Meal Library
                     </a>
 
+                    {{-- Email Templates --}}
+                    <a href="{{ route('email-templates.index') }}"
+                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;
+                              {{ request()->routeIs('email-templates.*') ? 'background:#e8f5e6;color:var(--primary-dark)' : 'color:var(--text-muted)' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        Email Templates
+                    </a>
+
                     {{-- Planner dropdown --}}
                     <div style="position:relative" x-data="{ open: false }" @click.outside="open = false">
                         <button @click="open = !open"
@@ -163,6 +173,7 @@
             <x-responsive-nav-link :href="route('dashboard')"          :active="request()->routeIs('dashboard')">{{ __('Dashboard') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('patients.index')"     :active="request()->routeIs('patients.*')">{{ __('Patients') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('meal-items.index')"   :active="request()->routeIs('meal-items.*')">{{ __('Meal Library') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('email-templates.index')" :active="request()->routeIs('email-templates.*')">{{ __('Email Templates') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('meal-planner.index')" :active="request()->routeIs('meal-planner.*')">{{ __('Weekly Plans') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('grocery-lists.index')" :active="request()->routeIs('grocery-lists.*')">{{ __('Grocery Lists') }}</x-responsive-nav-link>
         </div>

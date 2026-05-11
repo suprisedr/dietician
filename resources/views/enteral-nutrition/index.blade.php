@@ -50,9 +50,9 @@
     ];
 
     $densities = [
-        '1.0' => ['label' => '1.0 kcal/mL', 'desc' => 'Standard',          'water' => '~85%'],
-        '1.2' => ['label' => '1.2 kcal/mL', 'desc' => 'Concentrated',      'water' => '~80%'],
-        '1.5' => ['label' => '1.5 kcal/mL', 'desc' => 'High-Energy Dense', 'water' => '~70%'],
+        '1.0' => ['label' => '1.0 kcal/mL', 'desc' => 'Standard'],
+        '1.2' => ['label' => '1.2 kcal/mL', 'desc' => 'Concentrated'],
+        '1.5' => ['label' => '1.5 kcal/mL', 'desc' => 'High-Energy Dense'],
     ];
 @endphp
 
@@ -133,6 +133,23 @@
                     </dl>
                 </div>
 
+                {{-- Clinical Condition --}}
+                <div style="grid-column:1/-1">
+                    <label class="en-label">Clinical Condition
+                        <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-muted)">— sets guideline energy &amp; protein targets (SASPEN / ESPEN)</span>
+                    </label>
+                    <select id="cond-select" name="clinical_condition" class="en-input"
+                            onchange="onCondition(this.value)" style="max-width:420px">
+                        @foreach($conditions as $slug => $condLabel)
+                            <option value="{{ $slug }}" {{ old('clinical_condition', 'standard') === $slug ? 'selected' : '' }}>{{ $condLabel }}</option>
+                        @endforeach
+                    </select>
+                    <div style="margin-top:.35rem;font-size:.72rem;color:var(--text-muted);display:flex;gap:1.5rem">
+                        <span>Energy: <strong id="hint-energy">25 &ndash; 30 kcal/kg/day</strong></span>
+                        <span>Protein: <strong id="hint-protein">0.8 &ndash; 1.2 g/kg/day</strong></span>
+                    </div>
+                </div>
+
                 {{-- Weight Selection --}}
                 <div style="grid-column:1/-1">
                     <label class="en-label">Weight for Calculation</label>
@@ -171,6 +188,32 @@
                     @endif
                 </div>
 
+                {{-- Oedema / Fluid Overload Adjustment --}}
+                <div style="grid-column:1/-1">
+                    <label class="en-label">Oedema / Fluid Overload
+                        <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-muted)">— subtracts estimated excess fluid from dosing weight</span>
+                    </label>
+                    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                        <select id="oedema-select" class="en-input" style="max-width:300px" onchange="updateOedema(this.value)">
+                            <option value="0">None — no oedema / fluid overload</option>
+                            <option value="2">Mild — approx. 2 kg excess fluid</option>
+                            <option value="5">Moderate — approx. 5 kg excess fluid</option>
+                            <option value="10">Severe — approx. 10 kg excess fluid</option>
+                            <option value="custom">Custom — enter amount below</option>
+                        </select>
+                        <div id="oedema-custom-wrap" style="display:none">
+                            <input type="number" id="oedema-custom-input" min="0" max="40" step="0.5"
+                                   placeholder="kg excess" class="en-input" style="max-width:150px"
+                                   oninput="applyOedema()">
+                        </div>
+                    </div>
+                    <input type="hidden" name="oedema_adjustment_kg" id="oedema-adj-input" value="{{ old('oedema_adjustment_kg', 0) }}">
+                    <p id="oedema-hint" style="display:none;font-size:.72rem;color:#92400e;margin-top:.35rem;padding:.45rem .65rem;background:#fffbeb;border:1px solid #fde68a;line-height:1.6">
+                        Estimated dry weight for dosing: <strong id="oedema-dry-weight">&mdash;</strong>
+                        &mdash; oedema/fluid weight excluded from energy &amp; protein target calculations per ASPEN/ESPEN.
+                    </p>
+                </div>
+
                 {{-- Fluid Restriction --}}
                 <div>
                     <label class="en-label">Fluid Restriction</label>
@@ -191,7 +234,7 @@
                     <select id="density-select" class="en-input" onchange="selectDensity(this.value)">
                         @foreach($densities as $dVal => $d)
                             <option value="{{ $dVal }}" {{ $selD === $dVal ? 'selected' : '' }}>
-                                {{ $d['label'] }} &mdash; {{ $d['desc'] }} ({{ $d['water'] }} free water)
+                                {{ $d['label'] }} &mdash; {{ $d['desc'] }}
                             </option>
                         @endforeach
                     </select>
@@ -202,7 +245,7 @@
                 <div>
                     <label class="en-label">Goal kcal/kg/day <span style="font-weight:400;opacity:.65">auto-filled from MSJ</span></label>
                     <input type="number" id="energy-input" name="energy_kcal_per_kg"
-                           step="0.5" min="15" max="35" required value="{{ old('energy_kcal_per_kg', 25) }}"
+                           step="0.5" min="15" max="40" required value="{{ old('energy_kcal_per_kg', 25) }}"
                            class="en-input">
                 </div>
 
@@ -245,7 +288,17 @@
             <div class="dash-section" id="results-panel">
                 <div class="dash-section-header">
                     <span class="dash-section-title">Tube Feed Recommendations</span>
-                    <span style="font-size:.72rem;color:var(--text-muted)">Press Calculate to update</span>
+                    <div style="display:flex;align-items:center;gap:.75rem">
+                        <span style="font-size:.72rem;color:var(--text-muted)">Press Calculate to update</span>
+                        <button type="button" onclick="printResults()"
+                                id="btn-print-results"
+                                style="display:none;align-items:center;gap:.35rem;padding:.38rem .85rem;border-radius:7px;font-size:.78rem;font-weight:700;border:1.5px solid var(--primary);color:var(--primary);background:#fff;cursor:pointer;transition:all .15s"
+                                onmouseover="this.style.background='var(--primary)';this.style.color='#fff'"
+                                onmouseout="this.style.background='#fff';this.style.color='var(--primary)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            Download PDF
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Summary banner --}}
@@ -291,15 +344,6 @@
                     <div style="padding:1rem 1.25rem;border-right:1px solid var(--border)">
                         <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.8rem">Fluid</div>
                         <dl style="display:flex;flex-direction:column;gap:.7rem;margin:0">
-                            <div>
-                                <dt style="font-size:.72rem;color:var(--text-muted)">Feed Water</dt>
-                                <dd id="res-free-water" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
-                            </div>
-                            <div>
-                                <dt style="font-size:.72rem;color:var(--text-muted)">Water Flushes</dt>
-                                <dd id="res-extra-water" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
-                                <div id="res-flush-sub" style="font-size:.72rem;color:var(--text-muted)">&#x2014;</div>
-                            </div>
                             <div>
                                 <dt style="font-size:.72rem;color:var(--text-muted)">Total Fluids</dt>
                                 <dd id="res-total-fluid" style="font-size:1rem;font-weight:700;color:var(--primary);margin:0">&#x2014;</dd>
@@ -368,11 +412,6 @@
                                     <td id="res-kcal2"          style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--primary)">&#x2014;</td>
                                 </tr>
                                 <tr style="border-bottom:1px solid var(--border)">
-                                    <td style="padding:.4rem .5rem;color:var(--text-muted)">Free Water</td>
-                                    <td id="res-ftbl-fw-ml"    style="text-align:right;padding:.4rem .5rem;color:var(--text-primary)">&#x2014;</td>
-                                    <td id="res-ftbl-fw-daily" style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--text-primary)">&#x2014;</td>
-                                </tr>
-                                <tr style="border-bottom:1px solid var(--border)">
                                     <td style="padding:.4rem .5rem;color:var(--text-muted)">Protein</td>
                                     <td id="res-ftbl-pro-ml"   style="text-align:right;padding:.4rem .5rem;color:var(--text-primary)">&#x2014;</td>
                                     <td id="res-fml-protein"   style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--text-primary)">&#x2014;</td>
@@ -394,15 +433,6 @@
                         </p>
                     </div>
                     <div id="res-protein-adequacy" style="padding:.1rem 1rem .75rem;font-size:.78rem;font-weight:700"></div>
-                </div>
-
-                {{-- Footer: REE / TEE / NPN --}}
-                <div style="padding:.6rem 1.5rem;background:#f8fafc;display:flex;gap:2rem;flex-wrap:wrap">
-                    <span style="font-size:.72rem;color:var(--text-muted)">REE (MSJ): <strong id="res-ree" style="color:var(--text-primary)">&#x2014;</strong></span>
-                    <span style="font-size:.72rem;color:var(--text-muted)">TEE: <strong id="res-tee" style="color:var(--text-primary)">&#x2014;</strong></span>
-                    <span style="font-size:.72rem;color:var(--text-muted)">NPN&thinsp;:&thinsp;N: <strong id="res-npn" style="color:var(--text-primary)">&#x2014;</strong> <span style="font-weight:400">(100&ndash;150:1 standard)</span></span>
-                    <span style="font-size:.72rem;color:var(--text-muted)">Nitrogen: <strong id="res-nitrogen" style="color:var(--text-primary)">&#x2014;</strong></span>
-                    <span style="font-size:.72rem;color:var(--text-muted)">Volume: <strong id="res-volume" style="color:var(--text-primary)">&#x2014;</strong></span>
                 </div>
             </div>
 
@@ -494,6 +524,12 @@
 </div>
 
 <style>
+@media print {
+    body > * { display: none !important; }
+    #print-results-root,
+    #print-results-root * { display: revert !important; }
+    #print-results-root { position:fixed;top:0;left:0;width:100%;padding:1rem 1.5rem;font-family:sans-serif }
+}
 .en-label {
     display: block;
     font-size: .72rem;
@@ -545,17 +581,16 @@ select.en-input { cursor: pointer; }
         if (chev) chev.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
     };
 
-    // ── Condition change — update guideline hints & protein default ───
+    // ── Condition change — sets kcal/kg & protein defaults from guidelines ─
     window.onCondition = function (slug) {
         var er = ENERGY_RANGES[slug]  || [25, 30];
         var pr = PROTEIN_RANGES[slug] || [0.8, 1.2];
-        document.getElementById('hint-energy').textContent  = er[0] + ' \u2013 ' + er[1] + ' kcal/kg/day';
-        document.getElementById('hint-protein').textContent = pr[0] + ' \u2013 ' + pr[1] + ' g/kg/day';
+        var hintE = document.getElementById('hint-energy');
+        var hintP = document.getElementById('hint-protein');
+        if (hintE) hintE.textContent = er[0] + ' \u2013 ' + er[1] + ' kcal/kg/day';
+        if (hintP) hintP.textContent = pr[0] + ' \u2013 ' + pr[1] + ' g/kg/day';
+        document.getElementById('energy-input').value  = ((er[0] + er[1]) / 2).toFixed(1);
         document.getElementById('protein-input').value = ((pr[0] + pr[1]) / 2).toFixed(2);
-        // Energy is driven by MSJ+SF; only fall back if MSJ not available
-        if (!PATIENT_HEIGHT || !PATIENT_AGE) {
-            document.getElementById('energy-input').value = ((er[0] + er[1]) / 2).toFixed(1);
-        }
     };
 
     // ── Weight tile selection ─────────────────────────────────────────
@@ -588,22 +623,45 @@ select.en-input { cursor: pointer; }
         updatePatientSummary();
     };
 
-    // ── Mifflin-St Jeor → auto-fill kcal/kg ────────────────────────
+    // ── Mifflin-St Jeor REE (reference only — kcal/kg driven by condition) ─
     window.updateMSJ = function () {
+        var oedemAdj = parseFloat((document.getElementById('oedema-adj-input') || {}).value) || 0;
+        if (oedemAdj > 0) refreshOedemaHint(oedemAdj);
+    };
+
+    // ── Oedema weight adjustment helpers ────────────────────────────
+    function refreshOedemaHint(adj) {
         var wt = parseFloat(document.getElementById('wt-kg-input').value) || 0;
-        if (!wt || !PATIENT_HEIGHT || !PATIENT_AGE) return;
-        var ree = PATIENT_IS_MALE
-            ? (10 * wt) + (6.25 * PATIENT_HEIGHT) - (5 * PATIENT_AGE) + 5
-            : (10 * wt) + (6.25 * PATIENT_HEIGHT) - (5 * PATIENT_AGE) - 161;
-        if (wt > 0) {
-            var teeKcalKg = Math.min(35, Math.max(15, ree / wt));
-            document.getElementById('energy-input').value = teeKcalKg.toFixed(1);
+        var el = document.getElementById('oedema-dry-weight');
+        if (el && wt > 0) el.textContent = Math.max(1, wt - adj).toFixed(1) + ' kg';
+    }
+
+    window.updateOedema = function (val) {
+        var wrap = document.getElementById('oedema-custom-wrap');
+        var hint = document.getElementById('oedema-hint');
+        if (val === 'custom') {
+            if (wrap) wrap.style.display = '';
+            if (hint) hint.style.display = 'block';
+        } else {
+            if (wrap) wrap.style.display = 'none';
+            var adj = parseFloat(val) || 0;
+            document.getElementById('oedema-adj-input').value = adj;
+            if (hint) hint.style.display = adj > 0 ? 'block' : 'none';
+            if (adj > 0) refreshOedemaHint(adj);
         }
+    };
+
+    window.applyOedema = function () {
+        var custom = parseFloat(document.getElementById('oedema-custom-input').value) || 0;
+        document.getElementById('oedema-adj-input').value = custom;
+        var hint = document.getElementById('oedema-hint');
+        if (hint) hint.style.display = custom > 0 ? 'block' : 'none';
+        if (custom > 0) refreshOedemaHint(custom);
     };
 
     // ── Calculate button handler ──────────────────────────────────────
     window.calculate = function () {
-        updateMSJ();   // ensure kcal/kg is current
+        updateMSJ();
         updatePatientSummary();
         recalc();
         var panel = document.getElementById('results-panel');
@@ -631,18 +689,22 @@ select.en-input { cursor: pointer; }
 
         if (!wt || !kcalKg || !density) return;
 
-        // ── REE / TEE (SF fixed at 1.0) ──────────────────────────────
+        // ── Oedema-adjusted dry weight for dosing ────────────────────
+        var oedemAdj = parseFloat((document.getElementById('oedema-adj-input') || {}).value) || 0;
+        var dosingWt = Math.max(1, wt - oedemAdj);
+
+        // ── REE / TEE (Mifflin-St Jeor using dry/dosing weight) ──────
         var ree = 0;
         if (PATIENT_HEIGHT && PATIENT_AGE) {
             ree = PATIENT_IS_MALE
-                ? (10 * wt) + (6.25 * PATIENT_HEIGHT) - (5 * PATIENT_AGE) + 5
-                : (10 * wt) + (6.25 * PATIENT_HEIGHT) - (5 * PATIENT_AGE) - 161;
+                ? (10 * dosingWt) + (6.25 * PATIENT_HEIGHT) - (5 * PATIENT_AGE) + 5
+                : (10 * dosingWt) + (6.25 * PATIENT_HEIGHT) - (5 * PATIENT_AGE) - 161;
         }
         var tee = ree;
 
         // ── Energy & Volume ──────────────────────────────────────────
-        var energyKcal  = wt * kcalKg;
-        var proteinG    = wt * proKg;
+        var energyKcal  = dosingWt * kcalKg;
+        var proteinG    = dosingWt * proKg;
         var nitrogenG   = proteinG / 6.25;
         var proteinKcal = proteinG * 4;
         var nonProKcal  = energyKcal - proteinKcal;
@@ -682,18 +744,18 @@ select.en-input { cursor: pointer; }
 
         // ── Show banner ───────────────────────────────────────────────
         var banner = document.getElementById('res-summary-banner');
-        if (banner) banner.style.display = 'block';
-
+        if (banner) banner.style.display = 'block';        var btnPrint = document.getElementById('btn-print-results');
+        if (btnPrint) btnPrint.style.display = 'inline-flex';
         // ── Banner ────────────────────────────────────────────────────
         set('res-banner-formula', 'Formula ' + currentDensity + ' kcal/mL \u2014 Goal rate: ' + n(rateMlHr, 1) + ' mL/hr over ' + hours + 'h');
-        set('res-banner-protein', n(proteinG, 1) + ' g protein/day (' + n(proKg, 2) + ' g/kg)');
+        set('res-banner-protein', n(proteinG, 1) + ' g protein/day (' + n(proKg, 2) + ' g/kg' + (oedemAdj > 0 ? ', dry wt' : '') + ')');
         set('res-banner-flush',   n(extraWater) + ' mL water flushes (' + n(flushMl) + ' mL \u00d7 6 per day)');
 
         // ── Macros section ────────────────────────────────────────────
         set('res-kcal',         n(energyKcal) + ' kcal');
-        set('res-kcal-sub',     '(' + n(kcalKg, 1) + ' kcal/kg/day)');
+        set('res-kcal-sub',     '(' + n(kcalKg, 1) + ' kcal/kg \u00d7 ' + n(dosingWt, 1) + '\u202fkg)');
         set('res-protein-goal', n(proteinG, 1) + ' g');
-        set('res-protein-sub',  '(' + n(proKg, 2) + ' g/kg/day)');
+        set('res-protein-sub',  '(' + n(proKg, 2) + ' g/kg \u00d7 ' + n(dosingWt, 1) + '\u202fkg)');
         set('res-fml-carbs',    n(fmlCarbsG, 1) + ' g');
         set('res-fml-fat',      n(fmlFatG, 1) + ' g');
 
@@ -708,8 +770,8 @@ select.en-input { cursor: pointer; }
         // ── Nutritional weight ────────────────────────────────────────
         var wtLabels = { actual: 'Actual body weight', ibw: 'IBW (Devine)', abw: 'Adjusted body weight (NDW)' };
         var wtType   = document.getElementById('wt-type-input').value || '';
-        set('res-nutri-wt',      n(wt, 1) + ' kg');
-        set('res-nutri-wt-type', wtLabels[wtType] || wtType);
+        set('res-nutri-wt',      n(dosingWt, 1) + ' kg');
+        set('res-nutri-wt-type', (wtLabels[wtType] || wtType) + (oedemAdj > 0 ? ' (dry \u2212\u202f' + oedemAdj + '\u202fkg)' : ''));
 
         // ── Formula label & table ─────────────────────────────────────
         set('res-formula-label',    currentDensity + ' kcal/mL');
@@ -762,6 +824,39 @@ select.en-input { cursor: pointer; }
         if (el) el.textContent = val;
     }
 
+    // ── Print / Download PDF ─────────────────────────────────────
+    window.printResults = function () {
+        var panel  = document.getElementById('results-panel');
+        var hero   = document.querySelector('.dash-hero');
+        var heroHtml = hero
+            ? '<div style="padding:.75rem 0 1.25rem;border-bottom:2px solid #16a34a;margin-bottom:1rem">'
+              + '<strong style="font-size:1rem;color:#111">Enteral Nutrition — Tube Feed Recommendations</strong><br>'
+              + '<span style="font-size:.82rem;color:#555">{{ $patient->full_name }} &middot; {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }}&nbsp;yrs &middot; {{ $patient->weight }}&nbsp;kg &middot; BMI&nbsp;{{ $patient->bmi ? number_format($patient->bmi,1) : "—" }}</span>'
+              + '</div>'
+            : '';
+        var printWin = window.open('', '_blank', 'width=900,height=700');
+        printWin.document.write(
+            '<!DOCTYPE html><html><head><title>EN Results — {{ $patient->full_name }}</title>'
+            + '<style>'
+            + 'body{font-family:sans-serif;font-size:13px;padding:1.5rem 2rem;color:#111}'
+            + '.dash-section-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem .25rem;border-bottom:2px solid #16a34a;margin-bottom:.75rem}'
+            + '.dash-section-title{font-weight:800;font-size:.95rem}'
+            + 'dt{font-size:.72rem;color:#666;margin-bottom:.1rem}'
+            + 'dd{font-size:1rem;font-weight:700;margin:0 0 .5rem}'
+            + 'table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.5rem}'
+            + 'th,td{padding:.35rem .5rem;text-align:left;border-bottom:1px solid #e5e7eb}'
+            + 'th{font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:700}'
+            + '#btn-print-results,button{display:none!important}'
+            + '@media print{@page{margin:1cm}}'
+            + '</style></head><body>'
+            + heroHtml
+            + panel.innerHTML
+            + '<script>window.onload=function(){window.print();window.close();}<\/script>'
+            + '</body></html>'
+        );
+        printWin.document.close();
+    };
+
     // ── Initialise UI state (no auto-recalc on load) ─────────────────
     var condEl = document.getElementById('cond-select');
     if (condEl) onCondition(condEl.value);
@@ -784,7 +879,7 @@ select.en-input { cursor: pointer; }
         if (dot) { dot.style.border = '2px solid var(--primary)'; dot.style.background = 'var(--primary)'; }
         if (row) { row.style.border = '1.5px solid var(--primary)'; row.style.background = '#f0fdf4'; }
     }
-    updateMSJ();   // populate REE/TEE display & kcal/kg on load
+    updateMSJ();   // refresh oedema hint on load
     updatePatientSummary();
 })();
 </script>

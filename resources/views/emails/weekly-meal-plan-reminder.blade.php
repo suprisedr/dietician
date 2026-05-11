@@ -46,7 +46,7 @@
     <div class="hd">
         <div class="hd-inner">
             <span class="hd-icon">&#x1F96C;</span>
-            <h1>Your Weekly Meal Plan</h1>
+            <h1>{{ $template?->heading ?: 'Your Weekly Meal Plan' }}</h1>
             <p>Sent by {{ $dietician->name }} &mdash; {{ config('app.name') }}</p>
         </div>
     </div>
@@ -54,13 +54,19 @@
     <div class="badge-strip">&#x2665; Personalised Nutrition Plan</div>
 
     <div class="bd">
+        @php $tplVars = ['patient_name' => $patient->name, 'patient_full_name' => $patient->full_name, 'dietician_name' => $dietician->name]; @endphp
+
+        @if($template?->body_html)
+            {!! $template->resolveBody($tplVars) !!}
+        @else
         <p>Hi <strong>{{ $patient->full_name }}</strong>,</p>
 
         <p>
             Here is a reminder from your dietician <strong>{{ $dietician->name }}</strong> about your
             meal plan for the week. Sticking to your plan consistently is the key to reaching your
-            nutrition goals — you&rsquo;ve got this!
+            nutrition goals &mdash; you&rsquo;ve got this!
         </p>
+        @endif
 
         <hr class="divider">
 
@@ -123,6 +129,12 @@
             &#x1F4A7; <strong>Hydration reminder:</strong> Aim for at least 8 glasses of water per day.
             Staying hydrated supports your metabolism and keeps energy levels stable throughout the day.
         </div>
+
+        @if($template?->cta_text && $template?->cta_url)
+        <div class="cta-wrap" style="margin-top:1.2rem">
+            <a href="{{ $template->cta_url }}" style="display:inline-block;background:linear-gradient(135deg,#2d5a43,#4a7a60);color:#fff;text-decoration:none;padding:.75rem 2rem;border-radius:8px;font-size:.9rem;font-weight:700;letter-spacing:.02em">{{ $template->cta_text }}</a>
+        </div>
+        @endif
 
         <p style="font-size:.83rem;color:#64748b;margin-top:1rem">
             If you have questions about your meal plan, please contact your dietician&nbsp;<strong>{{ $dietician->name }}</strong> directly.

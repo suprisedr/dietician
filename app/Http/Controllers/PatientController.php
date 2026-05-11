@@ -18,12 +18,61 @@ class PatientController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $patients = Patient::where('user_id', auth()->id())
-            ->orderByDesc('created_at')
-            ->paginate(20);
-        return view('patients.index', compact('patients'));
+        $query = Patient::where('user_id', auth()->id());
+
+        // Search by name, surname, or email
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('surname', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Gender filter
+        if ($gender = $request->input('gender')) {
+            $query->where('gender', $gender);
+        }
+
+        // BMI category filter (computed from weight/height columns)
+        if ($bmiCat = $request->input('bmi_category')) {
+            $query->whereRaw('height > 0 AND weight > 0');
+            match ($bmiCat) {
+                'underweight' => $query->whereRaw('(weight / POW(height / 100, 2)) < 18.5'),
+                'normal'      => $query->whereRaw('(weight / POW(height / 100, 2)) >= 18.5 AND (weight / POW(height / 100, 2)) < 25'),
+                'overweight'  => $query->whereRaw('(weight / POW(height / 100, 2)) >= 25 AND (weight / POW(height / 100, 2)) < 30'),
+                'obese'       => $query->whereRaw('(weight / POW(height / 100, 2)) >= 30'),
+                default       => null,
+            };
+        }
+
+        // Consent status filter
+        if ($consent = $request->input('consent')) {
+            $query->where('consent_status', $consent);
+        }
+
+        // Age range filter
+        if ($ageMin = $request->input('age_min')) {
+            $query->where('age', '>=', (int) $ageMin);
+        }
+        if ($ageMax = $request->input('age_max')) {
+            $query->where('age', '<=', (int) $ageMax);
+        }
+
+        // Stats from full filtered result set (before pagination)
+        $allForStats = (clone $query)->get(['gender', 'weight', 'height']);
+        $stats = [
+            'total'   => $allForStats->count(),
+            'males'   => $allForStats->where('gender', 'male')->count(),
+            'females' => $allForStats->where('gender', 'female')->count(),
+            'avg_bmi' => $allForStats->filter(fn ($p) => $p->bmi)->avg(fn ($p) => $p->bmi),
+        ];
+
+        $patients = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+
+        return view('patients.index', compact('patients', 'stats'));
     }
 
     /**
@@ -49,13 +98,22 @@ class PatientController extends Controller
             'date_of_birth'         => 'nullable|date',
             'address'               => 'nullable|string|max:500',
             'reason_for_assessment' => 'nullable|string|max:1000',
+            'allergies'             => 'nullable|string|max:1000',
+            'medical_history'       => 'nullable|string|max:2000',
+            'medications'           => 'nullable|string|max:1000',
+            'dietary_history'       => 'nullable|string|max:1000',
+            'appetite'              => 'nullable|in:good,fair,poor',
+            'referred_by'           => 'nullable|string|max:255',
             'age'                   => 'required|integer|min:0|max:150',
             'gender'                => 'required|in:male,female',
             'weight'                => 'required|numeric|min:0',
             'height'                => 'required|numeric|min:0',
             'activity_factor'       => 'required|numeric|min:0',
             'ibw_bmi_target'        => 'nullable|integer|in:22,25,30',
+            'oedema'                => 'nullable|boolean',
         ]);
+
+        $oedema = (bool) $request->input('oedema', false);
 
         $patient = Patient::create([
             'user_id'               => auth()->id(),
@@ -68,6 +126,12 @@ class PatientController extends Controller
             'date_of_birth'         => $request->date_of_birth,
             'address'               => $request->address,
             'reason_for_assessment' => $request->reason_for_assessment,
+            'allergies'             => $request->allergies,
+            'medical_history'       => $request->medical_history,
+            'medications'           => $request->medications,
+            'dietary_history'       => $request->dietary_history,
+            'appetite'              => $request->appetite,
+            'referred_by'           => $request->referred_by,
             'age'                   => $request->age,
             'gender'                => $request->gender,
             'weight'                => $request->weight,
@@ -75,6 +139,8 @@ class PatientController extends Controller
             'activity_factor'       => $request->activity_factor,
             'ibw_bmi_target'        => $request->ibw_bmi_target ?? 22,
             'use_ibw_weight'        => true,
+            'oedema'                => $oedema,
+            'oedema_changed_at'     => now(),
         ]);
 
         // Create default macronutrients
@@ -231,12 +297,20 @@ class PatientController extends Controller
             }
         }
 
+        $enteral = \App\Models\EnteralNutritionCalculation::where('patient_id', $patient->id)
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->first();
+
+        $letterhead = auth()->user()->letterheadBase64();
+
         return view('patients.report', compact(
             'patient', 'teeKj', 'teeKcal', 'bmrKj', 'isObese',
             'choPct', 'proPct', 'fatPct',
             'recCho_g', 'recPro_g', 'recFat_g',
             'recCho_kj', 'recPro_kj', 'recFat_kj',
-            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj'
+            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj',
+            'enteral', 'letterhead'
         ));
     }
 
@@ -289,6 +363,12 @@ class PatientController extends Controller
             }
         }
 
+        // Latest enteral nutrition calculation for section C
+        $enteral = \App\Models\EnteralNutritionCalculation::where('patient_id', $patient->id)
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->first();
+
         $letterhead = auth()->user()->letterheadBase64();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('patients.report-pdf', compact(
@@ -296,7 +376,8 @@ class PatientController extends Controller
             'choPct', 'proPct', 'fatPct',
             'recCho_g', 'recPro_g', 'recFat_g',
             'recCho_kj', 'recPro_kj', 'recFat_kj',
-            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj', 'letterhead'
+            'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj',
+            'enteral', 'letterhead'
         ))->setPaper('a4', 'portrait');
 
         $filename = 'report-' . \Illuminate\Support\Str::slug($patient->name) . '-' . now()->format('Y-m-d') . '.pdf';
@@ -330,6 +411,12 @@ class PatientController extends Controller
             'date_of_birth'         => 'nullable|date',
             'address'               => 'nullable|string|max:500',
             'reason_for_assessment' => 'nullable|string|max:1000',
+            'allergies'             => 'nullable|string|max:1000',
+            'medical_history'       => 'nullable|string|max:2000',
+            'medications'           => 'nullable|string|max:1000',
+            'dietary_history'       => 'nullable|string|max:1000',
+            'appetite'              => 'nullable|in:good,fair,poor',
+            'referred_by'           => 'nullable|string|max:255',
             'age'                   => 'required|integer|min:0|max:150',
             'gender'                => 'required|in:male,female',
             'weight'                => 'required|numeric|min:0',
@@ -341,6 +428,7 @@ class PatientController extends Controller
         $updateData = $request->only([
             'title', 'name', 'surname', 'email', 'id_type', 'id_number',
             'date_of_birth', 'address', 'reason_for_assessment',
+            'allergies', 'medical_history', 'medications', 'dietary_history', 'appetite', 'referred_by',
             'age', 'gender', 'weight', 'height', 'activity_factor', 'ibw_bmi_target',
         ]);
         // Any BMI target (22, 25 or 30) means IBW is used as the calculation weight.
@@ -413,6 +501,29 @@ class PatientController extends Controller
                 'grams' => round(($m->selected_percentage / 100) * $teeKj / (in_array($m->type, ['fat','fats']) ? 38 : 17)),
             ])->values(),
         ]);
+    }
+
+    /**
+     * Update only the clinical/subjective assessment fields from the show page.
+     */
+    public function updateClinicalAssessment(Request $request, string $id)
+    {
+        $patient = Patient::where('user_id', auth()->id())->findOrFail($id);
+
+        $data = $request->validate([
+            'reason_for_assessment' => 'nullable|string|max:1000',
+            'referred_by'           => 'nullable|string|max:255',
+            'medical_history'       => 'nullable|string|max:5000',
+            'medications'           => 'nullable|string|max:2000',
+            'allergies'             => 'nullable|string|max:1000',
+            'dietary_history'       => 'nullable|string|max:2000',
+            'appetite'              => 'nullable|in:good,fair,poor',
+        ]);
+
+        $patient->update($data);
+
+        return redirect()->route('patients.edit', $patient->id)
+            ->with('success', 'Clinical assessment updated.');
     }
 
     /**

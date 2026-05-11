@@ -31,6 +31,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
         'two_factor_prompted_at',
+        'reminder_send_day',
+        'reminder_send_hour',
     ];
 
     protected $hidden = [
@@ -48,7 +50,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_prompted_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
-            'password'           => 'hashed',
+            'password'             => 'hashed',
+            'reminder_send_day'   => 'integer',
+            'reminder_send_hour'  => 'integer',
         ];
     }
 

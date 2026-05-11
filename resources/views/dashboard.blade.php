@@ -35,11 +35,11 @@
          FLOATING STAT CARDS
     ═══════════════════════════════════════════ --}}
     @php
-        $total     = isset($patients) ? $patients->count() : 0;
-        $males     = isset($patients) ? $patients->where('gender','male')->count() : 0;
-        $females   = isset($patients) ? $patients->where('gender','female')->count() : 0;
+        $total     = isset($allPatients) ? $allPatients->count() : 0;
+        $males     = isset($allPatients) ? $allPatients->where('gender','male')->count() : 0;
+        $females   = isset($allPatients) ? $allPatients->where('gender','female')->count() : 0;
         $avgBmi    = $total > 0
-            ? round($patients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 2)
+            ? round($allPatients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 2)
             : null;
     @endphp
 
@@ -120,13 +120,16 @@
                 {{-- Patient table card --}}
                 <div class="dash-section">
                     <div class="dash-section-header">
-                        <span class="dash-section-title">Patient List</span>
-                        <a href="{{ route('patients.create') }}" class="btn-add">
+                        <span class="dash-section-title">Recent Patients</span>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('patients.index') }}" style="font-size:.8rem;font-weight:600;color:var(--primary);text-decoration:none;white-space:nowrap">View all →</a>
+                            <a href="{{ route('patients.create') }}" class="btn-add">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                             </svg>
                             Add Patient
                         </a>
+                        </div>
                     </div>
 
                     @if(isset($patients) && $patients->count())

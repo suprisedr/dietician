@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dietetic Assessment & Care Plan</title>
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --section-a: #002d58;
+            --section-b: #1d3557;
+            --section-c: #006442;
+            --section-d: #8e44ad;
+            --bg-light: #f8f9fa;
+            --border-color: #d1d8e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #525659;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            padding: 15mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .title-area {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .title-area h1 {
+            color: var(--primary-blue);
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+
+        .contact-info {
+            font-size: 11px;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        /* Form Grid Layout */
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 15px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .field {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 5px;
+            padding-bottom: 2px;
+        }
+
+        .field label {
+            font-weight: bold;
+            margin-right: 5px;
+            white-space: nowrap;
+        }
+
+        .field span { flex-grow: 1; }
+
+        .abcd-box {
+            border: 1px solid var(--section-c);
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 10px;
+            background-color: #f0fff4;
+        }
+
+        /* Main Content Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .section-header {
+            color: white;
+            padding: 5px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            border-radius: 3px 3px 0 0;
+            margin-bottom: 10px;
+        }
+
+        .circle-label {
+            background: white;
+            color: inherit;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            font-weight: 900;
+        }
+
+        .bg-a { background-color: var(--section-a); }
+        .bg-b { background-color: var(--section-b); }
+        .bg-c { background-color: var(--section-c); }
+        .bg-d { background-color: var(--section-d); }
+
+        .content-box {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+
+        .sub-header {
+            color: #2d6a4f;
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+            margin: 8px 0 5px 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            font-size: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+
+        th { background-color: #f2f2f2; }
+
+        .pes-box {
+            background-color: #eef2f7;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        footer {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            font-size: 11px;
+        }
+
+        .stamp-box {
+            border: 1px solid #ccc;
+            height: 80px;
+            width: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+        }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .page { box-shadow: none; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <header>
+        <div class="logo-placeholder">YOUR LOGO HERE</div>
+        <div class="title-area">
+            <h1>Dietetic Assessment & Care Plan</h1>
+            <div style="font-size: 12px; font-weight: bold;">ABCD GUIDELINES - PATIENT REPORT TEMPLATE</div>
+        </div>
+        <div class="contact-info">
+            <strong>Your Clinic / Practice Name</strong><br>
+            123 Health Street, City, State, ZIP<br>
+            +00 123 456 7890<br>
+            info@yourclinic.com<br>
+            www.yourclinic.com
+        </div>
+    </header>
+
+    <div class="patient-info-grid">
+        <div>
+            <div class="field"><label>Patient Name:</label><span></span></div>
+            <div class="field" style="display: flex; gap: 10px;">
+                <label>Date of Birth:</label><span style="width: 80px;"></span>
+                <label>Age:</label><span style="width: 40px;"></span>
+                <label>Gender:</label><span>□ M □ F □ O</span>
+            </div>
+            <div class="field"><label>Patient ID:</label><span></span></div>
+            <div class="field"><label>Contact:</label><span></span></div>
+        </div>
+        <div>
+            <div class="field"><label>Date of Assessment:</label><span></span></div>
+            <div class="field"><label>Report Date:</label><span></span></div>
+            <div class="field"><label>Referred By:</label><span></span></div>
+            <div class="field"><label>Diagnosis:</label><span></span></div>
+            <div class="abcd-box">
+                <strong>ABCD FRAMEWORK</strong><br>
+                A - Assessment | B - Body Composition<br>
+                C - Calculation | D - Dietetic Intervention
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="column">
+            <div class="section-header bg-a"><span class="circle-label" style="color:var(--section-a)">A</span> ASSESSMENT</div>
+            <div class="content-box">
+                <div class="sub-header">Subjective Assessment</div>
+                <div class="field"><label>Chief Complaint:</label><span></span></div>
+                <div class="field"><label>Medical History:</label><span></span></div>
+                <div class="field"><label>Medications:</label><span></span></div>
+                <div class="field"><label>Allergies:</label><span></span></div>
+                <div class="field"><label>Dietary History:</label><span></span></div>
+                <div class="field" style="border:none">
+                    <label>Appetite:</label><span>□ Good □ Fair □ Poor</span>
+                </div>
+            </div>
+
+            <div class="section-header bg-b"><span class="circle-label" style="color:var(--section-b)">B</span> BODY COMPOSITION & CLINICAL</div>
+            <div class="content-box">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <div class="sub-header">Anthropometrics</div>
+                        <div class="field"><label>Height:</label><span></span> cm</div>
+                        <div class="field"><label>Weight:</label><span></span> kg</div>
+                        <div class="field"><label>BMI:</label><span></span> kg/m²</div>
+                    </div>
+                    <div>
+                        <div class="sub-header">Clinical Data</div>
+                        <div class="field"><label>BP:</label><span></span> mmHg</div>
+                        <div class="field"><label>HR:</label><span></span> bpm</div>
+                        <div class="field"><label>Labs:</label><span></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pes-box">
+                <strong style="color: var(--primary-blue); font-size: 11px;">NUTRITION DIAGNOSIS (PES STATEMENT)</strong>
+                <div class="field"><label>Problem:</label><span></span></div>
+                <div class="field"><label>Etiology:</label><span></span></div>
+                <div class="field"><label>Signs/Symptoms:</label><span></span></div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="section-header bg-c"><span class="circle-label" style="color:var(--section-c)">C</span> CALCULATION OF REQUIREMENTS</div>
+            <div class="content-box">
+                <div class="sub-header">Energy Requirements</div>
+                <table style="margin-bottom: 10px;">
+                    <tr><td>EER</td><td>kcal/day</td></tr>
+                    <tr><td>Total Energy Requirement</td><td>kcal/day</td></tr>
+                </table>
+
+                <div class="sub-header">Macronutrients</div>
+                <table>
+                    <thead>
+                        <tr><th>Nutrient</th><th>Grams</th><th>% Total</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Carbohydrates</td><td></td><td>%</td></tr>
+                        <tr><td>Protein</td><td></td><td>%</td></tr>
+                        <tr><td>Fats</td><td></td><td>%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section-header bg-d"><span class="circle-label" style="color:var(--section-d)">D</span> DIETETIC INTERVENTION</div>
+            <div class="content-box">
+                <div class="sub-header">Nutrition Prescription</div>
+                <div class="field"><label>Diet Type:</label><span></span></div>
+                <div class="field"><label>Caloric Prescription:</label><span></span></div>
+
+                <div class="sub-header">Goals (SMART)</div>
+                <div style="border-bottom: 1px solid #eee; height: 15px;">1.</div>
+                <div style="border-bottom: 1px solid #eee; height: 15px;">2.</div>
+
+                <div class="sub-header">Monitoring & Follow-up</div>
+                <table>
+                    <tr><th>Parameter</th><th>Target</th></tr>
+                    <tr style="height: 20px;"><td></td><td></td></tr>
+                    <tr style="height: 20px;"><td></td><td></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div>
+            <div class="field"><label>Dietitian Name:</label><span></span></div>
+            <div class="field"><label>Registration No.:</label><span></span></div>
+            <div class="field"><label>Date:</label><span></span></div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <div class="stamp-box">Stamp / Seal</div>
+        </div>
+    </footer>
+
+    <div style="text-align: center; font-size: 9px; color: #666; margin-top: 20px;">
+        This report is confidential and intended for the use of the patient and healthcare team only.
+    </div>
+</div>
+
+</body>
+</html>

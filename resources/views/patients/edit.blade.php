@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Back link --}}
         <a href="{{ route('patients.show', $patient) }}"
@@ -7,6 +7,9 @@
             ← Back to patient
         </a>
 
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+        {{-- ── LEFT: Patient Details ─────────────────────────── --}}
         <div class="dash-section">
             <div class="dash-section-header">
                 <span class="dash-section-title">Edit: {{ $patient->full_name }}</span>
@@ -159,20 +162,6 @@
                         @error('address')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
                     </div>
 
-                    {{-- ── Clinical Details ─────────────────────────────────── --}}
-                    <p style="font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--primary-dark);padding-bottom:.3rem;border-bottom:1.5px solid var(--border);margin:.6rem 0 .9rem">Clinical Details</p>
-
-                    {{-- Reason for Assessment --}}
-                    <div style="margin-bottom:1rem">
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Reason for Assessment</label>
-                        <textarea name="reason_for_assessment" rows="2"
-                                  placeholder="e.g. Weight management, diabetes follow-up…"
-                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
-                                  onfocus="this.style.borderColor='var(--primary)'"
-                                  onblur="this.style.borderColor='#d1d5db'">{{ old('reason_for_assessment', $patient->reason_for_assessment) }}</textarea>
-                        @error('reason_for_assessment')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
-                    </div>
-
                     {{-- Weight + Height --}}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
                         <div>
@@ -260,7 +249,123 @@
 
                 </form>
             </div>
-        </div>
+        </div>{{-- /left col --}}
+
+        {{-- ── RIGHT: Clinical / Subjective Assessment ──────── --}}
+        <div class="dash-section">
+            <div class="dash-section-header">
+                <span class="dash-section-title">Clinical / Subjective Assessment</span>
+            </div>
+            <div style="padding:1.5rem">
+                <form method="POST" action="{{ route('patients.clinical-assessment.update', $patient->id) }}">
+                    @csrf
+                    @method('PATCH')
+
+                    {{-- Reason for Assessment --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Chief Complaint / Reason for Assessment</label>
+                        <textarea name="reason_for_assessment" rows="2"
+                                  placeholder="e.g. Weight management, post-surgery dietary guidance…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('reason_for_assessment', $patient->reason_for_assessment) }}</textarea>
+                        @error('reason_for_assessment')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Referred By --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Referred By</label>
+                        <input type="text" name="referred_by"
+                               placeholder="e.g. Dr. Smith (GP)"
+                               value="{{ old('referred_by', $patient->referred_by) }}"
+                               style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
+                               onfocus="this.style.borderColor='var(--primary)'"
+                               onblur="this.style.borderColor='#d1d5db'">
+                        @error('referred_by')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Allergies --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem;color:{{ $patient->allergies ? '#dc2626' : 'var(--text-muted)' }}">
+                            Allergies / Intolerances
+                            @if($patient->allergies)<span style="margin-left:.4rem;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:999px;padding:.05rem .5rem;font-size:.68rem">⚠ On file</span>@endif
+                        </label>
+                        <textarea name="allergies" rows="2"
+                                  placeholder="e.g. Peanuts, lactose intolerance, shellfish…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1.5px solid {{ $patient->allergies ? '#fca5a5' : '#d1d5db' }};border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box;background:{{ $patient->allergies ? '#fff8f8' : '#fff' }}"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='{{ $patient->allergies ? '#fca5a5' : '#d1d5db' }}'">{{ old('allergies', $patient->allergies) }}</textarea>
+                        @error('allergies')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Medical History --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Medical History</label>
+                        <textarea name="medical_history" rows="3"
+                                  placeholder="e.g. Type 2 diabetes (2018), hypertension…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('medical_history', $patient->medical_history) }}</textarea>
+                        @error('medical_history')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Medications --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Current Medications</label>
+                        <textarea name="medications" rows="2"
+                                  placeholder="e.g. Metformin 500mg BD, Lisinopril 10mg OD…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('medications', $patient->medications) }}</textarea>
+                        @error('medications')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Dietary History --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Dietary History</label>
+                        <textarea name="dietary_history" rows="2"
+                                  placeholder="e.g. Follows a low-carb diet, vegetarian since 2020…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('dietary_history', $patient->dietary_history) }}</textarea>
+                        @error('dietary_history')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Appetite --}}
+                    <div style="margin-bottom:1.5rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Appetite</label>
+                        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+                            @foreach(['good' => 'Good', 'fair' => 'Fair', 'poor' => 'Poor'] as $val => $lbl)
+                            @php
+                                $sel   = old('appetite', $patient->appetite) === $val;
+                                $aClr  = $val === 'good' ? 'var(--primary)' : ($val === 'fair' ? '#f59e0b' : '#ef4444');
+                                $aBg   = $val === 'good' ? 'rgba(103,159,95,.07)' : ($val === 'fair' ? '#fffbeb' : '#fef2f2');
+                            @endphp
+                            <label style="display:flex;align-items:center;gap:.4rem;padding:.45rem .875rem;border:1.5px solid {{ $sel ? $aClr : '#d1d5db' }};border-radius:6px;cursor:pointer;font-size:.875rem;font-weight:600;color:{{ $sel ? $aClr : 'var(--text-muted)' }};background:{{ $sel ? $aBg : '#fff' }}">
+                                <input type="radio" name="appetite" value="{{ $val }}"
+                                       {{ $sel ? 'checked' : '' }}
+                                       style="accent-color:{{ $aClr }}">
+                                {{ $lbl }}
+                            </label>
+                            @endforeach
+                        </div>
+                        @error('appetite')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div style="display:flex;justify-content:flex-end;padding-top:.5rem;border-top:1px solid var(--border)">
+                        <button type="submit"
+                            style="display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.35rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;transition:background .15s"
+                            onmouseover="this.style.background='var(--primary-dark)'"
+                            onmouseout="this.style.background='var(--primary)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            Save Clinical Assessment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>{{-- /right col --}}
+
+        </div>{{-- /two-col grid --}}
     </div>
 
     <script>

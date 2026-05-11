@@ -223,6 +223,77 @@
                         @enderror
                     </div>
 
+                    {{-- Referred By --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Referred By</label>
+                        <input type="text" name="referred_by"
+                               placeholder="e.g. Dr. Smith (GP)"
+                               value="{{ old('referred_by') }}"
+                               style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
+                               onfocus="this.style.borderColor='var(--primary)'"
+                               onblur="this.style.borderColor='#d1d5db'">
+                        @error('referred_by')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Allergies --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Allergies / Intolerances</label>
+                        <textarea name="allergies" rows="2"
+                                  placeholder="e.g. Peanuts, lactose intolerance, shellfish…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('allergies') }}</textarea>
+                        @error('allergies')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Medical History --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Medical History</label>
+                        <textarea name="medical_history" rows="3"
+                                  placeholder="e.g. Type 2 diabetes (2018), hypertension…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('medical_history') }}</textarea>
+                        @error('medical_history')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Medications --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Current Medications</label>
+                        <textarea name="medications" rows="2"
+                                  placeholder="e.g. Metformin 500mg BD, Lisinopril 10mg OD…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('medications') }}</textarea>
+                        @error('medications')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Dietary History --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Dietary History</label>
+                        <textarea name="dietary_history" rows="2"
+                                  placeholder="e.g. Follows a low-carb diet, vegetarian since 2020…"
+                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
+                                  onfocus="this.style.borderColor='var(--primary)'"
+                                  onblur="this.style.borderColor='#d1d5db'">{{ old('dietary_history') }}</textarea>
+                        @error('dietary_history')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Appetite --}}
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Appetite</label>
+                        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+                            @foreach(['good' => 'Good', 'fair' => 'Fair', 'poor' => 'Poor'] as $val => $lbl)
+                            <label style="display:flex;align-items:center;gap:.4rem;padding:.45rem .875rem;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;font-size:.875rem">
+                                <input type="radio" name="appetite" value="{{ $val }}"
+                                       {{ old('appetite') === $val ? 'checked' : '' }}>
+                                {{ $lbl }}
+                            </label>
+                            @endforeach
+                        </div>
+                        @error('appetite')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
+                    </div>
+
                     {{-- Weight + Height --}}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
                         <div>
@@ -318,6 +389,30 @@
                         @enderror
                     </div>
 
+                    {{-- Oedema --}}
+                    <div style="margin-bottom:1.25rem">
+                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">
+                            Oedema Status
+                        </label>
+                        <div style="display:flex;gap:.75rem">
+                            <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;font-size:.875rem;transition:all .15s" id="lbl-oedema-no">
+                                <input type="radio" name="oedema" value="0"
+                                       {{ old('oedema', '0') !== '1' ? 'checked' : '' }}
+                                       onchange="styleOedemaLabels()"
+                                       style="accent-color:var(--primary)">
+                                No Oedema
+                            </label>
+                            <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .875rem;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;font-size:.875rem;transition:all .15s" id="lbl-oedema-yes">
+                                <input type="radio" name="oedema" value="1"
+                                       {{ old('oedema') === '1' ? 'checked' : '' }}
+                                       onchange="styleOedemaLabels()"
+                                       style="accent-color:#f59e0b">
+                                <span style="color:#92400e">Oedema Present</span>
+                            </label>
+                        </div>
+                        <p style="margin-top:.35rem;font-size:.74rem;color:var(--text-muted)">Timestamp is recorded automatically when oedema status is set or changes.</p>
+                    </div>
+
                     {{-- Actions --}}
                     <div style="display:flex;gap:.75rem;align-items:center">
                         <button type="submit"
@@ -351,6 +446,18 @@
             lblM.style.background  = male.checked   ? 'var(--primary-light, #eef2ff)' : '';
             lblF.style.borderColor = female.checked ? 'var(--primary)' : '#d1d5db';
             lblF.style.background  = female.checked ? 'var(--primary-light, #eef2ff)' : '';
+        }
+
+        function styleOedemaLabels() {
+            const no  = document.querySelector('input[name="oedema"][value="0"]');
+            const yes = document.querySelector('input[name="oedema"][value="1"]');
+            const lblNo  = document.getElementById('lbl-oedema-no');
+            const lblYes = document.getElementById('lbl-oedema-yes');
+            if (!no || !yes) return;
+            lblNo.style.borderColor  = no.checked  ? 'var(--primary)' : '#d1d5db';
+            lblNo.style.background   = no.checked  ? 'var(--primary-light, #eef2ff)' : '';
+            lblYes.style.borderColor = yes.checked ? '#f59e0b' : '#d1d5db';
+            lblYes.style.background  = yes.checked ? '#fffbeb' : '';
         }
 
         function onIdTypeChange() {
@@ -442,6 +549,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             styleGenderLabels();
+            styleOedemaLabels();
             onIdTypeChange();
             updateBmi();
         });

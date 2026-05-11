@@ -27,10 +27,10 @@
          FLOATING STAT CARDS
     ═══════════════════════════════════════════ --}}
     @php
-        $total   = $patients->total();
-        $males   = $patients->where('gender','male')->count();
-        $females = $patients->where('gender','female')->count();
-        $avgBmi  = $total > 0 ? round($patients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 2) : null;
+        $total   = $stats['total'];
+        $males   = $stats['males'];
+        $females = $stats['females'];
+        $avgBmi  = $stats['avg_bmi'] ? round($stats['avg_bmi'], 2) : null;
     @endphp
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 stat-cards-row">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -66,7 +66,95 @@
     ═══════════════════════════════════════════ --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        {{-- ── Search & Filter Bar ──────────────────────────────── --}}
+        <form method="GET" action="{{ route('patients.index') }}" id="filter-form">
+            <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end">
+
+                {{-- Search --}}
+                <div style="flex:1;min-width:200px">
+                    <label style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Search</label>
+                    <div style="position:relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:.65rem;top:50%;transform:translateY(-50%);width:.9rem;height:.9rem;color:var(--text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                        </svg>
+                        <input type="text" name="search" value="{{ request('search') }}"
+                               placeholder="Name, surname or email…"
+                               style="width:100%;padding:.45rem .75rem .45rem 2rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;background:#fafafa"
+                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                </div>
+
+                {{-- Gender --}}
+                <div style="min-width:130px">
+                    <label style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Gender</label>
+                    <select name="gender" onchange="this.form.submit()"
+                            style="width:100%;padding:.45rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafa;outline:none">
+                        <option value="">All</option>
+                        <option value="male"   {{ request('gender') === 'male'   ? 'selected' : '' }}>Male</option>
+                        <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>Female</option>
+                    </select>
+                </div>
+
+                {{-- BMI Category --}}
+                <div style="min-width:150px">
+                    <label style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">BMI Category</label>
+                    <select name="bmi_category" onchange="this.form.submit()"
+                            style="width:100%;padding:.45rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafa;outline:none">
+                        <option value="">All</option>
+                        <option value="underweight" {{ request('bmi_category') === 'underweight' ? 'selected' : '' }}>Underweight (&lt;18.5)</option>
+                        <option value="normal"      {{ request('bmi_category') === 'normal'      ? 'selected' : '' }}>Normal (18.5–24.9)</option>
+                        <option value="overweight"  {{ request('bmi_category') === 'overweight'  ? 'selected' : '' }}>Overweight (25–29.9)</option>
+                        <option value="obese"       {{ request('bmi_category') === 'obese'       ? 'selected' : '' }}>Obese (≥30)</option>
+                    </select>
+                </div>
+
+                {{-- Consent Status --}}
+                <div style="min-width:150px">
+                    <label style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Consent</label>
+                    <select name="consent" onchange="this.form.submit()"
+                            style="width:100%;padding:.45rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafa;outline:none">
+                        <option value="">All</option>
+                        <option value="consented" {{ request('consent') === 'consented' ? 'selected' : '' }}>Consented</option>
+                        <option value="declined"  {{ request('consent') === 'declined'  ? 'selected' : '' }}>Declined</option>
+                        <option value="pending"   {{ request('consent') === 'pending'   ? 'selected' : '' }}>Pending</option>
+                    </select>
+                </div>
+
+                {{-- Age Range --}}
+                <div style="min-width:160px">
+                    <label style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Age Range</label>
+                    <div style="display:flex;align-items:center;gap:.4rem">
+                        <input type="number" name="age_min" value="{{ request('age_min') }}" placeholder="Min"
+                               min="0" max="150"
+                               style="width:60px;padding:.45rem .5rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafa;outline:none"
+                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                        <span style="font-size:.8rem;color:var(--text-muted)">–</span>
+                        <input type="number" name="age_max" value="{{ request('age_max') }}" placeholder="Max"
+                               min="0" max="150"
+                               style="width:60px;padding:.45rem .5rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafa;outline:none"
+                               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                </div>
+
+                {{-- Search button + Clear --}}
+                <div style="display:flex;align-items:flex-end;gap:.5rem">
+                    <button type="submit"
+                            style="padding:.45rem 1rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer">
+                        Search
+                    </button>
+                    @if(request()->hasAny(['search','gender','bmi_category','consent','age_min','age_max']))
+                        <a href="{{ route('patients.index') }}"
+                           style="padding:.45rem .9rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;font-weight:600;color:var(--text-muted);text-decoration:none;white-space:nowrap">
+                            Clear
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </form>
+
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem">
             <span class="dash-section-title">Patient Records</span>
             <span style="font-size:.75rem;color:var(--text-muted)">Click &#8942; to edit or view a patient</span>
         </div>
@@ -257,6 +345,7 @@
                     {{ $patients->links() }}
                 </div>
             @endif
+        </div>{{-- end white card --}}
     </div>
 
     <script>

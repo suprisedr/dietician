@@ -538,6 +538,51 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 .mo-item-serving { font-size:.6rem; font-weight:400; color:var(--text-muted); margin-left:.2rem; }
 .mo-macros { font-size:.59rem; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:.05rem; }
 .mp-flash { padding:.65rem 1rem; background:#dcfce7; color:#15803d; border-radius:8px; font-size:.82rem; font-weight:600; margin-bottom:1.1rem; border:1px solid #86efac; }
+
+/* ── Copy-day button ─────────────────────────────────── */
+.copy-day-btn {
+    display:inline-flex; align-items:center; gap:.2rem;
+    margin-top:.3rem; padding:.2rem .5rem;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35);
+    border-radius:5px; color:#fff; font-size:.63rem; font-weight:700;
+    cursor:pointer; transition:background .15s;
+}
+.copy-day-btn:hover { background:rgba(255,255,255,.32); }
+
+/* ── Copy popover ────────────────────────────────────── */
+#copy-day-popover {
+    display:none; position:fixed; z-index:9999;
+    background:#fff; border:1px solid var(--border);
+    border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.18);
+    padding:1rem 1.1rem; min-width:200px;
+}
+#copy-day-popover h4 {
+    font-size:.78rem; font-weight:800; color:var(--text-primary);
+    margin-bottom:.7rem; display:flex; align-items:center; justify-content:space-between;
+}
+#copy-day-popover .cp-close {
+    background:none; border:none; cursor:pointer; font-size:1rem;
+    color:var(--text-muted); line-height:1; padding:0;
+}
+.cp-day-row {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.3rem .25rem; border-radius:5px;
+    font-size:.78rem; color:var(--text-primary); cursor:pointer;
+    transition:background .1s;
+}
+.cp-day-row:hover { background:#f3f4f6; }
+.cp-day-row input { accent-color:var(--primary); }
+.cp-day-row.cp-source { opacity:.4; pointer-events:none; }
+#copy-day-popover .cp-apply {
+    margin-top:.8rem; width:100%;
+    padding:.42rem; background:var(--primary); color:#fff;
+    border:none; border-radius:7px; font-size:.8rem; font-weight:700;
+    cursor:pointer; transition:opacity .15s;
+}
+#copy-day-popover .cp-apply:hover { opacity:.88; }
+#copy-day-popover .cp-note {
+    font-size:.67rem; color:var(--text-muted); margin-top:.5rem; text-align:center;
+}
 </style>
 
 <div class="mp-page">
@@ -565,6 +610,8 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             @endif
             <button type="button" class="mp-btn mp-btn-indigo"
                 onclick="openPdfPreview('{{ route('meal-planner.pdf-preview', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}','{{ route('meal-planner.pdf', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}')">&#x1F441; Preview PDF</button>
+            <button type="button" class="mp-btn" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff"
+                onclick="openRepeatModal()">&#x1F501; Repeat Plan</button>
         </div>
     </div>
 
@@ -650,9 +697,14 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                     {{-- Header row: Meal label + day columns --}}
                     <div class="sgh" style="text-align:left;padding-left:.75rem">Meal</div>
                     @foreach($days as $di => $dayName)
-                        <div class="sgh">
+                        <div class="sgh" style="position:relative">
                             {{ $dayName }}
                             <span class="day-num">{{ $mealPlanner->week_start->addDays($di)->format('d M') }}</span>
+                            <button type="button" class="copy-day-btn" title="Copy this day to another day"
+                                onclick="openCopyPopover(event,{{ $di }})">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                Copy
+                            </button>
                         </div>
                     @endforeach
 
@@ -696,6 +748,27 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                             </div>
                                         </div>
                                     @endforeach
+                                    {{-- Catch-all card: items with no matching exchCat --}}
+                                    <div class="cat-card"
+                                        style="background:#f9fafb;color:#6b7280;border-color:#e5e7eb;border-style:dashed;display:none"
+                                        data-day="{{ $di }}"
+                                        data-slot="{{ $slot }}"
+                                        data-category="Other"
+                                        data-cat-slug="__orphan__"
+                                        data-qty="0"
+                                        data-tag-bg="#f3f4f6"
+                                        data-tag-border="#d1d5db"
+                                        data-tag-text="#374151"
+                                        onclick="openModal(this)"
+                                        id="other-card-{{ $di }}-{{ $slot }}">
+                                        <div class="cat-card-hdr" style="border-bottom-color:#e5e7eb">
+                                            <span class="cat-card-name" style="font-style:italic;font-size:.72rem">Other / General</span>
+                                            <span class="cat-card-badge" id="catqty_{{ $di }}_{{ $slot }}___orphan__"></span>
+                                        </div>
+                                        <div class="cat-card-body">
+                                            <div class="cell-tags" id="tags_{{ $di }}_{{ $slot }}___orphan__"></div>
+                                        </div>
+                                    </div>
                                 @else
                                     <div class="cat-card"
                                         style="background:{{ $theme['tag_bg'] }};color:{{ $theme['tag_text'] }};border-color:{{ $theme['tag_border'] }}"
@@ -1014,6 +1087,7 @@ function renderAll(di, slot){
     const distrib = DISTRIB[slot]||[];
     if(distrib.length>0){
         distrib.forEach(function(d){ renderCatCell(di,slot,d.name,slugify(d.name)); });
+        renderCatCell(di, slot, 'Other', '__orphan__');
     } else {
         renderCatCell(di,slot,'','all');
     }
@@ -1030,9 +1104,21 @@ function renderCatCell(di, slot, catName, catSlug){
     var allItems = STATE[key]||[];
     // filter to this category (or all when catName is empty)
     // Filter by exchCat (exchange card slug), not library group name
-    var catItems = catSlug==='all'
-        ? allItems
-        : allItems.filter(function(it){ return it.exchCat===catSlug; });
+    var catItems;
+    if(catSlug==='all'){
+        catItems = allItems;
+    } else if(catSlug==='__orphan__'){
+        // Items whose exchCat is null or doesn't match any distribution category
+        var distribSlugs = (DISTRIB[slot]||[]).map(function(d){ return slugify(d.name); });
+        catItems = allItems.filter(function(it){
+            return !it.exchCat || distribSlugs.indexOf(it.exchCat) === -1;
+        });
+        // Show the orphan card only when there are such items
+        var orphanCard = document.getElementById('other-card-'+di+'-'+slot);
+        if(orphanCard) orphanCard.style.display = catItems.length > 0 ? '' : 'none';
+    } else {
+        catItems = allItems.filter(function(it){ return it.exchCat===catSlug; });
+    }
 
     var tagsDiv = document.getElementById('tags_'+di+'_'+slot+'_'+catSlug);
     var cellEl  = document.querySelector('.cat-card[data-day="'+di+'"][data-slot="'+slot+'"][data-cat-slug="'+catSlug+'"]');
@@ -1657,6 +1743,67 @@ for(var di=0;di<7;di++){
     });
 }
 
+/* ── Copy-day logic ──────────────────────────────────── */
+var _cpSourceDay = null;
+window.openCopyPopover = function(e, di) {
+    e.stopPropagation();
+    _cpSourceDay = di;
+    var days = @json($days);
+    document.getElementById('cp-source-name').textContent = days[di];
+    // Mark source row disabled, uncheck all
+    document.querySelectorAll('.cp-day-check').forEach(function(cb) {
+        cb.checked = false;
+    });
+    document.querySelectorAll('.cp-day-row').forEach(function(row) {
+        var val = parseInt(row.querySelector('input').value, 10);
+        if (val === di) {
+            row.classList.add('cp-source');
+        } else {
+            row.classList.remove('cp-source');
+        }
+    });
+    var pop = document.getElementById('copy-day-popover');
+    pop.style.display = 'block';
+    // Position near the button
+    var btn = e.currentTarget;
+    var rect = btn.getBoundingClientRect();
+    var popW = 220;
+    var left = Math.min(rect.left, window.innerWidth - popW - 12);
+    pop.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+    pop.style.left = Math.max(8, left) + 'px';
+};
+window.closeCopyPopover = function() {
+    document.getElementById('copy-day-popover').style.display = 'none';
+    _cpSourceDay = null;
+};
+window.applyCopyDay = function() {
+    if (_cpSourceDay === null) return;
+    var targets = [];
+    document.querySelectorAll('.cp-day-check:checked').forEach(function(cb) {
+        targets.push(parseInt(cb.value, 10));
+    });
+    if (targets.length === 0) { closeCopyPopover(); return; }
+    SLOTS.forEach(function(slot) {
+        var srcKey = _cpSourceDay + '_' + slot;
+        var srcItems = STATE[srcKey] || [];
+        targets.forEach(function(tdi) {
+            var tKey = tdi + '_' + slot;
+            // Deep clone the source items
+            STATE[tKey] = JSON.parse(JSON.stringify(srcItems));
+            renderAll(tdi, slot);
+        });
+    });
+    closeCopyPopover();
+    scheduleAutosave();
+};
+// Close popover on outside click
+document.addEventListener('click', function(e) {
+    var pop = document.getElementById('copy-day-popover');
+    if (pop && pop.style.display === 'block' && !pop.contains(e.target) && !e.target.closest('.copy-day-btn')) {
+        closeCopyPopover();
+    }
+});
+
 /* ── Sync on submit ───────────────────────────────────── */
 document.getElementById('mp-form').addEventListener('submit',function(){
     for(var di=0;di<7;di++){
@@ -1669,6 +1816,138 @@ document.getElementById('mp-form').addEventListener('submit',function(){
 
 }());
 </script>
+
+{{-- ── Repeat Plan Modal ──────────────────────────────────────── --}}
+<div id="repeat-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;align-items:center;justify-content:center" onclick="if(event.target===this)closeRepeatModal()">
+    <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:1.75rem 2rem;width:min(420px,94vw)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
+            <h3 style="font-size:1rem;font-weight:800;color:var(--text-primary)">&#x1F501; Repeat This Meal Plan</h3>
+            <button type="button" onclick="closeRepeatModal()" style="background:none;border:none;font-size:1.3rem;color:var(--text-muted);cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1.2rem;line-height:1.55">
+            Creates identical copies of this plan for upcoming week(s).
+            Weeks that already have a plan for this patient will be skipped automatically.
+        </p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
+            <button type="button" class="repeat-pill" onclick="setRepeatWeeks(1)">1 week</button>
+            <button type="button" class="repeat-pill" onclick="setRepeatWeeks(2)">2 weeks</button>
+            <button type="button" class="repeat-pill" onclick="setRepeatWeeks(4)">4 weeks</button>
+            <button type="button" class="repeat-pill" onclick="setRepeatWeeks(8)">8 weeks</button>
+            <button type="button" class="repeat-pill" onclick="setRepeatWeeks(12)">12 weeks</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1.3rem">
+            <label style="font-size:.8rem;font-weight:700;white-space:nowrap;color:var(--text-primary)">Repeat for</label>
+            <input type="number" id="repeat-weeks-input" min="1" max="52" value="4"
+                style="width:72px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:7px;font-size:.88rem;text-align:center">
+            <span style="font-size:.8rem;color:var(--text-muted)">upcoming week(s)</span>
+        </div>
+        <div id="repeat-result" style="display:none;padding:.6rem .9rem;border-radius:8px;font-size:.8rem;font-weight:600;margin-bottom:1rem"></div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-end">
+            <button type="button" onclick="closeRepeatModal()"
+                style="padding:.48rem 1.1rem;background:#f3f4f6;border:1px solid var(--border);border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer">Cancel</button>
+            <button type="button" id="repeat-submit-btn" onclick="submitRepeat()"
+                style="padding:.48rem 1.3rem;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .15s">
+                Create Copies
+            </button>
+        </div>
+    </div>
+</div>
+<style>
+.repeat-pill {
+    padding:.32rem .75rem;
+    background:#f3f0ff;border:1px solid #c4b5fd;
+    border-radius:20px;font-size:.75rem;font-weight:700;
+    color:#6d28d9;cursor:pointer;transition:background .15s;
+}
+.repeat-pill:hover,.repeat-pill.active { background:#7c3aed;color:#fff;border-color:#7c3aed; }
+</style>
+<script>
+function openRepeatModal() {
+    document.getElementById('repeat-weeks-input').value = 4;
+    document.getElementById('repeat-result').style.display = 'none';
+    document.getElementById('repeat-submit-btn').disabled = false;
+    document.getElementById('repeat-submit-btn').textContent = 'Create Copies';
+    document.querySelectorAll('.repeat-pill').forEach(function(p){ p.classList.remove('active'); });
+    var ov = document.getElementById('repeat-overlay');
+    ov.style.display = 'flex';
+}
+function closeRepeatModal() {
+    document.getElementById('repeat-overlay').style.display = 'none';
+}
+function setRepeatWeeks(n) {
+    document.getElementById('repeat-weeks-input').value = n;
+    document.querySelectorAll('.repeat-pill').forEach(function(p){ p.classList.remove('active'); });
+    event.currentTarget.classList.add('active');
+}
+function submitRepeat() {
+    var weeks = parseInt(document.getElementById('repeat-weeks-input').value, 10);
+    if (!weeks || weeks < 1 || weeks > 52) {
+        alert('Please enter a number between 1 and 52.');
+        return;
+    }
+    var btn = document.getElementById('repeat-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+    var res = document.getElementById('repeat-result');
+    res.style.display = 'none';
+
+    fetch('{{ route('meal-planner.repeat', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ weeks: weeks }),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        res.style.display = 'block';
+        if (data.ok) {
+            res.style.background = '#dcfce7';
+            res.style.color = '#15803d';
+            res.style.border = '1px solid #86efac';
+            res.textContent = '✓ ' + data.message;
+            btn.textContent = 'Done';
+        } else {
+            res.style.background = '#fef2f2';
+            res.style.color = '#dc2626';
+            res.style.border = '1px solid #fca5a5';
+            res.textContent = data.message || 'Something went wrong.';
+            btn.disabled = false;
+            btn.textContent = 'Create Copies';
+        }
+    })
+    .catch(function() {
+        res.style.display = 'block';
+        res.style.background = '#fef2f2';
+        res.style.color = '#dc2626';
+        res.style.border = '1px solid #fca5a5';
+        res.textContent = 'Network error. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Create Copies';
+    });
+}
+</script>
+
+{{-- ── Copy-day popover ──────────────────────────────────────── --}}
+<div id="copy-day-popover" role="dialog" aria-modal="true" aria-label="Copy day">
+    <h4>
+        <span id="cp-title">Copy <strong id="cp-source-name"></strong> to…</span>
+        <button class="cp-close" type="button" onclick="closeCopyPopover()" aria-label="Close">&times;</button>
+    </h4>
+    <div id="cp-day-list">
+        @foreach($days as $di => $dayName)
+            <label class="cp-day-row" id="cp-row-{{ $di }}">
+                <input type="checkbox" class="cp-day-check" value="{{ $di }}">
+                <span>{{ $dayName }}</span>
+                <span style="font-size:.68rem;color:var(--text-muted);margin-left:auto">{{ $mealPlanner->week_start->addDays($di)->format('d M') }}</span>
+            </label>
+        @endforeach
+    </div>
+    <button type="button" class="cp-apply" onclick="applyCopyDay()">Copy items</button>
+    <p class="cp-note">Existing items in target day(s) will be replaced.</p>
+</div>
 
 {{-- ── PDF Preview Modal ─────────────────────────────────────── --}}
 <div id="pdf-preview-overlay" role="dialog" aria-modal="true" aria-label="PDF Preview">

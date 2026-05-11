@@ -13,12 +13,16 @@ class PatientVisit extends Model
         'weight',
         'height',
         'notes',
+        'oedema',
+        'oedema_changed_at',
     ];
 
     protected $casts = [
-        'visited_at' => 'date',
-        'weight'     => 'decimal:2',
-        'height'     => 'decimal:2',
+        'visited_at'        => 'datetime',
+        'weight'            => 'decimal:2',
+        'height'            => 'decimal:2',
+        'oedema'            => 'boolean',
+        'oedema_changed_at' => 'datetime',
     ];
 
     public function patient(): BelongsTo
