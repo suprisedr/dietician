@@ -50,6 +50,15 @@ class EmailTemplate extends Model
     public static function meta(): array
     {
         return [
+            'health_journey_welcome' => [
+                'label'           => 'Health Journey Welcome',
+                'description'     => 'Sent to patients when they start their health journey.',
+                'icon'            => '🌟',
+                'schedule'        => 'On enrollment',
+                'default_subject' => 'Your Health Journey Starts Here',
+                'default_heading' => 'Your Health Journey Starts Here — You\'ve Got This!',
+                'default_body'    => "<p>Congratulations on taking this important first step toward prioritizing your health through structured meal planning. Making the decision to commit to nourishing your body is a powerful one and I want to commend you for choosing to invest in yourself.</p>\n<p>Starting a new eating plan can feel overwhelming at first and that is completely normal.</p>\n<p>Please remember: this journey is not about perfection, but about progress. Each balanced meal, each mindful choice and each day you follow your plan is a step toward more energy, improved wellbeing, and long-term health.</p>\n<p><strong>What you can look forward to:</strong></p>\n<ul>\n<li>Increased energy levels to get through your day with ease</li>\n<li>Improved focus and mood as your body receives consistent, quality nutrition</li>\n<li>A sense of control and confidence that comes from fueling your body intentionally</li>\n<li>Celebrating non-scale victories like better sleep, clearer skin, or looser clothing</li>\n</ul>\n<p>There will be days that are easier than others. If you have a meal that is not on the plan, view it as one moment, not a failure. Simply resume with your next planned meal. Consistency over time is what creates lasting results not rigid perfection.</p>\n<p><strong>My tips for success:</strong></p>\n<ul>\n<li><strong>Plan and prep:</strong> Set aside time each week to prepare. Future you will be grateful.</li>\n<li><strong>Stay curious:</strong> Notice how different foods make you feel. You're learning what works best for your body.</li>\n<li><strong>Reach out:</strong> If you have questions or feel stuck, I am here to support and adjust the plan with you. You do not have to do this alone.</li>\n</ul>\n<p>You have already done the hardest part by starting. I am confident in your ability to succeed and I am here to guide you every step of the way.</p>\n<p>Warm regards,<br><strong>{dietician_name}</strong></p>",
+            ],
             'motivational_reminder' => [
                 'label'           => 'Motivational Reminder',
                 'description'     => 'Sent weekly to patients who have motivational reminders enabled.',

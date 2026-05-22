@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\HealthJourneyWelcomeMail;
 use App\Mail\MotivationalReminderMail;
 use App\Mail\WeeklyMealPlanReminderMail;
 use App\Models\EmailTemplate;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 class EmailTemplateController extends Controller
 {
     private const TYPES = [
+        'health_journey_welcome',
         'motivational_reminder',
         'weekly_meal_plan_reminder',
     ];
@@ -74,8 +76,9 @@ class EmailTemplateController extends Controller
         ]);
 
         $mailable = match ($type) {
-            'motivational_reminder'     => new MotivationalReminderMail($patient, $dietician, 1, $template),
-            'weekly_meal_plan_reminder' => new WeeklyMealPlanReminderMail($patient, $dietician, null, $template),
+            'health_journey_welcome'     => new HealthJourneyWelcomeMail($patient, $dietician, $template),
+            'motivational_reminder'      => new MotivationalReminderMail($patient, $dietician, 1, $template),
+            'weekly_meal_plan_reminder'  => new WeeklyMealPlanReminderMail($patient, $dietician, null, $template),
         };
 
         return response($mailable->render())
@@ -110,8 +113,9 @@ class EmailTemplateController extends Controller
         ]);
 
         $mailable = match ($type) {
-            'motivational_reminder'     => new MotivationalReminderMail($patient, $dietician, 1, $template),
-            'weekly_meal_plan_reminder' => new WeeklyMealPlanReminderMail($patient, $dietician, null, $template),
+            'health_journey_welcome'     => new HealthJourneyWelcomeMail($patient, $dietician, $template),
+            'motivational_reminder'      => new MotivationalReminderMail($patient, $dietician, 1, $template),
+            'weekly_meal_plan_reminder'  => new WeeklyMealPlanReminderMail($patient, $dietician, null, $template),
         };
 
         Mail::to($dietician->email, $dietician->name)->send($mailable);

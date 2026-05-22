@@ -19,8 +19,8 @@
 
     $weightOptions = [
         'actual' => ['label' => 'Actual Body Weight',                'val' => $actualWt],
-        'ibw'    => ['label' => 'Ideal Body Weight — Devine (IBW)',  'val' => $devineIbw],
-        'abw'    => ['label' => 'Nutritional Dosing Weight (NDW)',   'val' => $ndw],
+        'ibw'    => ['label' => 'Ideal Body Weight — (IBW)',  'val' => $devineIbw],
+        'abw'    => ['label' => 'Adjusted Body Weight (ABW)',   'val' => $ndw],
     ];
     $recommended     = $isObese ? 'abw' : 'actual';
     $initialWeightKg = $weightOptions[$recommended]['val'] ?? $actualWt;
@@ -220,6 +220,38 @@
                     </p>
                 </div>
 
+                {{-- Ascites / Abdominal Fluid Adjustment --}}
+                <div style="grid-column:1/-1">
+                    <label class="en-label">Ascites / Abdominal Fluid
+                        <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-muted)">— subtracts estimated abdominal fluid from dosing weight</span>
+                    </label>
+                    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                        @php
+                            $initAscites = old('ascites_adjustment_kg') !== null
+                                ? (float) old('ascites_adjustment_kg')
+                                : 0;
+                        @endphp
+                        <select id="ascites-select" class="en-input" style="max-width:300px" onchange="updateAscites(this.value)">
+                            <option value="0"  {{ $initAscites == 0 ? 'selected' : '' }}>None &mdash; no ascites</option>
+                            <option value="2.2"  {{ $initAscites == 2.2 ? 'selected' : '' }}>Minimal &mdash; approx. 2.2 kg abdominal fluid</option>
+                            <option value="6"  {{ $initAscites == 6 ? 'selected' : '' }}>Moderate &mdash; approx. 6 kg abdominal fluid</option>
+                            <option value="14" {{ $initAscites == 14 ? 'selected' : '' }}>Severe &mdash; approx. 14 kg abdominal fluid</option>
+                            <option value="custom" {{ ($initAscites > 0 && !in_array($initAscites, [2.2,6,14])) ? 'selected' : '' }}>Custom &mdash; enter amount below</option>
+                        </select>
+                        <div id="ascites-custom-wrap" style="display:{{ ($initAscites > 0 && !in_array($initAscites, [2.2,6,14])) ? '' : 'none' }}">
+                            <input type="number" id="ascites-custom-input" min="0" max="40" step="0.5"
+                                   value="{{ ($initAscites > 0 && !in_array($initAscites, [2.2,6,14])) ? $initAscites : '' }}"
+                                   placeholder="kg excess" class="en-input" style="max-width:150px"
+                                   oninput="applyAscites()">
+                        </div>
+                    </div>
+                    <input type="hidden" name="ascites_adjustment_kg" id="ascites-adj-input" value="{{ $initAscites }}">
+                    <p id="ascites-hint" style="display:{{ $initAscites > 0 ? 'block' : 'none' }};font-size:.72rem;color:#92400e;margin-top:.35rem;padding:.45rem .65rem;background:#fffbeb;border:1px solid #fde68a;line-height:1.6">
+                        Estimated dry weight for dosing: <strong id="ascites-dry-weight">&mdash;</strong>
+                        &mdash; ascites/fluid weight excluded from energy &amp; protein target calculations per ASPEN/ESPEN.
+                    </p>
+                </div>
+
                 {{-- Fluid Restriction --}}
                 <div>
                     <label class="en-label">Fluid Restriction</label>
@@ -310,12 +342,6 @@
                 {{-- Summary banner --}}
                 <div id="res-summary-banner" style="display:none;padding:1.1rem 1.5rem;background:#f0fdf4;border-bottom:2px solid var(--primary)">
                     <div id="res-banner-formula" style="font-size:1.05rem;font-weight:800;color:var(--primary);margin-bottom:.55rem"></div>
-                    <ul style="margin:0 0 0 1.1rem;padding:0;list-style:disc;display:flex;flex-direction:column;gap:.3rem">
-                        <li style="font-size:.82rem;color:var(--text-primary)">Start at 20 mL/hr, titrate by 10&ndash;20 mL/hr every 4 hours to goal rate</li>
-                        <li id="res-banner-protein" style="font-size:.82rem;color:var(--text-primary)"></li>
-                        <li id="res-banner-flush" style="font-size:.82rem;color:var(--text-primary)"></li>
-                    </ul>
-                    <div id="res-vol-restrict" style="margin-top:.55rem;font-size:.78rem;font-weight:700"></div>
                 </div>
 
                 {{-- 3-col grid: Macros | Fluid | Anthropometrics --}}
@@ -395,50 +421,6 @@
                             </div>
                         </dl>
                     </div>
-                </div>
-
-                {{-- Formula info table --}}
-                <div style="border-bottom:1px solid var(--border)">
-                    <div style="padding:.65rem 1.5rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);background:#f8fafc">
-                        Formula Information &nbsp;<span id="res-formula-label" style="color:var(--primary);font-size:.75rem;text-transform:none;font-weight:600;letter-spacing:0"></span>
-                    </div>
-                    <div style="padding:.75rem 1.5rem 0">
-                        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-                            <thead>
-                                <tr style="border-bottom:2px solid var(--border)">
-                                    <th style="text-align:left;padding:.3rem .5rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Macronutrient</th>
-                                    <th style="text-align:right;padding:.3rem .5rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Per 1 000 mL</th>
-                                    <th style="text-align:right;padding:.3rem .5rem;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Daily Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="border-bottom:1px solid var(--border)">
-                                    <td style="padding:.4rem .5rem;color:var(--text-muted)">Energy</td>
-                                    <td id="res-ftbl-kcal-ml"  style="text-align:right;padding:.4rem .5rem;color:var(--text-primary)">&#x2014;</td>
-                                    <td id="res-kcal2"          style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--primary)">&#x2014;</td>
-                                </tr>
-                                <tr style="border-bottom:1px solid var(--border)">
-                                    <td style="padding:.4rem .5rem;color:var(--text-muted)">Protein</td>
-                                    <td id="res-ftbl-pro-ml"   style="text-align:right;padding:.4rem .5rem;color:var(--text-primary)">&#x2014;</td>
-                                    <td id="res-fml-protein"   style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--text-primary)">&#x2014;</td>
-                                </tr>
-                                <tr style="border-bottom:1px solid var(--border)">
-                                    <td style="padding:.4rem .5rem;color:var(--text-muted)">Carbohydrates</td>
-                                    <td id="res-ftbl-carbs-ml" style="text-align:right;padding:.4rem .5rem;color:var(--text-primary)">&#x2014;</td>
-                                    <td id="res-ftbl-carbs-daily" style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--text-primary)">&#x2014;</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:.4rem .5rem;color:var(--text-muted)">Fat</td>
-                                    <td id="res-ftbl-fat-ml"   style="text-align:right;padding:.4rem .5rem;color:var(--text-primary)">&#x2014;</td>
-                                    <td id="res-ftbl-fat-daily" style="text-align:right;padding:.4rem .5rem;font-weight:700;color:var(--text-primary)">&#x2014;</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p style="font-size:.68rem;color:var(--text-muted);margin:.65rem 0 .5rem;line-height:1.55">
-                            Manufacturers may change a formulation at any time. Nutrition information is based on generic formula data per 1 000 mL; verify against the manufacturer's current product data sheet.
-                        </p>
-                    </div>
-                    <div id="res-protein-adequacy" style="padding:.1rem 1rem .75rem;font-size:.78rem;font-weight:700"></div>
                 </div>
             </div>
 
