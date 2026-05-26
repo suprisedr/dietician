@@ -24,58 +24,6 @@
                         </svg>
                         Dashboard
                     </a>
-
-                    {{-- Patients --}}
-                    <a href="{{ route('patients.index') }}"
-                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;
-                              {{ request()->routeIs('patients.*') ? 'background:#e8f5e6;color:var(--primary-dark)' : 'color:var(--text-muted)' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
-                        </svg>
-                        Patients
-                    </a>
-
-                    {{-- Meal Library --}}
-                    <a href="{{ route('meal-items.index') }}"
-                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;
-                              {{ request()->routeIs('meal-items.*') ? 'background:#e8f5e6;color:var(--primary-dark)' : 'color:var(--text-muted)' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                        Meal Library
-                    </a>
-
-                    {{-- Email Templates --}}
-                    <a href="{{ route('email-templates.index') }}"
-                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;
-                              {{ request()->routeIs('email-templates.*') ? 'background:#e8f5e6;color:var(--primary-dark)' : 'color:var(--text-muted)' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        Email Templates
-                    </a>
-
-                    {{-- Planner dropdown --}}
-                    <div style="position:relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open"
-                                style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;background:none;border:none;cursor:pointer;
-                                       {{ request()->routeIs('meal-planner.*','pantry.*','grocery-lists.*','food-diary.*','recipes.*') ? 'background:#d8ede6;color:var(--secondary-dark)' : 'color:var(--text-muted)' }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            Planner
-                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.75rem;height:.75rem;transition:transform .2s" :style="open ? 'transform:rotate(180deg)' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div x-show="open" x-transition
-                             style="position:absolute;top:calc(100% + .35rem);left:0;background:#fff;border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 28px rgba(13,31,12,.13);z-index:50;overflow:hidden">
-                             <a href="{{ route('meal-planner.index') }}"  class="mn-dd-link">🗓️ Weekly Plans</a>
-                            <a href="{{ route('recipes.index') }}"       class="mn-dd-link">🍽️ Recipes</a>
-                            <a href="{{ route('grocery-lists.index') }}" class="mn-dd-link">🛒 Grocery Lists</a>
-                            <a href="{{ route('food-diary.index') }}"    class="mn-dd-link">📓 Food Diaries</a>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -170,12 +118,14 @@
     <!-- ── Mobile menu ── -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden" style="border-top:1px solid var(--border)">
         <div class="pt-2 pb-3 space-y-1 px-3">
-            <x-responsive-nav-link :href="route('dashboard')"          :active="request()->routeIs('dashboard')">{{ __('Dashboard') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('patients.index')"     :active="request()->routeIs('patients.*')">{{ __('Patients') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('meal-items.index')"   :active="request()->routeIs('meal-items.*')">{{ __('Meal Library') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('dashboard')"             :active="request()->routeIs('dashboard')">{{ __('Dashboard') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('patients.index')"        :active="request()->routeIs('patients.*')">{{ __('Patients') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('meal-items.index')"      :active="request()->routeIs('meal-items.*')">{{ __('Meal Library') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('email-templates.index')" :active="request()->routeIs('email-templates.*')">{{ __('Email Templates') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('meal-planner.index')" :active="request()->routeIs('meal-planner.*')">{{ __('Weekly Plans') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('grocery-lists.index')" :active="request()->routeIs('grocery-lists.*')">{{ __('Grocery Lists') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('meal-planner.index')"    :active="request()->routeIs('meal-planner.*')">{{ __('Weekly Plans') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('recipes.index')"         :active="request()->routeIs('recipes.*')">{{ __('Recipes') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('grocery-lists.index')"   :active="request()->routeIs('grocery-lists.*')">{{ __('Grocery Lists') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('food-diary.index')"      :active="request()->routeIs('food-diary.*')">{{ __('Food Diaries') }}</x-responsive-nav-link>
         </div>
         <div class="pt-4 pb-3 border-t border-gray-200 px-4">
             <div style="font-weight:700;font-size:.9rem;color:var(--text-primary)">{{ Auth::user()->name }}</div>

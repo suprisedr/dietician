@@ -10,10 +10,10 @@ body {
     color: #1e293b;
     background: #fff;
     margin: 0;
-    padding: 24px 28px 28px;
+    padding: 22px 26px 26px;
 }
 
-/* ── Letterhead / header ── */
+/* ── Letterhead ── */
 .hdr-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
 .hdr-logo  { width: 90px; vertical-align: middle; }
 .hdr-logo img { max-width: 80px; max-height: 60px; }
@@ -22,309 +22,290 @@ body {
 .hdr-sub   { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
 .hdr-meta  { vertical-align: middle; text-align: right; font-size: 7.5pt; color: #64748b; }
 .hdr-meta strong { color: #1e293b; }
-
-.divider { border: none; border-top: 2px solid #15803d; margin: 8px 0 12px; }
+.divider { border: none; border-top: 2px solid #15803d; margin: 8px 0 10px; }
 
 /* ── Page title ── */
 .page-title { font-size: 13pt; font-weight: bold; color: #0f172a; margin: 0 0 2px; }
-.page-sub   { font-size: 8pt; color: #64748b; margin: 0 0 12px; }
+.page-sub   { font-size: 8pt; color: #64748b; margin: 0 0 10px; }
 
-/* ── Patient info box ── */
+/* ── Patient box ── */
 .patient-box {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-bottom: 14px;
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-radius: 4px; padding: 7px 10px; margin-bottom: 12px;
 }
 .patient-grid { width: 100%; border-collapse: collapse; }
-.patient-grid td { font-size: 8pt; padding: 2px 8px 2px 0; vertical-align: top; }
-.patient-label { color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; font-size: 6.5pt; width: 80px; }
-.patient-value { color: #0f172a; font-weight: bold; }
+.patient-grid td { font-size: 7.5pt; padding: 2px 8px 2px 0; vertical-align: top; }
+.pat-lbl { color: #64748b; font-weight: bold; text-transform: uppercase;
+           letter-spacing: .04em; font-size: 6pt; width: 70px; }
+.pat-val { color: #0f172a; font-weight: bold; }
 
-/* ── Section title ── */
-.section-title {
-    font-size: 8pt; font-weight: bold; text-transform: uppercase;
-    letter-spacing: .07em; color: #fff;
-    background: #15803d; padding: 4px 10px;
-    margin: 14px 0 0;
-}
+/* ── Calculation block ── */
+.calc-block { margin-bottom: 18px; }
 
-/* ── Results table ── */
-table.calc-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 4px;
+/* ── Section header bar ── */
+.sec-bar {
+    background: #15803d; color: #fff;
+    font-size: 7.5pt; font-weight: bold;
+    text-transform: uppercase; letter-spacing: .07em;
+    padding: 4px 8px; margin-bottom: 0;
 }
-table.calc-table th {
-    background: #f1f5f9;
-    font-size: 7pt;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #475569;
-    padding: 4px 6px;
-    text-align: left;
-    border-bottom: 1.5px solid #cbd5e1;
-}
-table.calc-table th.right,
-table.calc-table td.right { text-align: right; }
-table.calc-table td {
-    font-size: 8pt;
-    padding: 4px 6px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
-    vertical-align: top;
-}
-table.calc-table tr.alt td { background: #f8fafc; }
-.sub-val { font-size: 6.5pt; color: #94a3b8; margin-top: 1px; }
-.badge-green {
-    background: #dcfce7; color: #15803d;
-    padding: 1px 5px; border-radius: 2px;
-    font-size: 7pt; font-weight: bold;
-}
+.sec-bar-meta { font-weight: normal; font-size: 6.5pt; letter-spacing: 0; float: right; }
 
-/* ── Macro mini-table per calc ── */
-table.macro-mini {
-    width: 100%; border-collapse: collapse;
-    margin-top: 5px;
-    border: 1px solid #e2e8f0;
+/* ── Summary banner ── */
+.banner {
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-left: 3px solid #15803d;
+    padding: 7px 10px; margin-bottom: 0;
 }
-table.macro-mini th {
-    background: #f8fafc; font-size: 6.5pt; font-weight: bold;
-    text-transform: uppercase; letter-spacing: .04em; color: #94a3b8;
-    padding: 3px 5px; border-bottom: 1px solid #e2e8f0; text-align: left;
+.banner-formula { font-size: 9.5pt; font-weight: bold; color: #15803d; margin-bottom: 3px; }
+.banner-detail  { font-size: 7.5pt; color: #166534; margin-bottom: 1px; }
+
+/* ── 3-col results grid ── */
+.grid-table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; }
+.grid-table td { vertical-align: top; padding: 8px 10px; border-right: 1px solid #e2e8f0; }
+.grid-table td:last-child { border-right: none; }
+.col-head {
+    font-size: 6pt; font-weight: bold; text-transform: uppercase;
+    letter-spacing: .08em; color: #64748b; margin-bottom: 7px;
+    padding-bottom: 4px; border-bottom: 1px solid #e2e8f0;
 }
-table.macro-mini td {
-    font-size: 7.5pt; padding: 3px 5px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
+.row-lbl  { font-size: 7pt; color: #64748b; margin-bottom: 1px; }
+.row-val  { font-size: 9.5pt; font-weight: bold; color: #0f172a; margin-bottom: 1px; }
+.row-val.green { color: #15803d; }
+.row-sub  { font-size: 6.5pt; color: #94a3b8; margin-bottom: 6px; }
+
+/* ── Startup protocol ── */
+.startup {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    font-size: 7.5pt; color: #475569;
+    padding: 5px 8px; margin-top: 0;
 }
-table.macro-mini td.right { text-align: right; }
-table.macro-mini tr:last-child td { border-bottom: none; }
+.startup strong { color: #0f172a; }
+
+/* ── Adequacy badge ── */
+.badge-ok  { background: #dcfce7; color: #15803d; padding: 1px 5px; border-radius: 2px; font-size: 6.5pt; font-weight: bold; }
+.badge-err { background: #fee2e2; color: #b91c1c; padding: 1px 5px; border-radius: 2px; font-size: 6.5pt; font-weight: bold; }
+
+/* ── Notes ── */
+.notes-box { background: #fffbeb; border: 1px solid #fde68a; font-size: 7.5pt; color: #1e293b; padding: 4px 8px; margin-top: 0; }
 
 /* ── Disclaimer ── */
-.disclaimer {
-    font-size: 6.5pt; color: #94a3b8; line-height: 1.5;
-    border-top: 1px solid #e2e8f0; margin-top: 18px; padding-top: 6px;
-}
+.disclaimer { font-size: 6pt; color: #94a3b8; line-height: 1.5;
+              border-top: 1px solid #e2e8f0; margin-top: 16px; padding-top: 6px; }
 
-/* ── Empty state ── */
+/* ── Empty ── */
 .empty { font-size: 9pt; color: #94a3b8; padding: 20px 0; text-align: center; }
 </style>
 </head>
 <body>
 
-{{-- ── Header ─────────────────────────────────────────────────────────── --}}
+{{-- ── Letterhead ────────────────────────────────────────────────── --}}
 <table class="hdr-table">
     <tr>
         @if($letterhead)
-        <td class="hdr-logo">
-            <img src="{{ $letterhead }}" alt="">
-        </td>
+        <td class="hdr-logo"><img src="{{ $letterhead }}" alt=""></td>
         @endif
         <td class="hdr-text">
             <div class="hdr-brand">MindfulNutrico</div>
-            <div class="hdr-sub">Enteral Nutrition Calculator &mdash; SASPEN / ESPEN Guidelines</div>
+            <div class="hdr-sub">Enteral Nutrition &mdash; Tube Feed Recommendations &mdash; SASPEN / ESPEN</div>
         </td>
         <td class="hdr-meta">
             <strong>{{ now()->format('d F Y') }}</strong><br>
-            Generated by {{ auth()->user()->name }}
+            {{ auth()->user()->name }}
         </td>
     </tr>
 </table>
 <hr class="divider">
 
-{{-- ── Page title ─────────────────────────────────────────────────────── --}}
 <div class="page-title">Tube Feed Prescription</div>
 <div class="page-sub">Enteral Nutrition Calculation Report</div>
 
-{{-- ── Patient demographics ─────────────────────────────────────────── --}}
+{{-- ── Patient demographics ──────────────────────────────────────── --}}
 <div class="patient-box">
     <table class="patient-grid">
         <tr>
-            <td class="patient-label">Patient</td>
-            <td class="patient-value">{{ $patient->full_name }}</td>
-            <td class="patient-label">Gender</td>
-            <td class="patient-value">{{ ucfirst($patient->gender ?? '—') }}</td>
-            <td class="patient-label">Age</td>
-            <td class="patient-value">{{ $patient->age ? $patient->age . ' yrs' : '—' }}</td>
-        </tr>
-        <tr>
-            <td class="patient-label">Weight</td>
-            <td class="patient-value">{{ $patient->weight ? $patient->weight . ' kg' : '—' }}</td>
-            <td class="patient-label">Height</td>
-            <td class="patient-value">{{ $patient->height ? $patient->height . ' cm' : '—' }}</td>
-            <td class="patient-label">BMI</td>
-            <td class="patient-value">{{ $patient->bmi ? number_format($patient->bmi, 1) . ' kg/m²' : '—' }}</td>
+            <td class="pat-lbl">Patient</td>
+            <td class="pat-val">{{ $patient->full_name }}</td>
+            <td class="pat-lbl">Gender</td>
+            <td class="pat-val">{{ ucfirst($patient->gender ?? '—') }}</td>
+            <td class="pat-lbl">Age</td>
+            <td class="pat-val">{{ $patient->age ? $patient->age.' yrs' : '—' }}</td>
+            <td class="pat-lbl">Weight</td>
+            <td class="pat-val">{{ $patient->weight ? $patient->weight.' kg' : '—' }}</td>
+            <td class="pat-lbl">Height</td>
+            <td class="pat-val">{{ $patient->height ? $patient->height.' cm' : '—' }}</td>
+            <td class="pat-lbl">BMI</td>
+            <td class="pat-val">{{ $patient->bmi ? number_format($patient->bmi,1).' kg/m²' : '—' }}</td>
         </tr>
     </table>
 </div>
 
-{{-- ── Calculations ─────────────────────────────────────────────────── --}}
+{{-- ── Calculations ──────────────────────────────────────────────── --}}
 @if($calculations->isEmpty())
     <div class="empty">No saved calculations for this patient.</div>
 @else
-    @php
-        $formulaDb = [
-            '1.0' => ['proteinGL' => 40.0,  'carbsGL' => 127.0, 'fatGL' => 35.4, 'freeWater' => 0.85],
-            '1.2' => ['proteinGL' => 55.5,  'carbsGL' => 169.4, 'fatGL' => 39.3, 'freeWater' => 0.80],
-            '1.5' => ['proteinGL' => 62.0,  'carbsGL' => 200.0, 'fatGL' => 50.0, 'freeWater' => 0.70],
-        ];
-    @endphp
 
-    @foreach($calculations as $i => $calc)
-        @php
-            $density   = (string)number_format((float)$calc->formula_density, 1);
-            $formula   = $formulaDb[$density] ?? $formulaDb['1.0'];
-            $volumeL   = $calc->daily_volume_ml / 1000;
-            $fmlPro    = round($volumeL * $formula['proteinGL'], 1);
-            $fmlCarbs  = round($volumeL * $formula['carbsGL'], 1);
-            $fmlFat    = round($volumeL * $formula['fatGL'], 1);
-            $fwMl      = round($calc->daily_volume_ml * $formula['freeWater']);
-            $adequate  = $fmlPro >= $calc->protein_target_g;
+@php
+$formulaDb = [
+    '1.0' => ['proteinGL' => 40.0,  'carbsGL' => 127.0, 'fatGL' => 35.4, 'freeWater' => 0.85],
+    '1.2' => ['proteinGL' => 55.5,  'carbsGL' => 169.4, 'fatGL' => 39.3, 'freeWater' => 0.80],
+    '1.5' => ['proteinGL' => 62.0,  'carbsGL' => 200.0, 'fatGL' => 50.0, 'freeWater' => 0.70],
+];
 
-            $heightCm  = (float)($patient->height ?? 0);
-            $age       = (int)($patient->age ?? 0);
-            $isMale    = strtolower($patient->gender ?? 'male') !== 'female';
-            $wt        = (float)$calc->weight_kg;
-            $ree = ($heightCm > 0 && $age > 0)
-                ? round(($isMale
-                    ? (10*$wt) + (6.25*$heightCm) - (5*$age) + 5
-                    : (10*$wt) + (6.25*$heightCm) - (5*$age) - 161))
-                : null;
+$heightCm = (float)($patient->height ?? 0);
+$ageYrs   = (int)($patient->age ?? 0);
+$isMale   = strtolower($patient->gender ?? 'male') !== 'female';
+$actualWt = (float)($patient->weight ?? 0);
+$heightIn = $heightCm / 2.54;
+$devineIbw = $heightCm > 0
+    ? max(0, round(($isMale ? 50.0 : 45.5) + 2.3 * max(0, $heightIn - 60), 1))
+    : null;
+$bmi = (float)($patient->bmi ?? 0);
+$bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($bmi >= 30 ? 'Obese class I' : ($bmi >= 25 ? 'Overweight' : ($bmi >= 18.5 ? 'Normal weight' : 'Underweight'))));
+@endphp
 
-            $flushPerFeed = $calc->additional_water_ml > 0 ? round($calc->additional_water_ml / 6) : 0;
-        @endphp
+@foreach($calculations as $i => $calc)
+@php
+    $density      = (string) number_format((float)$calc->formula_density, 1);
+    $formula      = $formulaDb[$density] ?? $formulaDb['1.0'];
+    $volumeL      = $calc->daily_volume_ml / 1000;
+    $fmlPro       = round($volumeL * $formula['proteinGL'], 1);
+    $fmlCarbs     = round($volumeL * $formula['carbsGL'], 1);
+    $fmlFat       = round($volumeL * $formula['fatGL'], 1);
+    $fwMl         = round($calc->daily_volume_ml * $formula['freeWater']);
+    $totalFluidMl = $fwMl + (float)$calc->additional_water_ml;
+    $adequate     = $fmlPro >= $calc->protein_target_g;
 
-        <div class="section-title">
-            Calculation #{{ $i + 1 }}
-            @if($calc->label) &mdash; {{ $calc->label }} @endif
-            &nbsp;&nbsp;
-            <span style="font-weight:normal;font-size:7pt;letter-spacing:0">{{ $calc->created_at->format('d M Y H:i') }}</span>
+    $flushFreqHours = (int) filter_var($calc->water_flush_frequency ?? '6-hourly', FILTER_SANITIZE_NUMBER_INT);
+    $flushFreqHours = max(1, $flushFreqHours ?: 6);
+    $flushesPerDay  = (int) round(24 / $flushFreqHours);
+    $flushVolMl     = (int)($calc->water_flush_ml ?? 30);
+    $flushTotalMl   = $flushVolMl * $flushesPerDay;
+
+    $wtLabels = ['actual' => 'Actual body weight', 'ibw' => 'IBW (Devine)', 'abw' => 'Adjusted (NDW)'];
+    $wtLabel  = $wtLabels[$calc->weight_type] ?? strtoupper($calc->weight_type);
+@endphp
+
+<div class="calc-block">
+
+    {{-- Section header bar --}}
+    <div class="sec-bar">
+        Calculation #{{ $i + 1 }}@if($calc->label) &mdash; {{ $calc->label }}@endif
+        <span class="sec-bar-meta">{{ $calc->created_at->format('d M Y H:i') }}</span>
+    </div>
+
+    {{-- Summary banner (mirrors UI banner) --}}
+    <div class="banner">
+        <div class="banner-formula">
+            Formula {{ number_format((float)$calc->formula_density,1) }} kcal/mL &mdash;
+            Goal rate: {{ number_format($calc->rate_ml_per_hour,1) }} mL/hr
+            over {{ $calc->feeding_hours_per_day }}h
         </div>
-
-        {{-- Primary results ── --}}
-        <table class="calc-table">
-            <thead>
-                <tr>
-                    <th>Parameter</th>
-                    <th class="right">Value</th>
-                    <th>Parameter</th>
-                    <th class="right">Value</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Weight Used</td>
-                    <td class="right">
-                        <strong>{{ number_format($calc->weight_kg, 1) }} kg</strong>
-                        <div class="sub-val">{{ strtoupper($calc->weight_type) }}</div>
-                    </td>
-                    <td>Formula Density</td>
-                    <td class="right"><strong>{{ number_format((float)$calc->formula_density, 1) }} kcal/mL</strong></td>
-                </tr>
-                <tr class="alt">
-                    <td>Energy Target</td>
-                    <td class="right">
-                        <strong>{{ number_format($calc->energy_target_kcal, 0) }} kcal/day</strong>
-                        <div class="sub-val">{{ $calc->energy_kcal_per_kg }} kcal/kg/day</div>
-                    </td>
-                    <td>Feed Duration</td>
-                    <td class="right"><strong>{{ $calc->feeding_hours_per_day }} hrs/day</strong></td>
-                </tr>
-                <tr>
-                    <td>Protein Target</td>
-                    <td class="right">
-                        <strong>{{ number_format($calc->protein_target_g, 1) }} g/day</strong>
-                        <div class="sub-val">{{ $calc->protein_g_per_kg }} g/kg/day</div>
-                    </td>
-                    <td>Daily Volume</td>
-                    <td class="right"><strong>{{ number_format($calc->daily_volume_ml, 0) }} mL/day</strong></td>
-                </tr>
-                <tr class="alt">
-                    <td>Infusion Rate</td>
-                    <td class="right"><strong>{{ number_format($calc->rate_ml_per_hour, 1) }} mL/hr</strong></td>
-                    <td>Additional Water</td>
-                    <td class="right">
-                        <strong>{{ number_format($calc->additional_water_ml, 0) }} mL/day</strong>
-                        @if($flushPerFeed > 0)
-                            <div class="sub-val">{{ $flushPerFeed }} mL &times; 6 flushes</div>
-                        @endif
-                    </td>
-                </tr>
-                <tr>
-                    <td>Free Water from Formula</td>
-                    <td class="right"><strong>{{ number_format($fwMl, 0) }} mL</strong></td>
-                    <td>Fluid Requirement (35 mL/kg)</td>
-                    <td class="right"><strong>{{ number_format($calc->fluid_requirement_ml, 0) }} mL</strong></td>
-                </tr>
-                @if($ree)
-                <tr class="alt">
-                    <td>REE &mdash; Mifflin-St Jeor</td>
-                    <td class="right"><strong>{{ number_format($ree, 0) }} kcal/day</strong></td>
-                    <td>Nitrogen</td>
-                    <td class="right"><strong>{{ round($calc->protein_target_g / 6.25, 1) }} g/day</strong></td>
-                </tr>
-                @endif
-            </tbody>
-        </table>
-
-        {{-- Formula macros ── --}}
-        <table class="macro-mini">
-            <thead>
-                <tr>
-                    <th>Formula Macros per Daily Volume ({{ number_format($calc->daily_volume_ml) }} mL)</th>
-                    <th class="right">Protein</th>
-                    <th class="right">Carbohydrates</th>
-                    <th class="right">Fat</th>
-                    <th>Protein adequacy</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ number_format((float)$calc->formula_density, 1) }} kcal/mL formula</td>
-                    <td class="right"><strong>{{ $fmlPro }} g</strong></td>
-                    <td class="right"><strong>{{ $fmlCarbs }} g</strong></td>
-                    <td class="right"><strong>{{ $fmlFat }} g</strong></td>
-                    <td>
-                        @if($adequate)
-                            <span class="badge-green">&#10003; Meets goal</span>
-                        @else
-                            <span style="font-size:7pt;color:#b91c1c;font-weight:bold;">
-                                &#9888; Below goal ({{ number_format($calc->protein_target_g, 1) }} g needed)
-                            </span>
-                        @endif
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        {{-- Start-up guidance ── --}}
-        <div style="font-size:7.5pt;color:#475569;margin-top:6px;padding:5px 8px;background:#f8fafc;border:1px solid #e2e8f0;">
-            <strong>Start-up protocol:</strong>
-            Start at 20 mL/hr, titrate by 10&ndash;20 mL/hr every 4 hours to goal rate of
-            <strong>{{ number_format($calc->rate_ml_per_hour, 1) }} mL/hr</strong>.
-            @if($calc->additional_water_ml > 0)
-                Flush with <strong>{{ $flushPerFeed }} mL</strong> water 6&times;/day (total {{ number_format($calc->additional_water_ml) }} mL).
-            @endif
+        <div class="banner-detail">
+            &#x25B8; {{ number_format($calc->protein_target_g,1) }} g protein/day
+            ({{ $calc->protein_g_per_kg }} g/kg &middot; {{ $wtLabel }})
         </div>
-
-        @if($calc->notes)
-        <div style="font-size:7.5pt;color:#1e293b;margin-top:5px;padding:4px 8px;background:#fffbeb;border:1px solid #fde68a;">
-            <strong>Notes:</strong> {{ $calc->notes }}
+        <div class="banner-detail">
+            &#x25B8; Water flush: {{ $flushVolMl }} mL every {{ $calc->water_flush_frequency ?? '6-hourly' }}
+            ({{ $flushesPerDay }}&times;/day &mdash; {{ number_format($flushTotalMl) }} mL/day)
         </div>
-        @endif
+    </div>
 
-    @endforeach
+    {{-- 3-column grid (Macronutrients | Fluid | Anthropometrics) --}}
+    <table class="grid-table">
+        <tr>
+
+            {{-- Macronutrients --}}
+            <td width="33%">
+                <div class="col-head">Macronutrients</div>
+
+                <div class="row-lbl">Feed Calories</div>
+                <div class="row-val">{{ number_format($calc->energy_target_kcal,0) }} kcal</div>
+                <div class="row-sub">({{ $calc->energy_kcal_per_kg }} kcal/kg &times; {{ number_format($calc->weight_kg,1) }}&thinsp;kg)</div>
+
+                <div class="row-lbl">Total Protein</div>
+                <div class="row-val">{{ number_format($calc->protein_target_g,1) }} g</div>
+                <div class="row-sub">({{ $calc->protein_g_per_kg }} g/kg &times; {{ number_format($calc->weight_kg,1) }}&thinsp;kg)</div>
+
+                <div class="row-lbl">Total Carbohydrates</div>
+                <div class="row-val">{{ $fmlCarbs }} g</div>
+                <div class="row-sub">from {{ number_format($calc->daily_volume_ml,0) }} mL formula</div>
+
+                <div class="row-lbl">Total Fat</div>
+                <div class="row-val">{{ $fmlFat }} g</div>
+                <div class="row-sub">
+                    @if($adequate)
+                        <span class="badge-ok">&#10003; Formula meets protein goal</span>
+                    @else
+                        <span class="badge-err">&#9888; Formula protein {{ $fmlPro }} g &lt; goal {{ number_format($calc->protein_target_g,1) }} g</span>
+                    @endif
+                </div>
+            </td>
+
+            {{-- Fluid --}}
+            <td width="33%">
+                <div class="col-head">Fluid</div>
+
+                <div class="row-lbl">Total Fluids</div>
+                <div class="row-val green">{{ number_format($totalFluidMl,0) }} mL</div>
+                <div class="row-sub">({{ number_format($totalFluidMl / max(1,(float)$calc->weight_kg),1) }} mL/kg/day)</div>
+
+                <div class="row-lbl">Daily Needs (35 mL/kg)</div>
+                <div class="row-val">{{ number_format($calc->fluid_requirement_ml,0) }} mL</div>
+                <div class="row-sub">35 mL/kg/day</div>
+
+                <div class="row-lbl">Water Flush</div>
+                <div class="row-val">{{ $flushVolMl }} mL every {{ $calc->water_flush_frequency ?? '6-hourly' }}</div>
+                <div class="row-sub">{{ $flushesPerDay }}&times;/day &mdash; {{ number_format($flushTotalMl,0) }} mL/day total</div>
+            </td>
+
+            {{-- Anthropometrics --}}
+            <td width="34%">
+                <div class="col-head">Anthropometrics</div>
+
+                <div class="row-lbl">Ideal Body Weight (Devine)</div>
+                <div class="row-val">{{ $devineIbw !== null ? number_format($devineIbw,1).' kg' : '—' }}</div>
+                <div class="row-sub">&nbsp;</div>
+
+                <div class="row-lbl">Actual Body Weight</div>
+                <div class="row-val">{{ $actualWt > 0 ? number_format($actualWt,1).' kg' : '—' }}</div>
+                <div class="row-sub">&nbsp;</div>
+
+                <div class="row-lbl">Nutritional Weight Used</div>
+                <div class="row-val green">{{ number_format($calc->weight_kg,1) }} kg</div>
+                <div class="row-sub">{{ $wtLabel }}</div>
+
+                <div class="row-lbl">BMI</div>
+                <div class="row-val">{{ $bmi > 0 ? number_format($bmi,1).' kg/m²' : '—' }}</div>
+                <div class="row-sub">{{ $bmiClass }}</div>
+            </td>
+
+        </tr>
+    </table>
+
+    {{-- Start-up protocol --}}
+    <div class="startup">
+        <strong>Start-up:</strong>
+        Start at 20 mL/hr, titrate by 10&ndash;20 mL/hr every 4 hours to goal rate of
+        <strong>{{ number_format($calc->rate_ml_per_hour,1) }} mL/hr</strong>.
+        &nbsp;
+        <strong>Water flush:</strong> {{ $flushVolMl }} mL every {{ $calc->water_flush_frequency ?? '6-hourly' }}
+        ({{ $flushesPerDay }}&times;/day &mdash; {{ number_format($flushTotalMl,0) }} mL/day).
+    </div>
+
+    @if($calc->notes)
+    <div class="notes-box"><strong>Notes:</strong> {{ $calc->notes }}</div>
+    @endif
+
+</div>
+@endforeach
+
 @endif
 
-{{-- ── Disclaimer ───────────────────────────────────────────────────── --}}
 <div class="disclaimer">
     This report is generated from MindfulNutrico and is intended for use by registered dieticians only.
     Calculations are based on SASPEN/ESPEN guidelines and generic enteral formula data.
     Verify all values against current product datasheets and clinical status before prescribing.
-    Manufacturers may change formula composition at any time.
 </div>
 
 </body>

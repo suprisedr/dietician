@@ -58,116 +58,72 @@
             </a>
 
             {{-- Patient identity --}}
-            <div class="flex flex-col lg:flex-row gap-4 items-start">
+            <div class="flex items-start gap-3">
+                <div class="patient-avatar-lg {{ $patient->gender }}" style="flex-shrink:0;width:3.75rem;height:3.75rem;font-size:1.2rem">{{ $initials }}</div>
+                <div style="min-width:0;flex:1">
+                    <h1 style="font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0">
+                        {{ $patient->full_name }}
+                    </h1>
+                    <p style="opacity:.7;font-size:.8rem;margin-top:.15rem">
+                        {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }} years &middot; Registered {{ $patient->created_at->format('M d, Y') }}
+                    </p>
 
-                {{-- LEFT: Avatar + Name + badges + actions --}}
-                <div class="flex items-start gap-3 flex-1 min-w-0">
-                    <div class="patient-avatar-lg {{ $patient->gender }}" style="flex-shrink:0;width:3.75rem;height:3.75rem;font-size:1.2rem">{{ $initials }}</div>
-                    <div style="min-width:0">
-                        <h1 style="font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0">
-                            {{ $patient->full_name }}
-                        </h1>
-                        <p style="opacity:.7;font-size:.8rem;margin-top:.15rem">
-                            {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }} years &middot; Registered {{ $patient->created_at->format('M d, Y') }}
-                        </p>
-
-                        {{-- Status chips --}}
-                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem">
-                            {{-- BMI chip --}}
-                            @if($patient->bmi)
-                                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:.72rem;font-weight:700;color:#fff">
-                                    BMI {{ number_format($patient->bmi, 1) }} &bull; {{ $patient->bmi_category }}
+                    {{-- Status chips --}}
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem">
+                        @if($patient->bmi)
+                            <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:.72rem;font-weight:700;color:#fff">
+                                BMI {{ number_format($patient->bmi, 1) }} &bull; {{ $patient->bmi_category }}
+                            </span>
+                        @endif
+                        @if($patient->email)
+                            @if($patient->hasConsented())
+                                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(21,128,61,.35);border:1px solid rgba(134,239,172,.4);border-radius:999px;font-size:.72rem;font-weight:700;color:#bbf7d0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.7rem;height:.7rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    Consent granted
+                                </span>
+                            @elseif($patient->consentDeclined())
+                                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(185,28,28,.3);border:1px solid rgba(252,165,165,.3);border-radius:999px;font-size:.72rem;font-weight:700;color:#fecaca">
+                                    Consent declined
+                                </span>
+                            @else
+                                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(217,119,6,.3);border:1px solid rgba(253,211,77,.3);border-radius:999px;font-size:.72rem;font-weight:700;color:#fde68a">
+                                    Consent pending
                                 </span>
                             @endif
-                            {{-- Consent chip --}}
-                            @if($patient->email)
-                                @if($patient->hasConsented())
-                                    <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(21,128,61,.35);border:1px solid rgba(134,239,172,.4);border-radius:999px;font-size:.72rem;font-weight:700;color:#bbf7d0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" style="width:.7rem;height:.7rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                        Consent granted
-                                    </span>
-                                @elseif($patient->consentDeclined())
-                                    <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(185,28,28,.3);border:1px solid rgba(252,165,165,.3);border-radius:999px;font-size:.72rem;font-weight:700;color:#fecaca">
-                                        Consent declined
-                                    </span>
-                                @else
-                                    <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(217,119,6,.3);border:1px solid rgba(253,211,77,.3);border-radius:999px;font-size:.72rem;font-weight:700;color:#fde68a">
-                                        Consent pending
-                                    </span>
-                                @endif
+                        @endif
+                    </div>
+
+                    {{-- Horizontal detail strip --}}
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0;margin-top:.6rem">
+                        @php
+                            $details = [];
+                            if ($patient->date_of_birth)
+                                $details[] = ['icon'=>'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 2 2z', 'label'=>'DOB', 'value'=> $patient->date_of_birth->format('d M Y')];
+                            if ($patient->email)
+                                $details[] = ['icon'=>'M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z', 'label'=>'Email', 'value'=> $patient->email];
+                            if ($patient->id_number)
+                                $details[] = ['icon'=>'M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 1 1 4 0v1m-4 0a2 2 0 0 0 4 0m-5 8a2 2 0 1 0 4 0 2 2 0 0 0-4 0', 'label'=> ($patient->id_type === 'passport' ? 'Passport' : 'SA ID'), 'value'=> $patient->id_number];
+                            if ($patient->address)
+                                $details[] = ['icon'=>'M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0zM15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z', 'label'=>'Address', 'value'=> $patient->address];
+                            if ($patient->reason_for_assessment)
+                                $details[] = ['icon'=>'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2', 'label'=>'Reason', 'value'=> $patient->reason_for_assessment];
+                        @endphp
+
+                        @foreach($details as $i => $d)
+                            @if($i > 0)
+                                <span style="width:1px;height:1.75rem;background:rgba(255,255,255,.2);margin:0 .75rem;flex-shrink:0"></span>
                             @endif
-                        </div>
+                            <div style="display:flex;align-items:center;gap:.4rem;min-width:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem;color:rgba(255,255,255,.55);flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $d['icon'] }}"/></svg>
+                                <div style="min-width:0">
+                                    <p style="font-size:.6rem;color:rgba(255,255,255,.45);margin:0;line-height:1;text-transform:uppercase;letter-spacing:.06em">{{ $d['label'] }}</p>
+                                    <p style="font-size:.8rem;font-weight:600;color:#fff;margin:0;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">{{ $d['value'] }}</p>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
+
                 </div>
-
-                {{-- RIGHT: Detail card --}}
-                <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:.75rem 1rem;min-width:240px;max-width:340px;width:100%">
-                    <p style="font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.5rem">Patient Details</p>
-                    <div style="display:flex;flex-direction:column;gap:.4rem">
-
-                        @if($patient->date_of_birth)
-                        <div style="display:flex;align-items:center;gap:.65rem">
-                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
-                            </span>
-                            <div>
-                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Date of Birth</p>
-                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.4">{{ $patient->date_of_birth->format('d M Y') }}</p>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($patient->email)
-                        <div style="display:flex;align-items:center;gap:.65rem">
-                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
-                            </span>
-                            <div style="min-width:0">
-                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Email</p>
-                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $patient->email }}</p>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($patient->id_number)
-                        <div style="display:flex;align-items:center;gap:.65rem">
-                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 1 1 4 0v1m-4 0a2 2 0 0 0 4 0m-5 8a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/></svg>
-                            </span>
-                            <div>
-                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">{{ $patient->id_type === 'passport' ? 'Passport No.' : 'SA ID Number' }}</p>
-                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.4;font-family:monospace;letter-spacing:.04em">{{ $patient->id_number }}</p>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($patient->address)
-                        <div style="display:flex;align-items:flex-start;gap:.65rem">
-                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0;margin-top:.1rem">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
-                            </span>
-                            <div>
-                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Address</p>
-                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.5">{{ $patient->address }}</p>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($patient->reason_for_assessment)
-                        <div style="display:flex;align-items:flex-start;gap:.65rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.12)">
-                            <span style="display:flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:7px;background:rgba(255,255,255,.12);flex-shrink:0;margin-top:.1rem">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;color:rgba(255,255,255,.8)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
-                            </span>
-                            <div>
-                                <p style="font-size:.65rem;color:rgba(255,255,255,.5);margin:0;line-height:1">Reason for Assessment</p>
-                                <p style="font-size:.82rem;font-weight:600;color:#fff;margin:0;line-height:1.5">{{ $patient->reason_for_assessment }}</p>
-                            </div>
-                        </div>
-                        @endif
-
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -300,57 +256,6 @@
         </div>
     </div>
 
-    {{-- ═══════════════════════════════════════════
-         WEEKLY MEAL PLAN REMINDERS
-    ═══════════════════════════════════════════ --}}
-    @if(auth()->user()->canAccessPlan('package_1'))
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div class="dash-card" style="padding:.75rem 1.25rem">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-                <div style="display:flex;align-items:center;gap:.6rem">
-                    <span style="font-size:1.1rem;line-height:1">&#x1F514;</span>
-                    <span style="font-weight:700;font-size:.88rem;color:var(--text-primary)">Email Reminders</span>
-                    @if($patient->weekly_reminder_enabled)
-                        <span style="font-size:.72rem;font-weight:700;color:#15803d;background:#dcfce7;border:1px solid #86efac;border-radius:999px;padding:.1rem .5rem">ON</span>
-                    @else
-                        <span style="font-size:.72rem;font-weight:700;color:#6b7280;background:#f3f4f6;border:1px solid #d1d5db;border-radius:999px;padding:.1rem .5rem">OFF</span>
-                    @endif
-                </div>
-
-                @if($patient->email)
-                    <form method="POST" action="{{ route('patients.weekly-reminder.toggle', $patient) }}">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" title="{{ $patient->weekly_reminder_enabled ? 'Disable reminders' : 'Enable reminders' }}"
-                                style="display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .9rem;font-size:.8rem;font-weight:700;border-radius:7px;cursor:pointer;transition:opacity .15s;
-                                       {{ $patient->weekly_reminder_enabled
-                                           ? 'background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5'
-                                           : 'background:#dcfce7;color:#15803d;border:1px solid #86efac' }}"
-                                onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-                            @if($patient->weekly_reminder_enabled)
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                Turn Off
-                            @else
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                Turn On
-                            @endif
-                        </button>
-                    </form>
-                @else
-                    <span style="font-size:.76rem;color:#f59e0b;background:#fffbeb;border:1px solid #fde68a;padding:.3rem .7rem;border-radius:6px;font-weight:600">
-                        <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;text-decoration:underline">Add email</a> to enable
-                    </span>
-                @endif
-            </div>
-
-            @if(session('reminder_success'))
-                <div style="margin-top:.6rem;padding:.4rem .9rem;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;color:#15803d;font-size:.8rem;font-weight:600">
-                    &#x2713; {{ session('reminder_success') }}
-                </div>
-            @endif
-        </div>
-    </div>
-    @endif
 
     {{-- ═══════════════════════════════════════════
          FLOATING METRIC CARDS
@@ -834,7 +739,7 @@
 
 
             {{-- ── Macronutrients ──────────────────────────── --}}
-                <div class="dash-section">
+                <div class="dash-section" id="macro-section">
                     <div class="dash-section-header" style="cursor:pointer;user-select:none" onclick="toggleSection('macro-body','macro-chevron')">
                         <span class="dash-section-title">Macronutrient Distribution</span>
                         <div style="display:flex;align-items:center;gap:.5rem">
@@ -900,6 +805,9 @@
                             <div class="flex items-center gap-3">
                                 <span id="macros-error" style="display:none;font-size:.78rem;font-weight:600;color:#b91c1c">
                                     ✕ Total must equal 100%
+                                </span>
+                                <span id="macros-save-msg" style="display:none;font-size:.78rem;font-weight:600;color:#15803d">
+                                    ✓ Saved
                                 </span>
                             </div>
                             <button id="macros-save" type="submit" class="btn-save">
@@ -1092,7 +1000,8 @@
         /* table layout */
         #mp-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             min-width: 660px;
             font-size: .82rem;
         }
@@ -1110,8 +1019,11 @@
         }
         .mp-meal-pill svg { flex-shrink:0; }
 
-        /* header cells */
+        /* header cells — sticky */
         #mp-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
             padding: .28rem .3rem;
             text-align: center;
             font-size: .65rem;
@@ -1120,6 +1032,7 @@
             border-bottom: 2px solid var(--border);
             background: #f8fafc;
             white-space: nowrap;
+            box-shadow: 0 1px 0 var(--border);
         }
         #mp-table thead th.th-item { text-align:left; padding-left:1rem; min-width:140px; }
         #mp-table thead th.th-no   { min-width:40px; background:#f1f5f9; color:var(--primary); }
@@ -1196,8 +1109,11 @@
             transition: width .2s, background .2s;
         }
 
-        /* footer totals row */
+        /* footer totals row — sticky */
         #mp-table tfoot td {
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
             padding: .28rem .3rem;
             text-align: center;
             font-size: .75rem;
@@ -1205,6 +1121,7 @@
             border-top: 2px solid var(--border);
             background: #f8fafc;
             color: var(--text-primary);
+            box-shadow: 0 -1px 0 var(--border);
         }
         #mp-table tfoot td.td-item {
             text-align:left; padding-left:1rem;
@@ -1236,7 +1153,7 @@
 
                 <form method="POST" action="{{ route('patients.meal-plan.save', $patient) }}" id="meal-plan-form">
                     @csrf @method('PATCH')
-                    <div class="overflow-x-auto" style="padding:0 0 0">
+                    <div class="overflow-x-auto" style="max-height:480px;overflow-y:auto">
                         <table id="mp-table">
                             <thead>
                                 <tr>
@@ -1818,6 +1735,8 @@
         const totalEl = document.getElementById('macros-total');
         const badgeEl = document.getElementById('total-badge');
         const errorEl = document.getElementById('macros-error');
+        const saveBtn = document.getElementById('macros-save');
+        const saveMsg = document.getElementById('macros-save-msg');
 
         // Expose so applyPatientUpdate can refresh the macro calculator's teeKj
         window._updateMacroTee = function(newTeeKj) {
@@ -1825,7 +1744,6 @@
             selects.forEach(function(sel) { updateRow(sel); });
             updateTotal();
         };
-        const saveBtn = document.getElementById('macros-save');
 
         function fmt(v, dec) { return Number(v).toFixed(dec); }
 
@@ -1833,8 +1751,10 @@
             const pct  = Number(sel.value);
             const row  = sel.closest('[data-macro-id]');
             if (!row) return;
+            const type = (row.querySelector('.macro-type-badge span:last-child') || {}).textContent || '';
             const kj   = teeKj * (pct / 100);
-            const g    = kj > 0 ? Math.round(kj / 17) : 0;
+            const div  = type.toLowerCase().includes('fat') ? 38 : 17;
+            const g    = kj > 0 ? Math.round(kj / div) : 0;
             const kjEl = row.querySelector('.macro-kj');
             const gEl  = row.querySelector('.macro-grams');
             if (kjEl) kjEl.innerHTML = fmt(kj, 1);
@@ -1844,7 +1764,7 @@
         function updateTotal() {
             const total = selects.reduce((s, el) => s + Number(el.value), 0);
             const ok    = Math.abs(total - 100) <= 0.01;
-            totalEl.textContent = Math.round(total) + '%';
+            totalEl.textContent      = Math.round(total) + '%';
             badgeEl.style.background = ok ? '#dcfce7' : '#fee2e2';
             badgeEl.style.color      = ok ? '#15803d' : '#b91c1c';
             errorEl.style.display    = ok ? 'none' : 'inline';
@@ -1856,6 +1776,57 @@
         });
 
         updateTotal();
+
+        // ── AJAX save — no page reload, section stays open ────────────────
+        document.getElementById('macro-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const total = selects.reduce((s, el) => s + Number(el.value), 0);
+            if (Math.abs(total - 100) > 0.01) {
+                errorEl.style.display = 'inline';
+                return;
+            }
+
+            const csrf = document.querySelector('meta[name="csrf-token"]').content;
+            const url  = this.action;
+
+            // Build macronutrients payload from selects
+            const macros = {};
+            selects.forEach(function(sel) {
+                const m = sel.name.match(/macronutrients\[(\d+)\]/);
+                if (m) macros[m[1]] = sel.value;
+            });
+
+            saveBtn.disabled  = true;
+            saveMsg.style.display = 'none';
+
+            fetch(url, {
+                method:  'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept':       'application/json',
+                },
+                body: JSON.stringify({ macronutrients: macros }),
+            })
+            .then(function(res) {
+                return res.ok ? res.json() : res.json().then(function(j) { return Promise.reject(j); });
+            })
+            .then(function(data) {
+                if (typeof window.applyPatientUpdate === 'function') {
+                    window.applyPatientUpdate(data);
+                }
+                saveMsg.textContent   = '✓ Saved';
+                saveMsg.style.display = 'inline';
+                setTimeout(function() { saveMsg.style.display = 'none'; }, 2500);
+                saveBtn.disabled = false;
+            })
+            .catch(function(err) {
+                errorEl.textContent   = (err && err.error) ? err.error : 'Save failed — please try again.';
+                errorEl.style.display = 'inline';
+                saveBtn.disabled      = false;
+            });
+        });
     })();
     </script>
 
@@ -2205,6 +2176,63 @@
                     Link expires {{ $patient->consent_token_expires_at->diffForHumans() }}.
                 @endif
             </p>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════
+         EMAIL REMINDERS TOGGLE
+    ═══════════════════════════════════════════ --}}
+    @if(auth()->user()->canAccessPlan('package_1'))
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="margin-top:1.5rem;padding-bottom:2.5rem">
+        <div class="dash-card" style="padding:1rem 1.5rem">
+            <div style="display:flex;align-items:center;gap:.75rem">
+
+                {{-- Bell icon --}}
+                <div style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:{{ $patient->weekly_reminder_enabled ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;color:{{ $patient->weekly_reminder_enabled ? '#15803d' : '#9ca3af' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </div>
+
+                {{-- Label --}}
+                <div>
+                    <p style="font-size:.88rem;font-weight:700;color:var(--text-primary);margin:0;line-height:1.2">Weekly Email Reminders</p>
+                    <p style="font-size:.78rem;color:var(--text-muted);margin:.2rem 0 0;line-height:1.3">
+                        @if(!$patient->email)
+                            <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;font-weight:600;text-decoration:underline">Add an email address</a> to enable reminders
+                        @elseif($patient->weekly_reminder_enabled)
+                            Sending weekly reminders to <strong>{{ $patient->email }}</strong>
+                        @else
+                            Reminders are off — patient will not receive weekly emails
+                        @endif
+                    </p>
+                </div>
+
+                {{-- Toggle switch (immediately after the text) --}}
+                @if($patient->email)
+                <form method="POST" action="{{ route('patients.weekly-reminder.toggle', $patient) }}" style="margin-left:.25rem">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit"
+                        role="switch"
+                        aria-checked="{{ $patient->weekly_reminder_enabled ? 'true' : 'false' }}"
+                        title="{{ $patient->weekly_reminder_enabled ? 'Turn off reminders' : 'Turn on reminders' }}"
+                        style="position:relative;display:inline-flex;align-items:center;width:3rem;height:1.625rem;border-radius:999px;border:none;cursor:pointer;padding:0;transition:background .25s;background:{{ $patient->weekly_reminder_enabled ? '#22c55e' : '#d1d5db' }};flex-shrink:0"
+                        onclick="this.style.opacity='.7'">
+                        <span style="position:absolute;top:.1875rem;left:{{ $patient->weekly_reminder_enabled ? '1.4375rem' : '.1875rem' }};width:1.25rem;height:1.25rem;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .25s"></span>
+                    </button>
+                </form>
+                @endif
+
+            </div>
+
+            @if(session('reminder_success'))
+                <div style="margin-top:.75rem;padding:.45rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.5rem;color:#15803d;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:.4rem">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    {{ session('reminder_success') }}
+                </div>
             @endif
         </div>
     </div>

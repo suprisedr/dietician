@@ -31,6 +31,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
         'two_factor_prompted_at',
+        'two_factor_method',
+        'two_factor_confirmed_methods',
         'reminder_send_day',
         'reminder_send_hour',
     ];
@@ -49,7 +51,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'admin_verified_at'  => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_prompted_at' => 'datetime',
-            'two_factor_recovery_codes' => 'array',
+            'two_factor_recovery_codes'    => 'array',
+            'two_factor_confirmed_methods' => 'array',
             'password'             => 'hashed',
             'reminder_send_day'   => 'integer',
             'reminder_send_hour'  => 'integer',
@@ -73,7 +76,35 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasTwoFactorEnabled(): bool
     {
-        return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
+        return ! empty($this->two_factor_confirmed_methods);
+    }
+
+    public function confirmedMethods(): array
+    {
+        return $this->two_factor_confirmed_methods ?? [];
+    }
+
+    public function hasMethod(string $method): bool
+    {
+        return in_array($method, $this->confirmedMethods());
+    }
+
+    public function enableMethod(string $method): void
+    {
+        $methods = $this->confirmedMethods();
+        if (! in_array($method, $methods)) {
+            $methods[] = $method;
+        }
+        $this->forceFill([
+            'two_factor_confirmed_methods' => $methods,
+            'two_factor_confirmed_at'      => $this->two_factor_confirmed_at ?? now(),
+            'two_factor_method'            => null,
+        ])->save();
+    }
+
+    public function passkeys(): HasMany
+    {
+        return $this->hasMany(Passkey::class);
     }
 
     public function twoFactorGracePeriodEndsAt(): ?Carbon

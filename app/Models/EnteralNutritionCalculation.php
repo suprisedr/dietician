@@ -25,6 +25,8 @@ class EnteralNutritionCalculation extends Model
         'fluid_requirement_ml',
         'free_water_from_formula_ml',
         'additional_water_ml',
+        'water_flush_ml',
+        'water_flush_frequency',
         'notes',
     ];
 
@@ -41,6 +43,7 @@ class EnteralNutritionCalculation extends Model
         'fluid_requirement_ml'      => 'decimal:0',
         'free_water_from_formula_ml'=> 'decimal:0',
         'additional_water_ml'       => 'decimal:0',
+        'water_flush_ml'            => 'integer',
     ];
 
     // ── SASPEN / ESPEN condition definitions (SA standards) ───────────────────

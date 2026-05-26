@@ -250,7 +250,7 @@ class PatientController extends Controller
     /**
      * Generate a downloadable/printable report for a patient.
      */
-    public function report(string $id)
+    public function report(Request $request, string $id)
     {
         $patient = Patient::with(['macronutrients', 'exchangeTemplate.items'])
             ->where('user_id', auth()->id())
@@ -297,11 +297,14 @@ class PatientController extends Controller
             }
         }
 
+        $asOf    = $request->input('as_of');
         $enteral = \App\Models\EnteralNutritionCalculation::where('patient_id', $patient->id)
             ->where('user_id', auth()->id())
+            ->when($asOf, fn($q) => $q->whereDate('created_at', '<=', $asOf))
             ->latest()
             ->first();
 
+        $isPackage3 = auth()->user()->canAccessPlan('package_3');
         $letterhead = auth()->user()->letterheadBase64();
 
         return view('patients.report', compact(
@@ -310,14 +313,14 @@ class PatientController extends Controller
             'recCho_g', 'recPro_g', 'recFat_g',
             'recCho_kj', 'recPro_kj', 'recFat_kj',
             'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj',
-            'enteral', 'letterhead'
+            'enteral', 'isPackage3', 'asOf', 'letterhead'
         ));
     }
 
     /**
      * Download a PDF version of the patient report.
      */
-    public function reportPdf(string $id)
+    public function reportPdf(Request $request, string $id)
     {
         $patient = Patient::with(['macronutrients', 'exchangeTemplate.items'])
             ->where('user_id', auth()->id())
@@ -363,12 +366,15 @@ class PatientController extends Controller
             }
         }
 
-        // Latest enteral nutrition calculation for section C
+        // Enteral nutrition calculation for section C/D (optionally filtered by date)
+        $asOf    = $request->input('as_of');
         $enteral = \App\Models\EnteralNutritionCalculation::where('patient_id', $patient->id)
             ->where('user_id', auth()->id())
+            ->when($asOf, fn($q) => $q->whereDate('created_at', '<=', $asOf))
             ->latest()
             ->first();
 
+        $isPackage3 = auth()->user()->canAccessPlan('package_3');
         $letterhead = auth()->user()->letterheadBase64();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('patients.report-pdf', compact(
@@ -377,10 +383,14 @@ class PatientController extends Controller
             'recCho_g', 'recPro_g', 'recFat_g',
             'recCho_kj', 'recPro_kj', 'recFat_kj',
             'etTotCho', 'etTotPro', 'etTotFat', 'etTotKj',
-            'enteral', 'letterhead'
+            'enteral', 'isPackage3', 'letterhead'
         ))->setPaper('a4', 'portrait');
 
         $filename = 'report-' . \Illuminate\Support\Str::slug($patient->name) . '-' . now()->format('Y-m-d') . '.pdf';
+
+        if ($request->boolean('stream')) {
+            return $pdf->stream($filename);
+        }
 
         return $pdf->download($filename);
     }
@@ -546,46 +556,50 @@ class PatientController extends Controller
         $patient = Patient::with('macronutrients')->where('user_id', auth()->id())->findOrFail($id);
 
         $input = $request->input('macronutrients', []);
-        if (!is_array($input)) {
-            return back()->withErrors(['macronutrients' => 'Invalid input.']);
+        if (! is_array($input)) {
+            return $request->expectsJson()
+                ? response()->json(['error' => 'Invalid input.'], 422)
+                : back()->withErrors(['macronutrients' => 'Invalid input.']);
         }
 
-        // validate that total selected percentages equal 100
-        $totalSelected = array_reduce($input, function ($carry, $item) {
-            return $carry + (float) $item;
-        }, 0.0);
+        $totalSelected = array_reduce($input, fn($carry, $item) => $carry + (float) $item, 0.0);
 
         if (abs($totalSelected - 100.0) > 0.01) {
-            return back()->withErrors(['macronutrients_total' => 'The total of selected macronutrient percentages must equal 100%.'])->withInput();
+            return $request->expectsJson()
+                ? response()->json(['error' => 'Total must equal 100%.'], 422)
+                : back()->withErrors(['macronutrients_total' => 'The total of selected macronutrient percentages must equal 100%.'])->withInput();
         }
 
         foreach ($input as $macroId => $selectedPercentage) {
             $macro = $patient->macronutrients->firstWhere('id', (int) $macroId);
-            if (! $macro) {
-                continue;
-            }
+            if (! $macro) continue;
 
             $selected = (float) $selectedPercentage;
             if ($selected < $macro->range_min || $selected > $macro->range_max) {
-                return back()->withErrors(["macronutrients.{$macroId}" => "Selected percentage for {$macro->type} must be between {$macro->range_min} and {$macro->range_max}."]);
+                $msg = "Selected percentage for {$macro->type} must be between {$macro->range_min} and {$macro->range_max}.";
+                return $request->expectsJson()
+                    ? response()->json(['error' => $msg], 422)
+                    : back()->withErrors(["macronutrients.{$macroId}" => $msg]);
             }
 
-            // Calculate KJ and grams using requested formulas:
-            // - KJ = (selected_percentage / 100) * TEE_in_kJ
-            // - grams = KJ / 17 (CHO & protein) or KJ / 38 (fat)
-            $teeKj = $patient->tee ?? 0; // kJ/day
-            $kj = ($selected / 100) * $teeKj;
+            $teeKj   = $patient->tee ?? 0;
+            $kj      = ($selected / 100) * $teeKj;
             $divisor = in_array($macro->type, ['fat', 'fats']) ? 38 : 17;
-            $grams = $kj > 0 ? ($kj / $divisor) : 0;
+            $grams   = $kj > 0 ? ($kj / $divisor) : 0;
 
             $macro->update([
                 'selected_percentage' => $selected,
-                'kj' => round($kj, 2),
+                'kj'    => round($kj, 2),
                 'grams' => round($grams, 0),
             ]);
         }
 
-        broadcast(new PatientUpdated($patient->fresh('macronutrients')))->toOthers();
+        $event = new PatientUpdated($patient->fresh('macronutrients'));
+        broadcast($event)->toOthers();
+
+        if ($request->expectsJson()) {
+            return response()->json($event->payload);
+        }
 
         return back()->with('success', 'Macronutrients updated.');
     }

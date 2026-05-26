@@ -1,5 +1,4 @@
 <x-app-layout>
-    {{-- suppress the default header slot so we control the full page --}}
 
     {{-- ═══════════════════════════════════════════
          HERO BANNER
@@ -32,192 +31,18 @@
     </div>
 
     {{-- ═══════════════════════════════════════════
-         FLOATING STAT CARDS
-    ═══════════════════════════════════════════ --}}
-    @php
-        $total     = isset($allPatients) ? $allPatients->count() : 0;
-        $males     = isset($allPatients) ? $allPatients->where('gender','male')->count() : 0;
-        $females   = isset($allPatients) ? $allPatients->where('gender','female')->count() : 0;
-        $avgBmi    = $total > 0
-            ? round($allPatients->filter(fn($p)=>$p->bmi)->avg(fn($p)=>$p->bmi), 2)
-            : null;
-    @endphp
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 stat-cards-row">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-            {{-- Total patients --}}
-            <div class="stat-card">
-                <div class="stat-icon orange">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="stat-value">{{ $total }}</div>
-                    <div class="stat-label">Total Patients</div>
-                    <span class="stat-change up">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                        Active
-                    </span>
-                </div>
-            </div>
-
-            {{-- Male patients --}}
-            <div class="stat-card">
-                <div class="stat-icon indigo">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M16 20a4 4 0 0 0-8 0"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="stat-value">{{ $males }}</div>
-                    <div class="stat-label">Male</div>
-                    <span class="stat-change neu">{{ $total > 0 ? round($males/$total*100) : 0 }}% of total</span>
-                </div>
-            </div>
-
-            {{-- Female patients --}}
-            <div class="stat-card">
-                <div class="stat-icon rose">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M16 20a4 4 0 0 0-8 0"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="stat-value">{{ $females }}</div>
-                    <div class="stat-label">Female</div>
-                    <span class="stat-change neu">{{ $total > 0 ? round($females/$total*100) : 0 }}% of total</span>
-                </div>
-            </div>
-
-            {{-- Avg BMI --}}
-            <div class="stat-card">
-                <div class="stat-icon teal">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="stat-value">{{ $avgBmi ?? '—' }}</div>
-                    <div class="stat-label">Avg BMI</div>
-                    <span class="stat-change neu">kg/m²</span>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    {{-- ═══════════════════════════════════════════
          MAIN CONTENT AREA
     ═══════════════════════════════════════════ --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            {{-- ── LEFT / MAIN COLUMN ──────────────────── --}}
-            <div class="lg:col-span-2 space-y-6">
-
-                {{-- Patient table card --}}
-                <div class="dash-section">
-                    <div class="dash-section-header">
-                        <span class="dash-section-title">Recent Patients</span>
-                        <div class="flex items-center gap-3">
-                            <a href="{{ route('patients.index') }}" style="font-size:.8rem;font-weight:600;color:var(--primary);text-decoration:none;white-space:nowrap">View all →</a>
-                            <a href="{{ route('patients.create') }}" class="btn-add">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Add Patient
-                        </a>
-                        </div>
-                    </div>
-
-                    @if(isset($patients) && $patients->count())
-                        <div class="overflow-x-auto">
-                            <table class="pt-table">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Age</th>
-                                        <th>BMI</th>
-                                        <th>TEE (kcal)</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($patients as $patient)
-                                        @php
-                                            $initials = collect(explode(' ', $patient->name))
-                                                ->map(fn($w)=>strtoupper(substr($w,0,1)))
-                                                ->take(2)->implode('');
-                                            $bmiCat   = strtolower($patient->bmi_category ?? 'normal');
-                                            $tee      = $patient->tee ? round($patient->tee / 4.184) : null;
-                                        @endphp
-                                        <tr>
-                                            <td>
-                                                <div class="flex items-center gap-3">
-                                                    <div class="pt-avatar {{ $patient->gender }}">{{ $initials }}</div>
-                                                    <div>
-                                                        <div class="font-semibold" style="color:var(--text-primary)">{{ $patient->name }}</div>
-                                                        <div class="text-xs" style="color:var(--text-muted)">{{ ucfirst($patient->gender) }}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ $patient->age }} yrs</td>
-                                            <td>
-                                                @if($patient->bmi)
-                                                    <span class="bmi-pill {{ $bmiCat }}">
-                                                        {{ number_format($patient->bmi, 2) }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-gray-400">—</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($tee)
-                                                    <span class="font-semibold" style="color:var(--text-primary)">{{ number_format($tee) }}</span>
-                                                    <span class="text-xs" style="color:var(--text-muted)"> kcal</span>
-                                                @else
-                                                    <span style="color:var(--text-muted)">—</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('patients.show', $patient) }}"
-                                                   style="font-size:.8rem;font-weight:600;color:var(--primary);text-decoration:none;white-space:nowrap">
-                                                    View →
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="empty-state">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
-                            </svg>
-                            <p class="font-semibold" style="color:var(--text-primary)">No patients yet</p>
-                            <p class="text-sm mt-1" style="color:var(--text-muted)">Add your first patient to get started.</p>
-                            <a href="{{ route('patients.create') }}" class="btn-add inline-flex mt-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                Add First Patient
-                            </a>
-                        </div>
-                    @endif
-                </div>
-
-            </div>
-
-            {{-- ── RIGHT / SIDEBAR COLUMN ──────────────── --}}
-            <div class="space-y-6">
-
-                {{-- Quick actions --}}
+            {{-- ── QUICK ACTIONS ──────────────────────────────── --}}
+            <div class="lg:col-span-2">
                 <div class="dash-section">
                     <div class="dash-section-header">
                         <span class="dash-section-title">Quick Actions</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 p-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
                         <a href="{{ route('patients.create') }}" class="quick-action">
                             <div class="qa-icon" style="background:linear-gradient(135deg,#fff7ed,#fed7aa)">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" style="color:#f97316" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -252,46 +77,56 @@
                         </a>
                     </div>
                 </div>
+            </div>
 
-                {{-- BMI distribution mini-chart --}}
-                @if(isset($patients) && $patients->count())
-                @php
-                    $bmiGroups = [
-                        'Underweight' => $patients->filter(fn($p)=>$p->bmi_category==='Underweight')->count(),
-                        'Normal'      => $patients->filter(fn($p)=>$p->bmi_category==='Normal')->count(),
-                        'Overweight'  => $patients->filter(fn($p)=>$p->bmi_category==='Overweight')->count(),
-                        'Obese'       => $patients->filter(fn($p)=>$p->bmi_category==='Obese')->count(),
-                    ];
-                    $bmiColors = [
-                        'Underweight' => ['bg'=>'#eff6ff','bar'=>'#3b82f6','text'=>'#1d4ed8'],
-                        'Normal'      => ['bg'=>'#dcfce7','bar'=>'#22c55e','text'=>'#15803d'],
-                        'Overweight'  => ['bg'=>'#fef9c3','bar'=>'#eab308','text'=>'#854d0e'],
-                        'Obese'       => ['bg'=>'#fee2e2','bar'=>'#ef4444','text'=>'#b91c1c'],
-                    ];
-                    $bmiTotal = array_sum($bmiGroups) ?: 1;
-                @endphp
-                <div class="dash-section">
+            {{-- ── DIETICIAN INFO CARD ────────────────────────── --}}
+            <div>
+                {{-- ── FEATURE LINKS ──────────────────────────────── --}}
+                <div class="dash-section mb-6">
                     <div class="dash-section-header">
-                        <span class="dash-section-title">BMI Distribution</span>
+                        <span class="dash-section-title">Features</span>
                     </div>
-                    <div class="p-4 space-y-3">
-                        @foreach($bmiGroups as $label => $count)
-                        @php $pct = round($count / $bmiTotal * 100); $c = $bmiColors[$label]; @endphp
-                        <div>
-                            <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span style="color:{{ $c['text'] }}">{{ $label }}</span>
-                                <span style="color:var(--text-muted)">{{ $count }} ({{ $pct }}%)</span>
-                            </div>
-                            <div style="height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden">
-                                <div style="height:100%;width:{{ $pct }}%;background:{{ $c['bar'] }};border-radius:999px;transition:width .5s ease"></div>
-                            </div>
-                        </div>
-                        @endforeach
+                    <div class="p-3 space-y-1">
+                        <a href="{{ route('meal-planner.index') }}" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.6rem;text-decoration:none;color:var(--text-primary);font-size:.85rem;font-weight:600;transition:background .12s" class="hover:bg-gray-50">
+                            <span style="width:2rem;height:2rem;background:linear-gradient(135deg,#eff6ff,#bfdbfe);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="color:#3b82f6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </span>
+                            Weekly Meal Plans
+                        </a>
+                        <a href="{{ route('recipes.index') }}" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.6rem;text-decoration:none;color:var(--text-primary);font-size:.85rem;font-weight:600;transition:background .12s" class="hover:bg-gray-50">
+                            <span style="width:2rem;height:2rem;background:linear-gradient(135deg,#fff7ed,#fed7aa);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="color:#f97316" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                            </span>
+                            Recipes
+                        </a>
+                        <a href="{{ route('grocery-lists.index') }}" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.6rem;text-decoration:none;color:var(--text-primary);font-size:.85rem;font-weight:600;transition:background .12s" class="hover:bg-gray-50">
+                            <span style="width:2rem;height:2rem;background:linear-gradient(135deg,#f0fdf4,#bbf7d0);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="color:#22c55e" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </span>
+                            Grocery Lists
+                        </a>
+                        <a href="{{ route('food-diary.index') }}" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.6rem;text-decoration:none;color:var(--text-primary);font-size:.85rem;font-weight:600;transition:background .12s" class="hover:bg-gray-50">
+                            <span style="width:2rem;height:2rem;background:linear-gradient(135deg,#fdf4ff,#e9d5ff);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="color:#a855f7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </span>
+                            Food Diaries
+                        </a>
+                        <a href="{{ route('meal-items.index') }}" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.6rem;text-decoration:none;color:var(--text-primary);font-size:.85rem;font-weight:600;transition:background .12s" class="hover:bg-gray-50">
+                            <span style="width:2rem;height:2rem;background:linear-gradient(135deg,#fef9c3,#fef08a);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="color:#ca8a04" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            </span>
+                            Meal Library
+                        </a>
+                        <a href="{{ route('email-templates.index') }}" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.6rem;text-decoration:none;color:var(--text-primary);font-size:.85rem;font-weight:600;transition:background .12s" class="hover:bg-gray-50">
+                            <span style="width:2rem;height:2rem;background:linear-gradient(135deg,#fce7f3,#fbcfe8);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="color:#ec4899" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            </span>
+                            Email Templates
+                        </a>
                     </div>
                 </div>
-                @endif
 
-                {{-- Dietician info card --}}
+                {{-- ── DIETICIAN INFO CARD ────────────────────────── --}}
                 <div class="dash-section" style="overflow:visible">
                     <div style="background:linear-gradient(135deg,#1e1b4b,#f97316);border-radius:1.5rem;padding:1.5rem;color:#fff;position:relative;overflow:hidden">
                         <div style="position:absolute;top:-1rem;right:-1rem;width:6rem;height:6rem;background:rgba(255,255,255,.08);border-radius:50%"></div>
@@ -300,12 +135,12 @@
                             <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;opacity:.65">Dietitian ID</div>
                             <div style="font-size:1.2rem;font-weight:800;letter-spacing:.05em;margin-top:.2rem">{{ Auth::user()->dietician_number }}</div>
                             <div style="margin-top:.75rem;font-size:.95rem;font-weight:700">{{ Auth::user()->name }}</div>
-                            <div style="margin-top:.25rem;opacity:.65;font-size:.8rem">{{ $total }} patient{{ $total !== 1 ? 's' : '' }} registered</div>
+                            <div style="margin-top:.25rem;opacity:.65;font-size:.8rem">{{ $patientCount }} patient{{ $patientCount !== 1 ? 's' : '' }} registered</div>
                         </div>
                     </div>
                 </div>
-
             </div>
+
         </div>
     </div>
 

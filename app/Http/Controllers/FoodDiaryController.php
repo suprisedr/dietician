@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\FoodDiary;
 use App\Models\Patient;
 use App\Mail\FoodDiaryInviteMail;
+use App\Mail\FoodDiaryWeeklyInviteMail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -120,6 +122,8 @@ class FoodDiaryController extends Controller
     {
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
+            'diary_type' => 'required|in:daily,weekly',
+            'week_start' => 'nullable|date|required_if:diary_type,weekly',
         ]);
 
         $patient = Patient::where('id', $request->patient_id)
@@ -128,7 +132,33 @@ class FoodDiaryController extends Controller
 
         abort_if(empty($patient->email), 422, 'This patient has no email address on file.');
 
-        // Create a pending diary record with a unique token
+        if ($request->diary_type === 'weekly') {
+            $weekStart = Carbon::parse($request->week_start)->startOfWeek(Carbon::MONDAY);
+            $entries   = [];
+
+            for ($i = 0; $i < 7; $i++) {
+                $day   = $weekStart->copy()->addDays($i);
+                $diary = FoodDiary::create([
+                    'user_id'       => auth()->id(),
+                    'patient_id'    => $patient->id,
+                    'patient_token' => Str::random(48),
+                    'diary_date'    => $day->toDateString(),
+                ]);
+                $entries[] = [
+                    'diary'     => $diary,
+                    'day_name'  => $day->format('l'),
+                    'date_str'  => $day->format('d M Y'),
+                    'link'      => route('food-diary.patient-show', $diary->patient_token),
+                ];
+            }
+
+            Mail::to($patient->email, $patient->name)
+                ->send(new FoodDiaryWeeklyInviteMail($entries, $weekStart, auth()->user(), $patient));
+
+            return back()->with('success', 'Weekly food diary invitation sent to ' . $patient->email . ' (' . $weekStart->format('d M') . ' – ' . $weekStart->copy()->endOfWeek()->format('d M Y') . ').');
+        }
+
+        // Daily diary (existing behaviour)
         $diary = FoodDiary::create([
             'user_id'       => auth()->id(),
             'patient_id'    => $patient->id,
@@ -138,10 +168,10 @@ class FoodDiaryController extends Controller
         Mail::to($patient->email, $patient->name)
             ->send(new FoodDiaryInviteMail($diary, auth()->user()));
 
-        return back()->with('success', 'Food diary invitation sent to ' . $patient->email . '.');
+        return back()->with('success', 'Daily food diary invitation sent to ' . $patient->email . '.');
     }
 
-    public function pdf(FoodDiary $foodDiary)
+    public function pdf(Request $request, FoodDiary $foodDiary)
     {
         abort_if($foodDiary->user_id !== auth()->id(), 403);
         $foodDiary->load('patient');
@@ -155,6 +185,10 @@ class FoodDiaryController extends Controller
         $patient  = $foodDiary->patient;
         $nameSlug = $patient ? \Illuminate\Support\Str::slug($patient->name) : 'diary';
         $filename = 'food-diary-' . $nameSlug . '-' . $date . '.pdf';
+
+        if ($request->boolean('stream')) {
+            return $pdf->stream($filename);
+        }
 
         return $pdf->download($filename);
     }

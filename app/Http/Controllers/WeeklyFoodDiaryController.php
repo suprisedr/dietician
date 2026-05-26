@@ -94,6 +94,10 @@ class WeeklyFoodDiaryController extends Controller
             . '-' . $weekStart->format('Y-m-d')
             . '.pdf';
 
+        if ($request->boolean('stream')) {
+            return $pdf->stream($filename);
+        }
+
         return $pdf->download($filename);
     }
 }

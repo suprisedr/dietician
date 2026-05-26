@@ -39,9 +39,8 @@ Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('tea
 // ── Dashboard (auth + verified + admin approved) ─────────────────────────────
 
 Route::get('/dashboard', function () {
-    $allPatients = \App\Models\Patient::where('user_id', Auth::id())->get();
-    $patients    = $allPatients->take(10);
-    return view('dashboard', compact('patients', 'allPatients'));
+    $patientCount = \App\Models\Patient::where('user_id', Auth::id())->count();
+    return view('dashboard', compact('patientCount'));
 })->middleware(['auth', 'two-factor', 'verified', 'admin.approved'])->name('dashboard');
 
 // ── Pending admin approval holding page ───────────────────────────────────────

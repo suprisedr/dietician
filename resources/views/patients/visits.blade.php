@@ -22,11 +22,12 @@
                         <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                         Back to Patient
                     </a>
-                    <a href="{{ route('patients.visits.pdf', $patient) }}"
-                       style="display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;background:rgba(255,255,255,.9);color:#1a4a36;border:1px solid rgba(255,255,255,.6);border-radius:8px;font-size:.82rem;font-weight:700;text-decoration:none">
-                        <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        Download PDF
-                    </a>
+                    <button type="button"
+                            onclick="openPdfPreviewModal('{{ route('patients.visits.pdf', $patient) }}?stream=1','{{ route('patients.visits.pdf', $patient) }}')"
+                            style="display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;background:rgba(255,255,255,.9);color:#1a4a36;border:1px solid rgba(255,255,255,.6);border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Preview / Download PDF
+                    </button>
                 </div>
             </div>
         </div>

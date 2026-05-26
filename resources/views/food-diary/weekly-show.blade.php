@@ -214,11 +214,11 @@
                 View Week
             </button>
             @if($patient)
-                <a href="{{ route('food-diary.weekly.pdf', ['patient_id' => $patientId, 'week' => $weekStart->format('Y-m-d')]) }}"
-                   target="_blank"
-                   style="padding:.45rem 1.25rem;background:#2d5a43;color:#fff;font-weight:700;font-size:.83rem;border-radius:6px;text-decoration:none;white-space:nowrap">
-                    &#x1F441; Preview / Download PDF
-                </a>
+                <button type="button"
+                        onclick="openPdfPreviewModal('{{ route('food-diary.weekly.pdf', ['patient_id' => $patientId, 'week' => $weekStart->format('Y-m-d')]) }}?stream=1','{{ route('food-diary.weekly.pdf', ['patient_id' => $patientId, 'week' => $weekStart->format('Y-m-d')]) }}')"
+                        style="padding:.45rem 1.25rem;background:#2d5a43;color:#fff;font-weight:700;font-size:.83rem;border-radius:6px;border:none;cursor:pointer;white-space:nowrap">
+                    Preview / Download PDF
+                </button>
             @endif
         </form>
     </div>

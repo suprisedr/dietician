@@ -14,9 +14,9 @@
     <form method="POST" action="{{ route('login') }}" style="width:100%">
         @csrf
 
-        {{-- Dietician Number --}}
+        {{-- HPCSA Number --}}
         <div class="auth-field">
-            <label class="auth-label" for="dietician_number">Dietitian Number</label>
+            <label class="auth-label" for="dietician_number">HPCSA Registration Number</label>
             <div class="auth-input-wrap">
                 <input
                     id="dietician_number"
@@ -25,7 +25,7 @@
                     value="{{ old('dietician_number') }}"
                     class="auth-input"
                     required autofocus autocomplete="username"
-                    placeholder="e.g. DC-00123"
+                    placeholder="DT0012345"
                 />
                 <svg xmlns="http://www.w3.org/2000/svg" class="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1m-4 0h4"/>
@@ -63,15 +63,15 @@
                     <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0 1 12 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 0 1 2.71-4.29M9.88 9.88a3 3 0 1 0 4.243 4.243M6.1 6.1 3 3m18 18-3.1-3.1M9.88 9.88 3 3m10.122 10.122L21 21"/></svg>
                 </button>
             </div>
+            <div id="capslock-login" style="display:none;margin-top:.4rem;align-items:center;gap:.35rem;font-size:.75rem;font-weight:600;color:#f97316">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/><line x1="8" y1="18" x2="16" y2="18"/>
+                </svg>
+                Caps Lock is on
+            </div>
             @error('password')
                 <p class="auth-field-error">{{ $message }}</p>
             @enderror
-        </div>
-
-        {{-- Remember me --}}
-        <div class="auth-check-wrap">
-            <input id="remember_me" type="checkbox" name="remember" class="auth-check">
-            <label for="remember_me" class="auth-check-label">Keep me signed in</label>
         </div>
 
         {{-- Submit --}}
@@ -92,5 +92,19 @@ function togglePw(id, btn) {
     btn.querySelector('.eye-show').style.display = show ? 'none' : '';
     btn.querySelector('.eye-hide').style.display = show ? '' : 'none';
 }
+
+(function () {
+    const pwInput   = document.getElementById('password');
+    const capsAlert = document.getElementById('capslock-login');
+
+    function checkCaps(e) {
+        const on = e.getModifierState && e.getModifierState('CapsLock');
+        capsAlert.style.display = on ? 'flex' : 'none';
+    }
+
+    pwInput.addEventListener('keyup',    checkCaps);
+    pwInput.addEventListener('keydown',  checkCaps);
+    pwInput.addEventListener('focus',    checkCaps);
+})();
 </script>
 </x-guest-layout>

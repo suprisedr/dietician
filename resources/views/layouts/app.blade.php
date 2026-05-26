@@ -49,5 +49,157 @@
 
         {{-- Global upgrade modal — triggered by RequiresPlan middleware on save attempts --}}
         <x-upgrade-modal />
+
+        {{-- ── Session inactivity logout ───────────────────────────────── --}}
+        @auth
+        {{-- Hidden logout form (POST required by Laravel) --}}
+        <form id="session-logout-form" method="POST" action="{{ route('logout') }}" style="display:none">
+            @csrf
+        </form>
+
+        {{-- Warning modal --}}
+        <div id="session-warning"
+             style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);align-items:center;justify-content:center">
+            <div style="background:#fff;border-radius:1.25rem;padding:2rem 2.25rem;max-width:380px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,.2);text-align:center">
+                <div style="width:3.25rem;height:3.25rem;background:#fff7ed;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:1.6rem;height:1.6rem;color:#f97316" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    </svg>
+                </div>
+                <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:.45rem">Session expiring soon</h3>
+                <p style="font-size:.85rem;color:#64748b;line-height:1.55;margin-bottom:1.25rem">
+                    Due to inactivity your session will expire in
+                    <strong id="session-countdown" style="color:#f97316">60</strong> seconds.
+                    Any unsaved work will be lost.
+                </p>
+                <div style="display:flex;gap:.75rem;justify-content:center">
+                    <button onclick="sessionKeepAlive()"
+                            style="flex:1;padding:.7rem 1rem;background:linear-gradient(135deg,#679F5F,#429677);color:#fff;font-size:.88rem;font-weight:700;border:none;border-radius:.75rem;cursor:pointer">
+                        Stay logged in
+                    </button>
+                    <button onclick="sessionLogout()"
+                            style="flex:1;padding:.7rem 1rem;background:#f1f5f9;color:#64748b;font-size:.88rem;font-weight:600;border:1.5px solid #e2e8f0;border-radius:.75rem;cursor:pointer">
+                        Log out now
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        (function () {
+            const TIMEOUT     = 10 * 60 * 1000;   // 10 min
+            const WARN_BEFORE = 60 * 1000;         // warn 60 s before
+            const warning     = document.getElementById('session-warning');
+            const countdown   = document.getElementById('session-countdown');
+
+            let logoutTimer, warnTimer, countdownInterval;
+
+            function reset() {
+                clearTimeout(logoutTimer);
+                clearTimeout(warnTimer);
+                clearInterval(countdownInterval);
+
+                if (warning) warning.style.display = 'none';
+
+                warnTimer = setTimeout(showWarning, TIMEOUT - WARN_BEFORE);
+                logoutTimer = setTimeout(sessionLogout, TIMEOUT);
+            }
+
+            function showWarning() {
+                if (!warning) return;
+                warning.style.display = 'flex';
+                let secs = Math.round(WARN_BEFORE / 1000);
+                if (countdown) countdown.textContent = secs;
+                countdownInterval = setInterval(function () {
+                    secs--;
+                    if (countdown) countdown.textContent = secs;
+                    if (secs <= 0) clearInterval(countdownInterval);
+                }, 1000);
+            }
+
+            // Activity events that reset the timer
+            ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(function (evt) {
+                document.addEventListener(evt, reset, { passive: true });
+            });
+
+            reset(); // start on page load
+        })();
+
+        function sessionKeepAlive() {
+            // Ping the server to refresh the session, then hide the modal
+            fetch(window.location.href, { method: 'HEAD', credentials: 'same-origin' })
+                .catch(function () {});
+            document.getElementById('session-warning').style.display = 'none';
+            // Trigger a full timer reset by simulating activity
+            document.dispatchEvent(new Event('mousemove'));
+        }
+
+        function sessionLogout() {
+            document.getElementById('session-logout-form').submit();
+        }
+        </script>
+        @endauth
+
+        {{-- ── Global PDF Preview Modal ─────────────────────────────────── --}}
+        <div id="global-pdf-overlay" role="dialog" aria-modal="true" aria-label="PDF Preview"
+             style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+            <div style="background:#fff;border-radius:1rem;width:92vw;max-width:960px;height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+                <div style="padding:.9rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+                    <span style="display:flex;align-items:center;gap:.5rem;font-size:.9rem;font-weight:700;color:#0f172a">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:#15803d" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        PDF Preview
+                    </span>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <a id="global-pdf-dl-btn" href="#" target="_blank"
+                           style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem 1rem;background:#15803d;color:#fff;font-size:.8rem;font-weight:700;border-radius:.5rem;text-decoration:none">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Download PDF
+                        </a>
+                        <button type="button" onclick="closeGlobalPdfPreview()"
+                                style="width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border:1.5px solid #e5e7eb;border-radius:.5rem;background:#f8fafc;font-size:1.1rem;cursor:pointer;color:#64748b">&times;</button>
+                    </div>
+                </div>
+                <div id="global-pdf-loading" style="display:none;flex:1;align-items:center;justify-content:center;gap:.5rem;color:#64748b;font-size:.875rem">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;animation:gpdf-spin 1s linear infinite" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                    Loading preview&hellip;
+                </div>
+                <iframe id="global-pdf-frame" title="PDF Preview" style="flex:1;width:100%;border:none"></iframe>
+            </div>
+        </div>
+        <style>
+        #global-pdf-overlay.open { display:flex !important; }
+        @keyframes gpdf-spin { to { transform:rotate(360deg); } }
+        </style>
+        <script>
+        (function () {
+            var overlay = document.getElementById('global-pdf-overlay');
+            var frame   = document.getElementById('global-pdf-frame');
+            var loading = document.getElementById('global-pdf-loading');
+            var dlBtn   = document.getElementById('global-pdf-dl-btn');
+
+            window.openPdfPreviewModal = function (streamUrl, downloadUrl) {
+                dlBtn.href = downloadUrl;
+                loading.style.display = 'flex';
+                frame.src = '';
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                frame.onload = function () { loading.style.display = 'none'; };
+                frame.src = streamUrl;
+            };
+
+            window.closeGlobalPdfPreview = function () {
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+                frame.src = '';
+            };
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeGlobalPdfPreview();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('open')) closeGlobalPdfPreview();
+            });
+        }());
+        </script>
     </body>
 </html>

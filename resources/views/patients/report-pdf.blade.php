@@ -52,9 +52,27 @@
     .bg-a { background-color: #002d58; }
     .bg-b { background-color: #1d3557; }
     .bg-c { background-color: #006442; }
+    .bg-d { background-color: #5b21b6; }
     .circle-a { color: #002d58; }
     .circle-b { color: #1d3557; }
     .circle-c { color: #006442; }
+    .circle-d { color: #5b21b6; }
+
+    .tube-banner { background: #5b21b6; color: #fff; border-radius: 4px; padding: 5px 8px; font-size: 7.5px; margin-bottom: 6px; }
+    .tube-banner td { color: #fff; font-size: 7.5px; padding: 0 8px 0 0; white-space: nowrap; }
+    .tube-3col { width: 100%; border-collapse: collapse; }
+    .tube-3col > tbody > tr > td { width: 33.3%; vertical-align: top; padding: 0 4px 0 0; }
+    .tube-3col > tbody > tr > td:last-child { padding-right: 0; }
+    .tube-box { background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 5px 7px; }
+    .tube-box-title { font-size: 7px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 4px; }
+    .tube-row { width: 100%; border-collapse: collapse; margin-bottom: 1px; }
+    .tube-row td { font-size: 7.5px; padding: 1px 0; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+    .tube-lbl { color: #6b7280; width: 55%; }
+    .tube-val { font-weight: bold; color: #0d1f0c; text-align: right; }
+    .pro-badge { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 6.5px; font-weight: bold; margin-top: 3px; }
+    .pro-ok  { background: #dcfce7; color: #166534; }
+    .pro-low { background: #fef9c3; color: #92400e; }
+    .startup-box { background: #f0fff4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 4px 7px; font-size: 7px; color: #166534; margin-top: 5px; }
 
     .content-box {
         border: 1px solid #d1d8e0; border-top: none;
@@ -240,10 +258,11 @@
                 <span class="field-value">{{ $patient->reason_for_assessment ?? '—' }}</span>
             </span>
             <div class="abcd-box" style="margin-top:6px">
-                <strong>ABC FRAMEWORK</strong><br>
+                <strong>ABCD FRAMEWORK</strong><br>
                 <strong>A</strong> &mdash; Assessment (Subjective + Patient Details)<br>
                 <strong>B</strong> &mdash; Body Composition &amp; Energy Calculations<br>
-                <strong>C</strong> &mdash; Calculation of Requirements (Enteral Feed)
+                <strong>C</strong> &mdash; Calculation of Requirements<br>
+                <strong>D</strong> &mdash; Tube Feeding Recommendations
             </div>
         </td>
     </tr>
@@ -628,6 +647,162 @@
 </td>
 </tr></tbody>
 </table>
+
+{{-- SECTION D — Tube Feeding Recommendations (Package 3) --}}
+@if(!empty($isPackage3) && $enteral)
+@php
+    $dCond       = \App\Models\EnteralNutritionCalculation::CONDITIONS[$enteral->clinical_condition] ?? $enteral->clinical_condition;
+    $dDensity    = (float)$enteral->formula_density;
+    $dVol        = (int)$enteral->daily_volume_ml;
+    $dRate       = (float)$enteral->rate_ml_per_hour;
+    $dHours      = (int)$enteral->feeding_hours_per_day;
+    $dEnergyKcal = (float)$enteral->energy_target_kcal;
+    $dProteinG   = (float)$enteral->protein_target_g;
+    $dWeightKg   = (float)$enteral->weight_kg;
+    $dWeightType = $enteral->weight_type ?? 'actual';
+    $dWeightLabel = match($dWeightType) { 'ibw' => 'IBW', 'abw' => 'ABW', default => 'Actual' };
+
+    $dMacros = [
+        '1.0' => ['cho_pct'=>54,'pro_pct'=>16,'fat_pct'=>30],
+        '1.2' => ['cho_pct'=>52,'pro_pct'=>17,'fat_pct'=>31],
+        '1.5' => ['cho_pct'=>50,'pro_pct'=>18,'fat_pct'=>32],
+    ];
+    $dm    = $dMacros[(string)number_format($dDensity,1)] ?? $dMacros['1.0'];
+    $dChoG = round($dVol * $dDensity * $dm['cho_pct'] / 100 / 4, 1);
+    $dProG = round($dVol * $dDensity * $dm['pro_pct'] / 100 / 4, 1);
+    $dFatG = round($dVol * $dDensity * $dm['fat_pct'] / 100 / 9, 1);
+
+    $dFwFrac   = match(true) { $dDensity >= 1.45 => 0.76, $dDensity >= 1.15 => 0.82, default => 0.85 };
+    $dFwMl     = round($dVol * $dFwFrac);
+    $dAddWater = (int)$enteral->additional_water_ml;
+    $dFluidReq = (int)$enteral->fluid_requirement_ml;
+    $dTotalFluid = $dFwMl + $dAddWater;
+
+    $dFlushFreqStr = $enteral->water_flush_frequency ?? '6-hourly';
+    $dFlushHours   = max(1, (int)filter_var($dFlushFreqStr, FILTER_SANITIZE_NUMBER_INT) ?: 6);
+    $dFlushPerDay  = (int)round(24 / $dFlushHours);
+    $dFlushMl      = (int)($enteral->water_flush_ml ?? 30);
+    $dFlushTotal   = $dFlushMl * $dFlushPerDay;
+
+    $dHeightCm = (float)($patient->height ?? 0);
+    $dIsMale   = strtolower($patient->gender ?? '') === 'male';
+    $dHeightIn = $dHeightCm / 2.54;
+    $dIbw      = $dHeightCm > 0 ? max(0, round(($dIsMale ? 50.0 : 45.5) + 2.3 * max(0, $dHeightIn - 60), 1)) : null;
+    $dActualBw = (float)($patient->weight ?? 0);
+    $dBmi      = $dHeightCm > 0 && $dActualBw > 0 ? round($dActualBw / pow($dHeightCm/100, 2), 1) : null;
+    $dBmiClass = match(true) {
+        $dBmi === null  => 'Normal',
+        $dBmi < 18.5    => 'Underweight',
+        $dBmi < 25.0    => 'Normal',
+        $dBmi < 30.0    => 'Overweight',
+        default         => 'Obese',
+    };
+    $dProAdequate = $dProG > 0 && $dProteinG > 0 ? ($dProG >= $dProteinG * 0.95) : null;
+    $dCalcDate    = $enteral->created_at?->format('d M Y') ?? '';
+@endphp
+
+<div style="margin-top:10px">
+    <div class="section-header bg-d">
+        <span class="circle-label circle-d">D</span> TUBE FEEDING RECOMMENDATIONS
+        @if($dCalcDate)<span style="font-size:7px;font-weight:400;opacity:.8;margin-left:8px">Calculated {{ $dCalcDate }}</span>@endif
+    </div>
+    <div class="content-box">
+        {{-- Banner row --}}
+        <table class="tube-banner" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td>Condition: <strong>{{ $dCond }}</strong></td>
+                <td>Formula: <strong>{{ $dDensity }} kcal/mL</strong></td>
+                <td>Goal: <strong>{{ $dRate }} mL/hr &times; {{ $dHours }}h</strong></td>
+                <td>Protein: <strong>{{ $dProG }}g</strong> / <strong>{{ $dProteinG }}g</strong> target</td>
+                <td>Flush: <strong>{{ $dFlushMl }}mL</strong> {{ $dFlushFreqStr }}</td>
+            </tr>
+        </table>
+
+        {{-- 3-column grid --}}
+        <table class="tube-3col" cellpadding="0" cellspacing="0">
+            <tbody><tr>
+                {{-- Macronutrients --}}
+                <td>
+                    <div class="tube-box">
+                        <div class="tube-box-title">Macronutrients</div>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Feed Calories</td><td class="tube-val">{{ number_format($dEnergyKcal) }} kcal</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Total Protein</td><td class="tube-val">{{ $dProteinG }}g/day</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Carbohydrates</td><td class="tube-val">{{ $dChoG }}g</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Fat</td><td class="tube-val">{{ $dFatG }}g</td></tr>
+                        </table>
+                        @if($dProAdequate !== null)
+                        <span class="pro-badge {{ $dProAdequate ? 'pro-ok' : 'pro-low' }}">
+                            {{ $dProAdequate ? 'Protein target met' : 'Below protein target' }}
+                        </span>
+                        @endif
+                    </div>
+                </td>
+                {{-- Fluid --}}
+                <td>
+                    <div class="tube-box">
+                        <div class="tube-box-title">Fluid Management</div>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Total Fluids</td><td class="tube-val">{{ number_format($dTotalFluid) }} mL</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Daily Needs (35mL/kg)</td><td class="tube-val">{{ number_format($dFluidReq) }} mL</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Free Water</td><td class="tube-val">{{ number_format($dFwMl) }} mL</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Additional Water</td><td class="tube-val">{{ number_format($dAddWater) }} mL</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Water Flush</td><td class="tube-val">{{ $dFlushMl }}mL &times;{{ $dFlushPerDay }}/d = {{ number_format($dFlushTotal) }}mL</td></tr>
+                        </table>
+                        <div style="font-size:6.5px;color:#6b7280;margin-top:2px">Flush {{ $dFlushMl }}mL {{ $dFlushFreqStr }}</div>
+                    </div>
+                </td>
+                {{-- Anthropometrics --}}
+                <td>
+                    <div class="tube-box">
+                        <div class="tube-box-title">Anthropometrics</div>
+                        @if($dIbw !== null)
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">IBW (Devine)</td><td class="tube-val">{{ $dIbw }} kg</td></tr>
+                        </table>
+                        @endif
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Actual Body Wt</td><td class="tube-val">{{ $dActualBw }} kg</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Weight Used ({{ $dWeightLabel }})</td><td class="tube-val">{{ $dWeightKg }} kg</td></tr>
+                        </table>
+                        @if($dBmi !== null)
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">BMI</td><td class="tube-val">{{ $dBmi }} &mdash; {{ $dBmiClass }}</td></tr>
+                        </table>
+                        @endif
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Energy Target</td><td class="tube-val">{{ $enteral->energy_kcal_per_kg }} kcal/kg</td></tr>
+                        </table>
+                        <table class="tube-row" cellpadding="0" cellspacing="0">
+                            <tr><td class="tube-lbl">Protein Target</td><td class="tube-val">{{ $enteral->protein_g_per_kg }} g/kg</td></tr>
+                        </table>
+                    </div>
+                </td>
+            </tr></tbody>
+        </table>
+
+        <div class="startup-box">
+            <strong>Startup Protocol:</strong> Start at 20&ndash;30 mL/hr. Advance by 10&ndash;20 mL/hr every 4&ndash;8 hours as tolerated until goal rate of {{ $dRate }} mL/hr is achieved.
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- FOOTER --}}
 <table class="footer-table" cellpadding="0" cellspacing="0">

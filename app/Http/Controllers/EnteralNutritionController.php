@@ -53,6 +53,8 @@ class EnteralNutritionController extends Controller
             'protein_g_per_kg'       => 'required|numeric|min:0.5|max:2.5',
             'formula_density'        => 'required|in:1.0,1.2,1.5',
             'feeding_hours_per_day'  => 'required|integer|min:1|max:24',
+            'water_flush_ml'         => 'required|integer|min:10|max:100',
+            'water_flush_frequency'  => 'required|in:4-hourly,6-hourly,8-hourly,12-hourly',
         ]);
 
         $weightKg       = (float) $data['weight_kg'];
@@ -89,6 +91,8 @@ class EnteralNutritionController extends Controller
             'fluid_requirement_ml'       => $fluidReqMl,
             'free_water_from_formula_ml' => $freeWaterMl,
             'additional_water_ml'        => $additionalWaterMl,
+            'water_flush_ml'             => (int) $data['water_flush_ml'],
+            'water_flush_frequency'      => $data['water_flush_frequency'],
         ]);
 
         return redirect()
@@ -97,13 +101,20 @@ class EnteralNutritionController extends Controller
     }
 
     /**
-     * Download a PDF of all saved calculations for a patient.
+     * Stream or download a PDF of all saved calculations for a patient.
+     * ?stream=1 returns inline for iframe preview.
      */
-    public function pdf(Patient $patient)
+    public function pdf(Request $request, Patient $patient)
     {
         abort_unless($patient->user_id === Auth::id(), 403);
 
-        $calculations = $patient->enteralNutritionCalculations()->latest()->get();
+        $calcIds = array_filter(array_map('intval', explode(',', $request->input('calculations', ''))));
+
+        $query = $patient->enteralNutritionCalculations()->latest();
+        if (!empty($calcIds)) {
+            $query->whereIn('id', $calcIds);
+        }
+        $calculations = $query->get();
 
         $letterhead = auth()->user()->letterheadBase64();
 
@@ -113,6 +124,10 @@ class EnteralNutritionController extends Controller
         )->setPaper('a4', 'portrait');
 
         $filename = 'enteral-nutrition-' . Str::slug($patient->full_name) . '-' . now()->format('Y-m-d') . '.pdf';
+
+        if ($request->boolean('stream')) {
+            return $pdf->stream($filename);
+        }
 
         return $pdf->download($filename);
     }

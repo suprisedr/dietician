@@ -152,7 +152,7 @@
             </div>
         </form>
 
-        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px">
 
         <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem">
             <span class="dash-section-title">Patient Records</span>

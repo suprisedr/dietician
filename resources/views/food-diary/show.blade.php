@@ -30,10 +30,11 @@
                    style="padding:.35rem .9rem;background:#f1f5f9;color:var(--text-primary);font-size:.8rem;font-weight:700;border-radius:6px;text-decoration:none">
                     &#9998; Edit
                 </a>
-                <a href="{{ route('food-diary.pdf', $foodDiary) }}" target="_blank"
-                   style="padding:.35rem .9rem;background:#2d5a43;color:#fff;font-size:.8rem;font-weight:700;border-radius:6px;text-decoration:none">
-                    &#x1F4C4; Download PDF
-                </a>
+                <button type="button"
+                        onclick="openPdfPreviewModal('{{ route('food-diary.pdf', $foodDiary) }}?stream=1','{{ route('food-diary.pdf', $foodDiary) }}')"
+                        style="padding:.35rem .9rem;background:#2d5a43;color:#fff;font-size:.8rem;font-weight:700;border-radius:6px;border:none;cursor:pointer">
+                    Preview / Download PDF
+                </button>
             </div>
         </div>
 

@@ -19,7 +19,7 @@ class PatientVisitController extends Controller
         return view('patients.visits', compact('patient', 'visits'));
     }
 
-    public function pdf(Patient $patient)
+    public function pdf(Request $request, Patient $patient)
     {
         abort_unless($patient->user_id === auth()->id(), 403);
 
@@ -29,6 +29,10 @@ class PatientVisitController extends Controller
             ->setPaper('a4', 'landscape');
 
         $filename = 'visit-log-' . \Illuminate\Support\Str::slug($patient->full_name) . '-' . now()->format('Y-m-d') . '.pdf';
+
+        if ($request->boolean('stream')) {
+            return $pdf->stream($filename);
+        }
 
         return $pdf->download($filename);
     }

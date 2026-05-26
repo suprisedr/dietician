@@ -154,9 +154,23 @@
         .bg-a { background-color: #002d58; }
         .bg-b { background-color: #1d3557; }
         .bg-c { background-color: #006442; }
+        .bg-d { background-color: #5b21b6; }
         .circle-a { color: #002d58; }
         .circle-b { color: #1d3557; }
         .circle-c { color: #006442; }
+        .circle-d { color: #5b21b6; }
+
+        /* Section D — Tube Recommendations */
+        .tube-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 8px; }
+        .tube-col { background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; font-size: 10px; }
+        .tube-col-title { font-size: 10px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 6px; }
+        .tube-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #f3f4f6; }
+        .tube-row:last-child { border-bottom: none; }
+        .tube-label { color: #6b7280; font-size: 9px; }
+        .tube-val { font-weight: 700; color: #0d1f0c; font-size: 10px; }
+        .tube-banner { background: linear-gradient(135deg,#5b21b6,#7c3aed); color:#fff; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-size:9px; display:flex; gap:12px; flex-wrap:wrap; }
+        .tube-banner span { opacity:.9; }
+        .tube-banner strong { opacity:1; }
 
         .content-box {
             border: 1px solid #d1d8e0;
@@ -258,11 +272,28 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         Back to {{ $patient->name }}
     </a>
-    <div class="toolbar-buttons">
-        <a href="{{ route('patients.report.pdf', $patient->id) }}" class="btn-toolbar btn-pdf">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
-            Download PDF
-        </a>
+    <div class="toolbar-buttons" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        {{-- Date filter --}}
+        <form method="GET" action="{{ route('patients.report', $patient->id) }}" id="report-date-form"
+              style="display:flex;align-items:center;gap:.35rem">
+            <label style="font-size:.75rem;font-weight:700;color:#d1e8d9;white-space:nowrap">As of</label>
+            <input type="date" name="as_of" id="report-as-of"
+                   value="{{ $asOf ?? '' }}"
+                   style="padding:.3rem .5rem;border:none;border-radius:5px;font-size:.8rem;background:#fff;color:#0d1f0c;cursor:pointer"
+                   onchange="document.getElementById('report-date-form').submit()">
+            @if($asOf)
+            <a href="{{ route('patients.report', $patient->id) }}"
+               style="font-size:.72rem;color:#fbbf24;font-weight:700;text-decoration:none;white-space:nowrap">&#x2715; Clear</a>
+            @endif
+        </form>
+        <button type="button" class="btn-toolbar btn-pdf" id="btn-pdf-report"
+                onclick="openPdfPreviewModal(
+                    '{{ route('patients.report.pdf', $patient->id) }}?stream=1' + (document.getElementById('report-as-of').value ? '&as_of=' + document.getElementById('report-as-of').value : ''),
+                    '{{ route('patients.report.pdf', $patient->id) }}' + (document.getElementById('report-as-of').value ? '?as_of=' + document.getElementById('report-as-of').value : '')
+                )">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Preview / Download PDF
+        </button>
         <button class="btn-toolbar btn-print" onclick="window.print()">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m2 4h6a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2zm1-4h4v6H10v-6z"/></svg>
             Print
@@ -451,6 +482,142 @@
 
         </div>{{-- end right column --}}
     </div>{{-- end main-container --}}
+
+    {{-- SECTION D — Tube Recommendations (Package 3 only) --}}
+    @if($isPackage3 && $enteral)
+    @php
+        $dCond       = \App\Models\EnteralNutritionCalculation::CONDITIONS[$enteral->clinical_condition] ?? $enteral->clinical_condition;
+        $dDensity    = (float)$enteral->formula_density;
+        $dVol        = (int)$enteral->daily_volume_ml;
+        $dRate       = (float)$enteral->rate_ml_per_hour;
+        $dHours      = (int)$enteral->feeding_hours_per_day;
+        $dEnergyKcal = (float)$enteral->energy_target_kcal;
+        $dProteinG   = (float)$enteral->protein_target_g;
+        $dWeightKg   = (float)$enteral->weight_kg;
+        $dWeightType = $enteral->weight_type ?? 'actual';
+        $dWeightLabel = match($dWeightType) { 'ibw' => 'IBW', 'abw' => 'ABW', default => 'Actual' };
+
+        // Macros from formula density (approximate split)
+        $dMacros = [
+            '1.0' => ['cho_pct'=>54,'pro_pct'=>16,'fat_pct'=>30],
+            '1.2' => ['cho_pct'=>52,'pro_pct'=>17,'fat_pct'=>31],
+            '1.5' => ['cho_pct'=>50,'pro_pct'=>18,'fat_pct'=>32],
+        ];
+        $dm = $dMacros[(string)number_format($dDensity,1)] ?? $dMacros['1.0'];
+        $dChoG   = round($dVol * $dDensity * $dm['cho_pct'] / 100 / 4, 1);
+        $dProG   = round($dVol * $dDensity * $dm['pro_pct'] / 100 / 4, 1);
+        $dFatG   = round($dVol * $dDensity * $dm['fat_pct'] / 100 / 9, 1);
+
+        // Fluid
+        $dFwFrac = match(true) { $dDensity >= 1.45 => 0.76, $dDensity >= 1.15 => 0.82, default => 0.85 };
+        $dFwMl      = round($dVol * $dFwFrac);
+        $dAddWater  = (int)$enteral->additional_water_ml;
+        $dFluidReq  = (int)$enteral->fluid_requirement_ml;
+        $dTotalFluid = $dFwMl + $dAddWater;
+
+        // Flush
+        $dFlushFreqStr = $enteral->water_flush_frequency ?? '6-hourly';
+        $dFlushHours   = max(1, (int)filter_var($dFlushFreqStr, FILTER_SANITIZE_NUMBER_INT) ?: 6);
+        $dFlushPerDay  = (int)round(24 / $dFlushHours);
+        $dFlushMl      = (int)($enteral->water_flush_ml ?? 30);
+        $dFlushTotal   = $dFlushMl * $dFlushPerDay;
+
+        // Anthropometrics
+        $dHeightCm = (float)($patient->height ?? 0);
+        $dIsMale   = strtolower($patient->gender ?? '') === 'male';
+        $dHeightIn = $dHeightCm / 2.54;
+        $dIbw      = $dHeightCm > 0 ? max(0, round(($dIsMale ? 50.0 : 45.5) + 2.3 * max(0, $dHeightIn - 60), 1)) : null;
+        $dActualBw = (float)($patient->weight ?? 0);
+        $dBmi      = $dHeightCm > 0 && $dActualBw > 0 ? round($dActualBw / pow($dHeightCm/100, 2), 1) : null;
+        $dBmiClass = match(true) {
+            $dBmi === null         => 'Normal',
+            $dBmi < 18.5           => 'Underweight',
+            $dBmi < 25.0           => 'Normal',
+            $dBmi < 30.0           => 'Overweight',
+            default                => 'Obese',
+        };
+
+        // Protein adequacy
+        $dProAdequate = $dProG > 0 && $dProteinG > 0 ? ($dProG >= $dProteinG * 0.95) : null;
+
+        $dCalcDate = $enteral->created_at?->format('d M Y') ?? '';
+    @endphp
+    <div style="margin-top:14px">
+        <div class="section-header bg-d">
+            <span class="circle-label circle-d">D</span> TUBE FEEDING RECOMMENDATIONS
+            @if($dCalcDate)<span style="font-size:9px;font-weight:400;opacity:.8;margin-left:8px">Calculated {{ $dCalcDate }}</span>@endif
+            @if($asOf ?? null)<span style="font-size:9px;font-weight:400;opacity:.8;margin-left:4px">&mdash; as of {{ \Carbon\Carbon::parse($asOf)->format('d M Y') }}</span>@endif
+        </div>
+        <div class="content-box" style="font-size:11px">
+
+            {{-- Banner --}}
+            <div class="tube-banner">
+                <span>Condition: <strong>{{ $dCond }}</strong></span>
+                <span>Formula: <strong>{{ $dDensity }} kcal/mL</strong></span>
+                <span>Goal rate: <strong>{{ $dRate }} mL/hr &times; {{ $dHours }}h</strong></span>
+                <span>Protein: <strong>{{ $dProG }}g</strong> delivered / <strong>{{ $dProteinG }}g</strong> target</span>
+                <span>Flush: <strong>{{ $dFlushMl }}mL</strong> {{ $dFlushFreqStr }}</span>
+            </div>
+
+            {{-- 3 columns --}}
+            <div class="tube-grid">
+                {{-- Macronutrients --}}
+                <div class="tube-col">
+                    <div class="tube-col-title">Macronutrients</div>
+                    <div class="tube-row"><span class="tube-label">Feed Calories</span><span class="tube-val">{{ number_format($dEnergyKcal) }} kcal</span></div>
+                    <div class="tube-row"><span class="tube-label">Total Protein</span><span class="tube-val">{{ $dProteinG }}g/day</span></div>
+                    <div class="tube-row"><span class="tube-label">Carbohydrates</span><span class="tube-val">{{ $dChoG }}g</span></div>
+                    <div class="tube-row"><span class="tube-label">Fat</span><span class="tube-val">{{ $dFatG }}g</span></div>
+                    @if($dProAdequate !== null)
+                    <div style="margin-top:5px;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700;display:inline-block;background:{{ $dProAdequate ? '#dcfce7' : '#fef9c3' }};color:{{ $dProAdequate ? '#15803d' : '#92400e' }}">
+                        {{ $dProAdequate ? '&#x2713; Protein target met' : '&#x26A0; Below protein target' }}
+                    </div>
+                    @endif
+                </div>
+                {{-- Fluid --}}
+                <div class="tube-col">
+                    <div class="tube-col-title">Fluid Management</div>
+                    <div class="tube-row"><span class="tube-label">Total Fluids</span><span class="tube-val">{{ number_format($dTotalFluid) }} mL</span></div>
+                    <div class="tube-row"><span class="tube-label">Daily Needs (35mL/kg)</span><span class="tube-val">{{ number_format($dFluidReq) }} mL</span></div>
+                    <div class="tube-row"><span class="tube-label">Free Water (formula)</span><span class="tube-val">{{ number_format($dFwMl) }} mL</span></div>
+                    <div class="tube-row"><span class="tube-label">Additional Water</span><span class="tube-val">{{ number_format($dAddWater) }} mL</span></div>
+                    <div class="tube-row"><span class="tube-label">Water Flush</span><span class="tube-val">{{ $dFlushMl }}mL &times; {{ $dFlushPerDay }}/day = {{ number_format($dFlushTotal) }}mL</span></div>
+                    <div style="margin-top:5px;font-size:9px;color:#6b7280">Flush {{ $dFlushMl }}mL {{ $dFlushFreqStr }}</div>
+                </div>
+                {{-- Anthropometrics --}}
+                <div class="tube-col">
+                    <div class="tube-col-title">Anthropometrics</div>
+                    @if($dIbw !== null)
+                    <div class="tube-row"><span class="tube-label">IBW (Devine)</span><span class="tube-val">{{ $dIbw }} kg</span></div>
+                    @endif
+                    <div class="tube-row"><span class="tube-label">Actual Body Weight</span><span class="tube-val">{{ $dActualBw }} kg</span></div>
+                    <div class="tube-row"><span class="tube-label">Weight Used ({{ $dWeightLabel }})</span><span class="tube-val">{{ $dWeightKg }} kg</span></div>
+                    @if($dBmi !== null)
+                    <div class="tube-row"><span class="tube-label">BMI</span><span class="tube-val">{{ $dBmi }} &mdash; {{ $dBmiClass }}</span></div>
+                    @endif
+                    <div class="tube-row"><span class="tube-label">Energy Target</span><span class="tube-val">{{ $enteral->energy_kcal_per_kg }} kcal/kg</span></div>
+                    <div class="tube-row"><span class="tube-label">Protein Target</span><span class="tube-val">{{ $enteral->protein_g_per_kg }} g/kg</span></div>
+                </div>
+            </div>
+
+            {{-- Startup protocol --}}
+            <div style="margin-top:8px;background:#f0fff4;border:1px solid #bbf7d0;border-radius:5px;padding:6px 8px;font-size:9px;color:#166534">
+                <strong>Startup Protocol:</strong> Start at 20&ndash;30 mL/hr. Advance by 10&ndash;20 mL/hr every 4&ndash;8 hours as tolerated until goal rate of {{ $dRate }} mL/hr is achieved.
+            </div>
+
+        </div>
+    </div>
+    @elseif($isPackage3 && !$enteral)
+    <div style="margin-top:14px">
+        <div class="section-header bg-d">
+            <span class="circle-label circle-d">D</span> TUBE FEEDING RECOMMENDATIONS
+        </div>
+        <div class="content-box" style="font-size:11px;color:#888;text-align:center;padding:14px">
+            No enteral nutrition calculation found{{ $asOf ? ' on or before ' . \Carbon\Carbon::parse($asOf)->format('d M Y') : '' }}.
+            <span style="font-size:9px;display:block;margin-top:4px">Use the Enteral Feed Calculator for this patient to populate Section D.</span>
+        </div>
+    </div>
+    @endif
 
     {{-- FOOTER --}}
     <footer>

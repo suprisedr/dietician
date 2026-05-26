@@ -73,14 +73,14 @@
                 <span style="padding:.3rem .7rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.9)">SASPEN / ESPEN</span>
                 <span style="padding:.3rem .7rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.9)">Package 3</span>
                 @if($calculations->isNotEmpty())
-                <a href="{{ route('patients.enteral-nutrition.pdf', $patient) }}"
-                   target="_blank"
-                   style="display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .95rem;background:#fff;color:#15803d;font-size:.78rem;font-weight:700;border-radius:6px;text-decoration:none;border:1.5px solid rgba(255,255,255,.6);">
+                <button type="button"
+                        onclick="openEnPdfPreview()"
+                        style="display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .95rem;background:#fff;color:#15803d;font-size:.78rem;font-weight:700;border-radius:6px;border:1.5px solid rgba(255,255,255,.6);cursor:pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    Download PDF
-                </a>
+                    Preview / Download PDF
+                </button>
                 @endif
             </div>
         </div>
@@ -306,6 +306,35 @@
                     </select>
                 </div>
 
+                {{-- Water Flush --}}
+                <div style="grid-column:1/-1">
+                    <label class="en-label">Water Flush
+                        <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-muted)">— independent flush prescription (compulsory)</span>
+                    </label>
+                    <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:flex-end">
+                        <div>
+                            <label class="en-label" style="margin-bottom:.25rem;font-size:.68rem">Volume per flush</label>
+                            <select id="flush-vol-input" name="water_flush_ml" class="en-input" style="max-width:160px" onchange="recalcIfCalculated()">
+                                @foreach(range(10, 100, 10) as $vol)
+                                    <option value="{{ $vol }}" {{ old('water_flush_ml', 30) == $vol ? 'selected' : '' }}>{{ $vol }} mL</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="en-label" style="margin-bottom:.25rem;font-size:.68rem">Frequency</label>
+                            <select id="flush-freq-input" name="water_flush_frequency" class="en-input" style="max-width:240px" onchange="recalcIfCalculated()">
+                                <option value="4-hourly"  {{ old('water_flush_frequency', '6-hourly') === '4-hourly'  ? 'selected' : '' }}>Every 4 hours &mdash; 6&times; per day</option>
+                                <option value="6-hourly"  {{ old('water_flush_frequency', '6-hourly') === '6-hourly'  ? 'selected' : '' }}>Every 6 hours &mdash; 4&times; per day</option>
+                                <option value="8-hourly"  {{ old('water_flush_frequency', '6-hourly') === '8-hourly'  ? 'selected' : '' }}>Every 8 hours &mdash; 3&times; per day</option>
+                                <option value="12-hourly" {{ old('water_flush_frequency', '6-hourly') === '12-hourly' ? 'selected' : '' }}>Every 12 hours &mdash; 2&times; per day</option>
+                            </select>
+                        </div>
+                        <div id="flush-preview-inline" style="font-size:.78rem;color:var(--text-muted);padding:.4rem 0;display:none">
+                            Total: <strong id="flush-preview-total" style="color:var(--primary)">—</strong> mL/day
+                        </div>
+                    </div>
+                </div>
+
                 <div style="grid-column:1/-1;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;padding-top:.25rem">
                     <button type="button" onclick="calculate()"
                             style="display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.4rem;background:var(--primary);color:#fff;font-size:.85rem;font-weight:700;border:none;cursor:pointer;letter-spacing:.02em;transition:background .15s"
@@ -333,15 +362,19 @@
                                 style="display:none;align-items:center;gap:.35rem;padding:.38rem .85rem;border-radius:7px;font-size:.78rem;font-weight:700;border:1.5px solid var(--primary);color:var(--primary);background:#fff;cursor:pointer;transition:all .15s"
                                 onmouseover="this.style.background='var(--primary)';this.style.color='#fff'"
                                 onmouseout="this.style.background='#fff';this.style.color='var(--primary)'">
-                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                            Download PDF
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            Preview PDF
                         </button>
                     </div>
                 </div>
 
                 {{-- Summary banner --}}
                 <div id="res-summary-banner" style="display:none;padding:1.1rem 1.5rem;background:#f0fdf4;border-bottom:2px solid var(--primary)">
-                    <div id="res-banner-formula" style="font-size:1.05rem;font-weight:800;color:var(--primary);margin-bottom:.55rem"></div>
+                    <div id="res-banner-formula" style="font-size:1.05rem;font-weight:800;color:var(--primary);margin-bottom:.4rem"></div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem 1.5rem">
+                        <div id="res-banner-protein" style="font-size:.8rem;color:#166534"></div>
+                        <div id="res-banner-flush"   style="font-size:.8rem;color:#166534"></div>
+                    </div>
                 </div>
 
                 {{-- 3-col grid: Macros | Fluid | Anthropometrics --}}
@@ -385,6 +418,11 @@
                                 <dt style="font-size:.72rem;color:var(--text-muted)">Daily Needs <span style="font-weight:400">(35 mL/kg)</span></dt>
                                 <dd id="res-fluid-std" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
                                 <div style="font-size:.72rem;color:var(--text-muted)">35 mL/kg/day</div>
+                            </div>
+                            <div>
+                                <dt style="font-size:.72rem;color:var(--text-muted)">Water Flush</dt>
+                                <dd id="res-flush-rx" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
+                                <div id="res-flush-rx-sub" style="font-size:.72rem;color:var(--text-muted)">&#x2014;</div>
                             </div>
                         </dl>
                     </div>
@@ -432,17 +470,33 @@
         <div class="dash-section-header" style="cursor:pointer;user-select:none"
              onclick="toggleSection('hist-body','hist-chev')">
             <span class="dash-section-title">Saved Calculations ({{ $calculations->count() }})</span>
+            <div style="display:flex;align-items:center;gap:.5rem;margin-left:auto" onclick="event.stopPropagation()">
+                <span id="sel-count-badge" style="display:none;font-size:.7rem;font-weight:700;color:#15803d;background:#dcfce7;border:1px solid #86efac;padding:.15rem .55rem;border-radius:999px">
+                    <span id="sel-count-num">0</span> selected
+                </span>
+                <button type="button" id="btn-pdf-selected"
+                        onclick="previewSelectedPdf()"
+                        style="display:none;align-items:center;gap:.35rem;padding:.35rem .85rem;background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;border:none;border-radius:.5rem;cursor:pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.75rem;height:.75rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    Preview Selected PDF
+                </button>
+            </div>
             <svg id="hist-chev" xmlns="http://www.w3.org/2000/svg"
-                 style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s"
+                 style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;flex-shrink:0"
                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
             </svg>
         </div>
         <div id="hist-body">
             <div class="overflow-x-auto">
-                <table class="pt-table">
+                <table class="pt-table" id="calc-history-table">
                     <thead>
                         <tr>
+                            <th style="width:2rem;text-align:center">
+                                <input type="checkbox" id="calc-select-all" title="Select all"
+                                       style="cursor:pointer"
+                                       onchange="toggleAllCalcs(this.checked)">
+                            </th>
                             <th>Date / Label</th>
                             <th>Condition</th>
                             <th style="text-align:right">Weight</th>
@@ -451,13 +505,17 @@
                             <th style="text-align:center">Formula</th>
                             <th style="text-align:right">Volume</th>
                             <th style="text-align:right">Rate</th>
-                            <th style="text-align:right">Add. Water</th>
+                            <th style="text-align:right">Flush</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($calculations as $calc)
                         <tr>
+                            <td style="text-align:center">
+                                <input type="checkbox" class="calc-check" value="{{ $calc->id }}"
+                                       style="cursor:pointer" onchange="onCalcCheckChange()">
+                            </td>
                             <td>
                                 <div style="font-weight:700;color:var(--text-primary)">{{ $calc->label ?: '—' }}</div>
                                 <div style="font-size:.72rem;color:var(--text-muted)">{{ $calc->created_at->format('d M Y H:i') }}</div>
@@ -483,7 +541,10 @@
                                 <div style="font-weight:700">{{ number_format($calc->rate_ml_per_hour,1) }} mL/hr</div>
                                 <div style="font-size:.7rem;color:var(--text-muted)">{{ $calc->feeding_hours_per_day }}h/day</div>
                             </td>
-                            <td style="text-align:right;font-weight:700">{{ number_format($calc->additional_water_ml,0) }} mL</td>
+                            <td style="text-align:right">
+                                <div style="font-weight:700">{{ $calc->water_flush_ml ?? 30 }} mL</div>
+                                <div style="font-size:.7rem;color:var(--text-muted)">{{ $calc->water_flush_frequency ?? '6-hourly' }}</div>
+                            </td>
                             <td>
                                 <form method="POST"
                                       action="{{ route('patients.enteral-nutrition.destroy', [$patient, $calc]) }}"
@@ -495,6 +556,7 @@
                         </tr>
                         @if($calc->notes)
                         <tr>
+                            <td></td>
                             <td colspan="10" style="font-size:.75rem;color:var(--text-muted);font-style:italic;padding-top:.15rem;padding-bottom:.6rem">
                                 &#x1F4CB; {{ $calc->notes }}
                             </td>
@@ -722,22 +784,36 @@ select.en-input { cursor: pointer; }
         var fmlFatG     = volumeL * (formula.fatGL     || 0);
 
         // ── Other metrics ─────────────────────────────────────────────
+        // ── Water Flush from UI ───────────────────────────
+        var flushVolMl    = parseInt((document.getElementById('flush-vol-input') || {}).value) || 30;
+        var flushFreq     = (document.getElementById('flush-freq-input') || {}).value || '6-hourly';
+        var flushFreqHrs  = parseInt(flushFreq) || 6;
+        var flushesPerDay = Math.round(24 / flushFreqHrs);
+        var flushTotalMl  = flushVolMl * flushesPerDay;
+
+        // ── Other metrics ─────────────────────────────────────────────
         var npnRatio = nitrogenG > 0 ? Math.round(nonProKcal / nitrogenG) : null;
-        var flushMl  = extraWater > 0 ? Math.round(extraWater / 6) : 0;
 
         function n(v, dec) {
             if (!v && v !== 0) return '\u2014';
             return parseFloat(v).toLocaleString('en-ZA', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
         }
 
-        // ── Show banner ───────────────────────────────────────────────
+        // ── Show banner ─────────────────────────────────────────────
         var banner = document.getElementById('res-summary-banner');
-        if (banner) banner.style.display = 'block';        var btnPrint = document.getElementById('btn-print-results');
+        if (banner) banner.style.display = 'block';
+        var btnPrint = document.getElementById('btn-print-results');
         if (btnPrint) btnPrint.style.display = 'inline-flex';
+
         // ── Banner ────────────────────────────────────────────────────
         set('res-banner-formula', 'Formula ' + currentDensity + ' kcal/mL \u2014 Goal rate: ' + n(rateMlHr, 1) + ' mL/hr over ' + hours + 'h');
         set('res-banner-protein', n(proteinG, 1) + ' g protein/day (' + n(proKg, 2) + ' g/kg' + (oedemAdj > 0 ? ', dry wt' : '') + ')');
-        set('res-banner-flush',   n(extraWater) + ' mL water flushes (' + n(flushMl) + ' mL \u00d7 6 per day)');
+        set('res-banner-flush',   'Water flush: ' + flushVolMl + ' mL every ' + flushFreq + ' (' + flushesPerDay + '\u00d7/day \u2014 ' + n(flushTotalMl) + ' mL/day)');
+
+        // Inline flush preview in form
+        var flushPrev = document.getElementById('flush-preview-inline');
+        if (flushPrev) { flushPrev.style.display = ''; }
+        set('flush-preview-total', n(flushTotalMl));
 
         // ── Macros section ────────────────────────────────────────────
         set('res-kcal',         n(energyKcal) + ' kcal');
@@ -748,12 +824,11 @@ select.en-input { cursor: pointer; }
         set('res-fml-fat',      n(fmlFatG, 1) + ' g');
 
         // ── Fluid section ─────────────────────────────────────────────
-        set('res-free-water',      n(fwMl) + ' mL');
-        set('res-extra-water',     n(extraWater) + ' mL');
-        set('res-flush-sub',       extraWater > 0 ? '(' + n(flushMl) + ' mL every 4 hrs)' : '(no supplemental flush needed)');
         set('res-total-fluid',     n(totalFluid) + ' mL');
         set('res-total-fluid-sub', '(' + n(totalFluid / wt, 1) + ' mL/kg/day)');
         set('res-fluid-std',       n(fluidStd) + ' mL');
+        set('res-flush-rx',        flushVolMl + ' mL every ' + flushFreq);
+        set('res-flush-rx-sub',    flushesPerDay + '\u00d7/day \u2014 ' + n(flushTotalMl) + ' mL/day total');
 
         // ── Nutritional weight ────────────────────────────────────────
         var wtLabels = { actual: 'Actual body weight', ibw: 'IBW (Devine)', abw: 'Adjusted body weight (NDW)' };
@@ -812,12 +887,35 @@ select.en-input { cursor: pointer; }
         if (el) el.textContent = val;
     }
 
-    // ── Print / Download PDF ─────────────────────────────────────
+    // ── recalcIfCalculated — retrigger when flush inputs change ──────
+    window.recalcIfCalculated = function () {
+        var banner = document.getElementById('res-summary-banner');
+        if (banner && banner.style.display !== 'none') recalc();
+    };
+
+    // ── Preview PDF (server-side, saved calculations) ─────────────────
+    window.openEnPdfPreview = function () {
+        var overlay = document.getElementById('en-pdf-overlay');
+        var frame   = document.getElementById('en-pdf-frame');
+        var loading = document.getElementById('en-pdf-loading');
+        var dlBtn   = document.getElementById('en-pdf-dl-btn');
+        var streamUrl   = '{{ route("patients.enteral-nutrition.pdf", $patient) }}?stream=1';
+        var downloadUrl = '{{ route("patients.enteral-nutrition.pdf", $patient) }}';
+        dlBtn.href = downloadUrl;
+        loading.style.display = 'flex';
+        frame.src = '';
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        frame.onload = function () { loading.style.display = 'none'; };
+        frame.src = streamUrl;
+    };
+
+    // ── Preview PDF (current unsaved calculation — JS-generated) ──────
     window.printResults = function () {
         function tv(id) { var e = document.getElementById(id); return e ? e.textContent : ''; }
         var patientInfo = '{{ addslashes($patient->full_name) }} &middot; {{ ucfirst($patient->gender) }} &middot; {{ $patient->age }}&nbsp;yrs &middot; {{ $patient->weight }}&nbsp;kg &middot; BMI&nbsp;{{ $patient->bmi ? number_format($patient->bmi,1) : "\u2014" }}';
         var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
-            + '<title>EN Results — {{ addslashes($patient->full_name) }}</title>'
+            + '<title>EN Results \u2014 {{ addslashes($patient->full_name) }}</title>'
             + '<style>'
             + '*{box-sizing:border-box;margin:0;padding:0}'
             + 'body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;padding:1.5cm 2cm}'
@@ -844,7 +942,7 @@ select.en-input { cursor: pointer; }
             + '.note{font-size:9px;color:#9ca3af;margin-top:4px;line-height:1.5}'
             + '@media print{@page{margin:1.5cm}button{display:none!important}}'
             + '</style></head><body>'
-            + '<h1>Enteral Nutrition &mdash; Tube Feed Recommendations</h1>'
+            + '<h1>Enteral Nutrition \u2014 Tube Feed Recommendations</h1>'
             + '<p class="subtitle">' + patientInfo + '</p>';
 
         // Banner
@@ -853,7 +951,7 @@ select.en-input { cursor: pointer; }
         var bannerFlush = tv('res-banner-flush');
         if (bannerFml) {
             html += '<div class="banner"><strong>' + bannerFml + '</strong><ul>'
-                + '<li>Start at 20 mL/hr, titrate by 10–20 mL/hr every 4 hours to goal rate</li>'
+                + '<li>Start at 20 mL/hr, titrate by 10\u201320 mL/hr every 4 hours to goal rate</li>'
                 + '<li>' + bannerProt  + '</li>'
                 + '<li>' + bannerFlush + '</li>'
                 + '</ul></div>';
@@ -872,6 +970,7 @@ select.en-input { cursor: pointer; }
         html += '<div><div class="col-head">Fluid</div><dl>'
             + '<div><dt>Total Fluids</dt><dd class="primary">' + tv('res-total-fluid') + '</dd><div class="sub">' + tv('res-total-fluid-sub') + '</div></div>'
             + '<div><dt>Daily Needs (35 mL/kg)</dt><dd>' + tv('res-fluid-std') + '</dd><div class="sub">35 mL/kg/day</div></div>'
+            + '<div><dt>Water Flush</dt><dd>' + tv('res-flush-rx') + '</dd><div class="sub">' + tv('res-flush-rx-sub') + '</div></div>'
             + '</dl></div>';
         // Anthropometrics
         var ibd = '{{ $devineIbw > 0 ? number_format($devineIbw,1)." kg" : "\u2014" }}';
@@ -886,7 +985,7 @@ select.en-input { cursor: pointer; }
         html += '</div>';
 
         // Formula table
-        html += '<div class="section-title">Formula Information &mdash; ' + tv('res-formula-label') + '</div>';
+        html += '<div class="section-title">Formula Information \u2014 ' + tv('res-formula-label') + '</div>';
         html += '<table><thead><tr><th>Macronutrient</th><th>Per 1 000 mL</th><th>Daily Total</th></tr></thead><tbody>'
             + '<tr><td>Energy</td><td>' + tv('res-ftbl-kcal-ml') + '</td><td><strong>' + tv('res-kcal2') + '</strong></td></tr>'
             + '<tr><td>Protein</td><td>' + tv('res-ftbl-pro-ml') + '</td><td><strong>' + tv('res-fml-protein') + '</strong></td></tr>'
@@ -899,13 +998,24 @@ select.en-input { cursor: pointer; }
         }
         html += '<p class="note">Nutrition information based on generic formula data per 1 000 mL; verify against the manufacturer&rsquo;s current product data sheet.</p>';
 
-        html += '<script>window.onload=function(){window.print();};<\/script>';
+        html += '<button onclick="window.print()" style="margin-top:1rem;padding:.5rem 1.2rem;background:#16a34a;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer">Print / Save as PDF</button>';
         html += '</body></html>';
 
-        var printWin = window.open('', '_blank', 'width=900,height=700');
-        if (!printWin) { alert('Please allow pop-ups to download the PDF.'); return; }
-        printWin.document.write(html);
-        printWin.document.close();
+        // Show in modal iframe instead of new window
+        var overlay = document.getElementById('en-pdf-overlay');
+        var frame   = document.getElementById('en-pdf-frame');
+        var loading = document.getElementById('en-pdf-loading');
+        var dlBtn   = document.getElementById('en-pdf-dl-btn');
+        // For JS-generated preview, the download href triggers print
+        dlBtn.removeAttribute('href');
+        dlBtn.onclick = function () {
+            var f = document.getElementById('en-pdf-frame');
+            if (f && f.contentWindow) f.contentWindow.print();
+        };
+        loading.style.display = 'none';
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        frame.srcdoc = html;
     };
 
     // ── Initialise UI state (no auto-recalc on load) ─────────────────
@@ -942,6 +1052,122 @@ select.en-input { cursor: pointer; }
         }
     })();
 })();
+
+// ── Calculation checkbox helpers ──────────────────────────────────
+function getCheckedCalcIds() {
+    return Array.from(document.querySelectorAll('.calc-check:checked')).map(function (c) { return c.value; });
+}
+
+window.toggleAllCalcs = function (checked) {
+    document.querySelectorAll('.calc-check').forEach(function (c) { c.checked = checked; });
+    onCalcCheckChange();
+};
+
+window.onCalcCheckChange = function () {
+    var ids     = getCheckedCalcIds();
+    var badge   = document.getElementById('sel-count-badge');
+    var numEl   = document.getElementById('sel-count-num');
+    var pdfBtn  = document.getElementById('btn-pdf-selected');
+    var allBox  = document.getElementById('calc-select-all');
+    var total   = document.querySelectorAll('.calc-check').length;
+    if (numEl)  numEl.textContent  = ids.length;
+    if (badge)  badge.style.display  = ids.length > 0 ? '' : 'none';
+    if (pdfBtn) pdfBtn.style.display = ids.length > 0 ? 'inline-flex' : 'none';
+    if (allBox) allBox.indeterminate = ids.length > 0 && ids.length < total;
+    if (allBox && ids.length === total && total > 0) allBox.checked = true;
+    if (allBox && ids.length === 0) allBox.checked = false;
+};
+
+window.previewSelectedPdf = function () {
+    var ids = getCheckedCalcIds();
+    if (!ids.length) return;
+    var base      = '{{ route("patients.enteral-nutrition.pdf", $patient) }}';
+    var param     = 'calculations=' + ids.join(',');
+    var streamUrl = base + '?' + param + '&stream=1';
+    var dlUrl     = base + '?' + param;
+    openEnPdfPreview(streamUrl, dlUrl);
+};
+
+// Wire hero PDF button to use selection if any are checked
+window.openEnPdfPreview = function (streamUrlOverride, dlUrlOverride) {
+    var overlay = document.getElementById('en-pdf-overlay');
+    var frame   = document.getElementById('en-pdf-frame');
+    var loading = document.getElementById('en-pdf-loading');
+    var dlBtn   = document.getElementById('en-pdf-dl-btn');
+    var base    = '{{ route("patients.enteral-nutrition.pdf", $patient) }}';
+    var ids     = getCheckedCalcIds();
+    var streamUrl, dlUrl;
+    if (streamUrlOverride) {
+        streamUrl = streamUrlOverride;
+        dlUrl     = dlUrlOverride || base;
+    } else if (ids.length) {
+        var param = 'calculations=' + ids.join(',');
+        streamUrl = base + '?' + param + '&stream=1';
+        dlUrl     = base + '?' + param;
+    } else {
+        streamUrl = base + '?stream=1';
+        dlUrl     = base;
+    }
+    dlBtn.href = dlUrl;
+    dlBtn.onclick = null;
+    loading.style.display = 'flex';
+    frame.src = '';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    frame.onload = function () { loading.style.display = 'none'; };
+    frame.src = streamUrl;
+};
+</script>
+
+{{-- ── PDF Preview Modal ──────────────────────────────────────────── --}}
+<div id="en-pdf-overlay" role="dialog" aria-modal="true" aria-label="PDF Preview"
+     style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:1rem;width:92vw;max-width:960px;height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+        {{-- Header --}}
+        <div style="padding:.9rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <span style="display:flex;align-items:center;gap:.5rem;font-size:.9rem;font-weight:700;color:#0f172a">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--primary)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Enteral Nutrition Report Preview
+            </span>
+            <div style="display:flex;align-items:center;gap:.5rem">
+                <a id="en-pdf-dl-btn" href="#" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem 1rem;background:var(--primary);color:#fff;font-size:.8rem;font-weight:700;border-radius:.5rem;text-decoration:none">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download PDF
+                </a>
+                <button type="button" onclick="closeEnPdfPreview()"
+                        style="width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border:1.5px solid #e5e7eb;border-radius:.5rem;background:#f8fafc;font-size:1.1rem;cursor:pointer;color:#64748b">&times;</button>
+            </div>
+        </div>
+        {{-- Loading spinner --}}
+        <div id="en-pdf-loading" style="display:none;flex:1;align-items:center;justify-content:center;gap:.5rem;color:#64748b;font-size:.875rem">
+            <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;animation:en-spin 1s linear infinite" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+            Loading preview&hellip;
+        </div>
+        {{-- iframe --}}
+        <iframe id="en-pdf-frame" title="PDF Preview" style="flex:1;width:100%;border:none"></iframe>
+    </div>
+</div>
+<style>
+#en-pdf-overlay.open { display:flex !important; }
+@keyframes en-spin { to { transform:rotate(360deg); } }
+</style>
+<script>
+(function(){
+    var overlay = document.getElementById('en-pdf-overlay');
+    window.closeEnPdfPreview = function () {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+        var f = document.getElementById('en-pdf-frame');
+        if (f) f.src = '';
+    };
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeEnPdfPreview();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closeEnPdfPreview();
+    });
+}());
 </script>
 
 </x-app-layout>

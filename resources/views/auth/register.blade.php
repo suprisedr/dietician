@@ -45,17 +45,17 @@
             </div>
         </div>
 
-        {{-- ── STEP 3: Dietician Number ── --}}
+        {{-- ── STEP 3: HPCSA Number ── --}}
         <div class="step hidden" id="step-3-content">
             <div style="margin-bottom:1.75rem">
                 <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);margin-bottom:.35rem">Step 3 of 5</p>
                 <h1 class="auth-card-title">Professional ID 🪪</h1>
-                <p class="auth-card-sub">Enter your registered dietitian number.</p>
+                <p class="auth-card-sub">Enter your HPCSA registered dietitian number.</p>
             </div>
             <div class="auth-field">
-                <label class="auth-label" for="dietician_number">Dietitian Number</label>
+                <label class="auth-label" for="dietician_number">HPCSA Registration Number</label>
                 <div class="auth-input-wrap">
-                    <input id="dietician_number" type="text" name="dietician_number" value="{{ old('dietician_number') }}" class="auth-input" required autocomplete="off" placeholder="e.g. DC-00123"/>
+                    <input id="dietician_number" type="text" name="dietician_number" value="{{ old('dietician_number') }}" class="auth-input" required autocomplete="off" placeholder="DT0012345"/>
                     <svg xmlns="http://www.w3.org/2000/svg" class="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1m-4 0h4"/></svg>
                 </div>
                 @error('dietician_number')<p class="auth-field-error">{{ $message }}</p>@enderror
@@ -72,22 +72,35 @@
             <div class="auth-field">
                 <label class="auth-label" for="password">Password</label>
                 <div class="auth-input-wrap">
-                    <input id="password" type="password" name="password" class="auth-input auth-input-pw" required autocomplete="new-password" placeholder="••••••••" oninput="updateStrength(this.value)"/>
+                    <input id="password" type="password" name="password" class="auth-input auth-input-pw" required autocomplete="new-password" placeholder="••••••••" oninput="updateStrength(this.value)" onkeyup="checkCaps(event,'capslock-reg')" onkeydown="checkCaps(event,'capslock-reg')" onfocus="checkCaps(event,'capslock-reg')"/>
                     <svg xmlns="http://www.w3.org/2000/svg" class="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg>
                     <button type="button" class="pw-toggle" onclick="togglePw('password',this)" tabindex="-1" aria-label="Show password">
                         <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0 1 12 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 0 1 2.71-4.29M9.88 9.88a3 3 0 1 0 4.243 4.243M6.1 6.1 3 3m18 18-3.1-3.1M9.88 9.88 3 3m10.122 10.122L21 21"/></svg>
                     </button>
                 </div>
+
+                {{-- Caps Lock warning --}}
+                <div id="capslock-reg" style="display:none;margin-top:.4rem;align-items:center;gap:.35rem;font-size:.75rem;font-weight:600;color:#f97316">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/><line x1="8" y1="18" x2="16" y2="18"/>
+                    </svg>
+                    Caps Lock is on
+                </div>
+
                 {{-- Strength meter --}}
-                <div class="pw-strength-wrap" id="pw-strength-wrap" style="display:none">
+                <div class="pw-strength-wrap" id="pw-strength-wrap" style="display:none;margin-top:.75rem">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+                        <span style="font-size:.72rem;font-weight:600;color:var(--text-muted)">Password strength</span>
+                        <span id="pw-strength-label" style="font-size:.72rem;font-weight:700"></span>
+                    </div>
                     <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
-                    <div class="pw-reqs" id="pw-reqs">
-                        <span class="pw-req" id="req-len">✗ 8+ characters</span>
-                        <span class="pw-req" id="req-upper">✗ Uppercase</span>
-                        <span class="pw-req" id="req-lower">✗ Lowercase</span>
-                        <span class="pw-req" id="req-num">✗ Number</span>
-                        <span class="pw-req" id="req-sym">✗ Symbol</span>
+                    <div class="pw-reqs" id="pw-reqs" style="margin-top:.6rem">
+                        <span class="pw-req" id="req-len">✗ At least 8 characters</span>
+                        <span class="pw-req" id="req-upper">✗ One uppercase letter (A–Z)</span>
+                        <span class="pw-req" id="req-lower">✗ One lowercase letter (a–z)</span>
+                        <span class="pw-req" id="req-num">✗ One number (0–9)</span>
+                        <span class="pw-req" id="req-sym">✗ One special character (!@#$…)</span>
                     </div>
                 </div>
                 @error('password')<p class="auth-field-error">{{ $message }}</p>@enderror
@@ -104,12 +117,19 @@
             <div class="auth-field">
                 <label class="auth-label" for="password_confirmation">Confirm Password</label>
                 <div class="auth-input-wrap">
-                    <input id="password_confirmation" type="password" name="password_confirmation" class="auth-input auth-input-pw" required autocomplete="new-password" placeholder="••••••••"/>
+                    <input id="password_confirmation" type="password" name="password_confirmation" class="auth-input auth-input-pw" required autocomplete="new-password" placeholder="••••••••" onkeyup="checkCaps(event,'capslock-confirm')" onkeydown="checkCaps(event,'capslock-confirm')" onfocus="checkCaps(event,'capslock-confirm')"/>
                     <svg xmlns="http://www.w3.org/2000/svg" class="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     <button type="button" class="pw-toggle" onclick="togglePw('password_confirmation',this)" tabindex="-1" aria-label="Show password">
                         <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0 1 12 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 0 1 2.71-4.29M9.88 9.88a3 3 0 1 0 4.243 4.243M6.1 6.1 3 3m18 18-3.1-3.1M9.88 9.88 3 3m10.122 10.122L21 21"/></svg>
                     </button>
+                </div>
+                {{-- Caps Lock warning --}}
+                <div id="capslock-confirm" style="display:none;margin-top:.4rem;align-items:center;gap:.35rem;font-size:.75rem;font-weight:600;color:#f97316">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/><line x1="8" y1="18" x2="16" y2="18"/>
+                    </svg>
+                    Caps Lock is on
                 </div>
                 @error('password_confirmation')<p class="auth-field-error">{{ $message }}</p>@enderror
             </div>
@@ -146,7 +166,7 @@
             steps.forEach((el, i) => el.classList.toggle('hidden', i !== n - 1));
             pips.forEach((pip, i) => {
                 pip.classList.remove('done', 'active');
-                if (i < n - 1)      pip.classList.add('done');
+                if (i < n - 1)        pip.classList.add('done');
                 else if (i === n - 1) pip.classList.add('active');
             });
             prevBtn.hidden = n === 1;
@@ -158,7 +178,6 @@
                 actBtn.type = 'button';
             }
 
-            // focus first input of newly visible step
             const input = steps[n - 1].querySelector('input');
             if (input) setTimeout(() => input.focus(), 50);
         }
@@ -183,6 +202,12 @@
         btn.querySelector('.eye-hide').style.display = show ? '' : 'none';
     }
 
+    function checkCaps(e, alertId) {
+        const on = e.getModifierState && e.getModifierState('CapsLock');
+        const el = document.getElementById(alertId);
+        if (el) el.style.display = on ? 'flex' : 'none';
+    }
+
     function updateStrength(val) {
         const wrap = document.getElementById('pw-strength-wrap');
         wrap.style.display = val.length ? 'block' : 'none';
@@ -203,10 +228,33 @@
             if (ok) passed++;
         }
 
-        const fill = document.getElementById('pw-strength-fill');
-        const pct  = (passed / 5) * 100;
+        const fill  = document.getElementById('pw-strength-fill');
+        const label = document.getElementById('pw-strength-label');
+        const pct   = (passed / 5) * 100;
+
         fill.style.width = pct + '%';
-        fill.style.background = pct <= 40 ? '#ef4444' : pct <= 60 ? '#f97316' : pct <= 80 ? '#eab308' : '#22c55e';
+
+        if (pct <= 20) {
+            fill.style.background = '#ef4444';
+            label.textContent = 'Very Weak';
+            label.style.color = '#ef4444';
+        } else if (pct <= 40) {
+            fill.style.background = '#f97316';
+            label.textContent = 'Weak';
+            label.style.color = '#f97316';
+        } else if (pct <= 60) {
+            fill.style.background = '#eab308';
+            label.textContent = 'Fair';
+            label.style.color = '#eab308';
+        } else if (pct <= 80) {
+            fill.style.background = '#84cc16';
+            label.textContent = 'Good';
+            label.style.color = '#84cc16';
+        } else {
+            fill.style.background = '#22c55e';
+            label.textContent = 'Strong';
+            label.style.color = '#22c55e';
+        }
     }
     </script>
 </x-guest-layout>

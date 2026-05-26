@@ -20,16 +20,21 @@
         </div>
 
         {{-- Send invite panel --}}
-        @php $patients = \App\Models\Patient::where('user_id', auth()->id())->orderBy('name')->get(['id','name','surname','email']); @endphp
+        @php
+            $patients  = \App\Models\Patient::where('user_id', auth()->id())->orderBy('name')->get(['id','name','surname','email']);
+            $monday    = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY)->format('Y-m-d');
+        @endphp
         <div style="background:#f0f9f4;border:1px solid #b7dfc9;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem">
-            <div style="font-size:.82rem;font-weight:700;color:#1a3d2b;margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem">
+            <div style="font-size:.82rem;font-weight:700;color:#1a3d2b;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem">
                 &#x2709; Send diary link to a patient
             </div>
-            <form method="POST" action="{{ route('food-diary.send-invite') }}"
-                  style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+            <form method="POST" action="{{ route('food-diary.send-invite') }}" id="invite-form"
+                  style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-start">
                 @csrf
+
+                {{-- Patient --}}
                 <select name="patient_id" required
-                        style="flex:1;min-width:220px;padding:.42rem .7rem;border:1px solid #b7dfc9;border-radius:6px;font-size:.83rem;background:#fff;color:var(--text-primary)">
+                        style="flex:1;min-width:200px;padding:.42rem .7rem;border:1px solid #b7dfc9;border-radius:6px;font-size:.83rem;background:#fff;color:var(--text-primary)">
                     <option value="">— Select a patient —</option>
                     @foreach($patients as $p)
                         <option value="{{ $p->id }}" @if(!$p->email) disabled @endif>
@@ -37,12 +42,36 @@
                         </option>
                     @endforeach
                 </select>
+
+                {{-- Type dropdown --}}
+                <select name="diary_type" id="diary-type-select" required
+                        onchange="toggleWeekPicker(this.value)"
+                        style="padding:.42rem .7rem;border:1px solid #b7dfc9;border-radius:6px;font-size:.83rem;background:#fff;color:var(--text-primary);min-width:148px">
+                    <option value="daily">&#x1F4D3; Daily Diary</option>
+                    <option value="weekly">&#x1F4C5; Weekly Diary</option>
+                </select>
+
+                {{-- Week picker (shown only for weekly) --}}
+                <div id="week-picker-wrap" style="display:none;align-items:center;gap:.35rem">
+                    <label style="font-size:.75rem;font-weight:700;color:#2d5a43;white-space:nowrap">Week of</label>
+                    <input type="date" name="week_start" id="week-start-input"
+                           value="{{ $monday }}"
+                           style="padding:.4rem .6rem;border:1px solid #b7dfc9;border-radius:6px;font-size:.83rem;background:#fff;color:var(--text-primary)">
+                </div>
+
                 <button type="submit"
                         style="padding:.42rem 1.1rem;background:#2d5a43;color:#fff;font-weight:700;font-size:.83rem;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">
-                    &#x1F4E7; Send Diary Link
+                    &#x1F4E7; Send Link
                 </button>
             </form>
         </div>
+
+        <script>
+        function toggleWeekPicker(val) {
+            var wrap = document.getElementById('week-picker-wrap');
+            wrap.style.display = val === 'weekly' ? 'flex' : 'none';
+        }
+        </script>
 
         {{-- Search --}}
         <form method="GET" style="margin-bottom:1.1rem;display:flex;gap:.5rem">
@@ -103,8 +132,9 @@
                                    style="padding:.28rem .7rem;background:var(--primary);color:#fff;font-size:.73rem;font-weight:700;border-radius:5px;text-decoration:none">View</a>
                                 <a href="{{ route('food-diary.edit', $diary) }}"
                                    style="padding:.28rem .7rem;background:#f1f5f9;color:var(--text-primary);font-size:.73rem;font-weight:700;border-radius:5px;text-decoration:none">Edit</a>
-                                <a href="{{ route('food-diary.pdf', $diary) }}" target="_blank"
-                                   style="padding:.28rem .7rem;background:#e0e7ff;color:#3730a3;font-size:.73rem;font-weight:700;border-radius:5px;text-decoration:none">PDF</a>
+                                <button type="button"
+                                        onclick="openPdfPreviewModal('{{ route('food-diary.pdf', $diary) }}?stream=1','{{ route('food-diary.pdf', $diary) }}')"
+                                        style="padding:.28rem .7rem;background:#e0e7ff;color:#3730a3;font-size:.73rem;font-weight:700;border-radius:5px;border:none;cursor:pointer">PDF</button>
                             @endif
                             @if($diary->patient_token && !$diary->submitted_at)
                                 <span title="{{ route('food-diary.patient-show', $diary->patient_token) }}"
