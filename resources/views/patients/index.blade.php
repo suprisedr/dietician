@@ -68,6 +68,8 @@
 
         {{-- ── Search & Filter Bar ──────────────────────────────── --}}
         <form method="GET" action="{{ route('patients.index') }}" id="filter-form">
+            <input type="hidden" name="sort"      value="{{ request('sort', 'created_at') }}">
+            <input type="hidden" name="direction" value="{{ request('direction', 'desc') }}">
             <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end">
 
                 {{-- Search --}}
@@ -167,21 +169,43 @@
             @empty
             @endforelse
 
+            @php
+                $cs  = request('sort', 'created_at');
+                $cd  = request('direction', 'desc');
+
+                $thLink = function(string $col, string $label) use ($cs, $cd): string {
+                    $isActive = $cs === $col;
+                    $newDir   = ($isActive && $cd === 'asc') ? 'desc' : 'asc';
+                    $params   = array_merge(request()->query(), ['sort' => $col, 'direction' => $newDir]);
+                    unset($params['page']);
+                    $url     = route('patients.index', $params);
+                    $upColor = ($isActive && $cd === 'asc')  ? 'var(--primary)' : '#cbd5e1';
+                    $dnColor = ($isActive && $cd === 'desc') ? 'var(--primary)' : '#cbd5e1';
+                    $labelStyle = $isActive ? 'color:var(--primary);font-weight:800' : '';
+                    return '<a href="' . e($url) . '" style="display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;color:inherit;white-space:nowrap">'
+                        . '<span style="' . $labelStyle . '">' . e($label) . '</span>'
+                        . '<span style="display:inline-flex;flex-direction:column;gap:1px;flex-shrink:0">'
+                        . '<svg xmlns="http://www.w3.org/2000/svg" style="width:.5rem;height:.5rem;color:' . $upColor . '" viewBox="0 0 10 6" fill="currentColor"><path d="M5 0L10 6H0L5 0Z"/></svg>'
+                        . '<svg xmlns="http://www.w3.org/2000/svg" style="width:.5rem;height:.5rem;color:' . $dnColor . '" viewBox="0 0 10 6" fill="currentColor"><path d="M5 6L0 0H10L5 6Z"/></svg>'
+                        . '</span>'
+                        . '</a>';
+                };
+            @endphp
             <table class="pt-table" style="width:100%">
                 <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>Consent</th>
-                            <th>Gender</th>
-                            <th>Age</th>
-                            <th>Weight</th>
-                            <th>Height</th>
-                            <th>Act. Factor</th>
-                            <th>BMI</th>
-                            <th>TEE (kJ)</th>
-                            <th style="text-align:right;width:3rem"></th>
-                        </tr>
-                    </thead>
+                    <tr>
+                        <th>{!! $thLink('name', 'Patient') !!}</th>
+                        <th>{!! $thLink('consent_status', 'Consent') !!}</th>
+                        <th>{!! $thLink('gender', 'Gender') !!}</th>
+                        <th>{!! $thLink('age', 'Age') !!}</th>
+                        <th>{!! $thLink('weight', 'Weight') !!}</th>
+                        <th>{!! $thLink('height', 'Height') !!}</th>
+                        <th>{!! $thLink('activity_factor', 'Act. Factor') !!}</th>
+                        <th>{!! $thLink('bmi', 'BMI') !!}</th>
+                        <th>TEE (kJ)</th>
+                        <th style="text-align:right;width:3rem"></th>
+                    </tr>
+                </thead>
                     <tbody>
                         @forelse($patients as $patient)
                             @php

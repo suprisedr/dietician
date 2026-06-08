@@ -372,8 +372,7 @@
                 <div id="res-summary-banner" style="display:none;padding:1.1rem 1.5rem;background:#f0fdf4;border-bottom:2px solid var(--primary)">
                     <div id="res-banner-formula" style="font-size:1.05rem;font-weight:800;color:var(--primary);margin-bottom:.4rem"></div>
                     <div style="display:flex;flex-wrap:wrap;gap:.35rem 1.5rem">
-                        <div id="res-banner-protein" style="font-size:.8rem;color:#166534"></div>
-                        <div id="res-banner-flush"   style="font-size:.8rem;color:#166534"></div>
+                        <div id="res-banner-flush" style="font-size:.8rem;color:#166534"></div>
                     </div>
                 </div>
 
@@ -429,7 +428,7 @@
 
                     {{-- Anthropometrics --}}
                     <div style="padding:1rem 1.25rem">
-                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.8rem">Anthropometrics</div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.8rem">Anthropometry</div>
                         <dl style="display:flex;flex-direction:column;gap:.7rem;margin:0">
                             <div>
                                 <dt style="font-size:.72rem;color:var(--text-muted)">Ideal Body Weight <span style="font-weight:400">(Devine)</span></dt>
@@ -451,7 +450,7 @@
                             </div>
                             <div>
                                 <dt style="font-size:.72rem;color:var(--text-muted)">BMI</dt>
-                                <dd style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">{{ $bmi > 0 ? number_format($bmi,1).' kg/m&sup2;' : '&mdash;' }}</dd>
+                                <dd style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">{!! $bmi > 0 ? number_format($bmi,1).' kg/m&sup2;' : '&mdash;' !!}</dd>
                                 @php
                                     $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($bmi >= 30 ? 'Obese class I' : ($bmi >= 25 ? 'Overweight' : ($bmi >= 18.5 ? 'Normal weight' : 'Underweight'))));
                                 @endphp
@@ -807,7 +806,6 @@ select.en-input { cursor: pointer; }
 
         // ── Banner ────────────────────────────────────────────────────
         set('res-banner-formula', 'Formula ' + currentDensity + ' kcal/mL \u2014 Goal rate: ' + n(rateMlHr, 1) + ' mL/hr over ' + hours + 'h');
-        set('res-banner-protein', n(proteinG, 1) + ' g protein/day (' + n(proKg, 2) + ' g/kg' + (oedemAdj > 0 ? ', dry wt' : '') + ')');
         set('res-banner-flush',   'Water flush: ' + flushVolMl + ' mL every ' + flushFreq + ' (' + flushesPerDay + '\u00d7/day \u2014 ' + n(flushTotalMl) + ' mL/day)');
 
         // Inline flush preview in form
@@ -855,17 +853,6 @@ select.en-input { cursor: pointer; }
         set('res-nitrogen', n(nitrogenG, 1) + ' g/day');
         set('res-npn',      npnRatio ? npnRatio + '\u00a0:\u00a01' : '\u2014');
         set('res-volume',   n(volumeMl) + ' mL');
-
-        // ── Protein adequacy flag ─────────────────────────────────────
-        var adequate = fmlProteinG >= proteinG;
-        var adeqEl   = document.getElementById('res-protein-adequacy');
-        if (adeqEl) {
-            adeqEl.textContent = adequate
-                ? '\u2713 Formula meets protein goal.'
-                : '\u26A0\uFE0F Formula protein (' + n(fmlProteinG, 1) + ' g) is below goal (' + n(proteinG, 1) + ' g) \u2014 consider higher-protein formula or supplementation.';
-            adeqEl.style.color      = adequate ? '#15803d' : '#b91c1c';
-            adeqEl.style.fontWeight = '700';
-        }
 
         // ── Fluid restriction status ──────────────────────────────────
         var volEl = document.getElementById('res-vol-restrict');
@@ -947,12 +934,10 @@ select.en-input { cursor: pointer; }
 
         // Banner
         var bannerFml   = tv('res-banner-formula');
-        var bannerProt  = tv('res-banner-protein');
         var bannerFlush = tv('res-banner-flush');
         if (bannerFml) {
             html += '<div class="banner"><strong>' + bannerFml + '</strong><ul>'
                 + '<li>Start at 20 mL/hr, titrate by 10\u201320 mL/hr every 4 hours to goal rate</li>'
-                + '<li>' + bannerProt  + '</li>'
                 + '<li>' + bannerFlush + '</li>'
                 + '</ul></div>';
         }
@@ -976,7 +961,7 @@ select.en-input { cursor: pointer; }
         var ibd = '{{ $devineIbw > 0 ? number_format($devineIbw,1)." kg" : "\u2014" }}';
         var abw = '{{ $actualWt > 0 ? number_format($actualWt,1)." kg" : "\u2014" }}';
         var bmiV= '{{ $bmi > 0 ? number_format($bmi,1)." kg/m\u00b2" : "\u2014" }}';
-        html += '<div><div class="col-head">Anthropometrics</div><dl>'
+        html += '<div><div class="col-head">Anthropometry</div><dl>'
             + '<div><dt>Ideal Body Weight (Devine)</dt><dd>' + ibd + '</dd></div>'
             + '<div><dt>Actual Body Weight</dt><dd>' + abw + '</dd></div>'
             + '<div><dt>Nutritional Weight Used</dt><dd class="primary">' + tv('res-nutri-wt') + '</dd><div class="sub">' + tv('res-nutri-wt-type') + '</div></div>'
@@ -992,10 +977,6 @@ select.en-input { cursor: pointer; }
             + '<tr><td>Carbohydrates</td><td>' + tv('res-ftbl-carbs-ml') + '</td><td><strong>' + tv('res-ftbl-carbs-daily') + '</strong></td></tr>'
             + '<tr><td>Fat</td><td>' + tv('res-ftbl-fat-ml') + '</td><td><strong>' + tv('res-ftbl-fat-daily') + '</strong></td></tr>'
             + '</tbody></table>';
-        var adeqEl = document.getElementById('res-protein-adequacy');
-        if (adeqEl && adeqEl.textContent) {
-            html += '<p class="adequacy" style="color:' + (adeqEl.style.color || '#111') + '">' + adeqEl.textContent + '</p>';
-        }
         html += '<p class="note">Nutrition information based on generic formula data per 1 000 mL; verify against the manufacturer&rsquo;s current product data sheet.</p>';
 
         html += '<button onclick="window.print()" style="margin-top:1rem;padding:.5rem 1.2rem;background:#16a34a;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer">Print / Save as PDF</button>';

@@ -329,94 +329,93 @@
                         <svg id="anthro-chevron" xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem;color:var(--text-muted);transition:transform .25s;transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </div>
                     <div id="anthro-body" style="display:none">
-                    <dl class="info-grid">
+                    {{-- Top row: basic measurements --}}
+                    <dl class="info-grid" style="grid-template-columns:repeat(3,1fr);padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
                         <div class="info-item"><dt>Weight</dt><dd>{{ $patient->weight }} kg</dd></div>
                         <div class="info-item"><dt>Height</dt><dd>{{ $patient->height }} cm</dd></div>
                         <div class="info-item"><dt>ABW <span style="font-size:.65rem;color:var(--text-muted);font-weight:500">(0.4 factor)</span></dt><dd>{{ $patient->abw ? number_format($patient->abw, 2).' kg' : '—' }}</dd></div>
-                        {{-- Target / Ideal Weights at three BMI benchmarks --}}
-                        <div class="info-item" style="grid-column:1/-1">
-                            <dt style="margin-bottom:.45rem">Ideal Body Weight (IBW) — select active target</dt>
-                            <dd style="padding:0">
-                                <table id="ibw-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
-                                    <thead>
-                                        <tr style="background:#f3f4f6">
-                                            <th style="padding:.3rem .5rem;width:2rem;border-bottom:1px solid #e5e7eb"></th>
-                                            <th style="padding:.3rem .6rem;text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI Target</th>
-                                            <th style="padding:.3rem .6rem;text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Meaning</th>
-                                            <th style="padding:.3rem .6rem;text-align:right;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $ibwRows = [
-                                                22 => ['label'=>'BMI 22','meaning'=>'Medical ideal',        'val'=>$patient->ibw22,  'color'=>'var(--text-primary)'],
-                                                25 => ['label'=>'BMI 25','meaning'=>'Healthy upper limit',  'val'=>$patient->ibw25,  'color'=>'var(--text-primary)'],
-                                                30 => ['label'=>'BMI 30','meaning'=>'Obesity threshold',    'val'=>$patient->ibw30,  'color'=>'#c2410c'],
-                                            ];
-                                            $activeTarget = (int) ($patient->ibw_bmi_target ?? 22);
-                                        @endphp
-                                        @foreach($ibwRows as $bmiVal => $row)
-                                            @php
-                                                $isActive    = ($bmiVal === $activeTarget);
-                                                $isIbwActive = ($bmiVal === 30 && $useIbwWeight);
-                                                $rowBg = $isIbwActive
-                                                    ? 'background:#f0fdf4'
-                                                    : ($loop->even ? 'background:#f9fafb' : 'background:#fff');
-                                            @endphp
-                                            <tr data-bmi="{{ $bmiVal }}"
-                                                style="{{ $rowBg }};{{ $isActive && !$isIbwActive ? 'outline:2px solid var(--primary);outline-offset:-2px;' : '' }}{{ $isIbwActive ? 'outline:2px solid #15803d;outline-offset:-2px;' : '' }}cursor:pointer"
-                                                onclick="selectIbwTarget({{ $bmiVal }})">
-                                                <td style="padding:.4rem .5rem;text-align:center;border-bottom:1px solid #f3f4f6">
-                                                    <span id="ibw-radio-{{ $bmiVal }}"
-                                                          style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;border:2px solid {{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#9ca3af' }};background:{{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#fff' }};vertical-align:middle"></span>
-                                                </td>
-                                                <td style="padding:.35rem .6rem;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6">{{ $row['label'] }}</td>
-                                                <td style="padding:.35rem .6rem;color:var(--text-muted);font-size:.75rem;text-align:center;border-bottom:1px solid #f3f4f6">
-                                                    {{ $row['meaning'] }}
-                                                    @if($isIbwActive)
-                                                        <span style="display:inline-flex;align-items:center;gap:.2rem;margin-left:.35rem;padding:.1rem .4rem;background:#dcfce7;color:#15803d;border-radius:999px;font-size:.65rem;font-weight:700;white-space:nowrap">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" style="width:.6rem;height:.6rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                                            Using IBW
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td style="padding:.35rem .6rem;text-align:right;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6"
-                                                    id="ibw-weight-{{ $bmiVal }}">
-                                                    {{ $row['val'] ? number_format($row['val'], 2).' kg' : '—' }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                                <p id="ibw-save-msg" style="font-size:.72rem;color:#15803d;margin-top:.35rem;display:none">✓ Saving…</p>
-                                @if($useIbwWeight)
-                                <div id="ibw-weight-notice" style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding:.5rem .75rem;background:#dcfce7;border:1px solid #bbf7d0;border-radius:8px;font-size:.75rem;font-weight:600;color:#15803d">
-                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    IBW active — RMR, TEE &amp; macros are calculated using <strong>&nbsp;{{ number_format($patient->ibw, 2) }} kg&nbsp;</strong> (IBW at BMI&nbsp;30) instead of actual weight. Click BMI&nbsp;22 or BMI&nbsp;25 to revert.
-                                </div>
-                                @endif
-                            </dd>
-                        </div>
-                        <div class="info-item"><dt>Activity Factor</dt><dd>{{ $patient->activity_factor }}</dd></div>
-                        <div class="info-item">
-                            <dt>RMR (kcal)
-                                @if($isObese)
-                                    <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
-                                @endif
-                            </dt>
-                            <dd id="anthro-rmr-kcal">{{ $patient->bmr ? number_format(round($patient->bmr), 0).' kcal/day' : '—' }}</dd>
-                        </div>
-                        <div class="info-item">
-                            <dt>RMR (kJ)
-                                @if($isObese)
-                                    <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px;margin-left:.3rem">Adj.</span>
-                                @endif
-                            </dt>
-                            <dd id="anthro-rmr-kj">{{ $patient->bmr ? number_format(round($patient->bmr * 4.184), 0).' kJ/day' : '—' }}</dd>
-                        </div>
-                        <div class="info-item"><dt>TEE</dt><dd id="anthro-tee-kj">{{ $patient->tee ? number_format(round($patient->tee), 0).' kJ/day' : '—' }}</dd></div>
-                        <div class="info-item"><dt>TEE (kcal)</dt><dd id="anthro-tee-kcal">{{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}</dd></div>
                     </dl>
+
+                    {{-- 2-col grid: IBW table (left) | Stats (right) --}}
+                    <div style="display:grid;grid-template-columns:1fr 1fr">
+                        {{-- Left: IBW selector --}}
+                        <div style="padding:1rem 1.25rem;border-right:1px solid var(--border)">
+                            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.5rem">Ideal Body Weight (IBW) — select active target</div>
+                            <table id="ibw-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
+                                <thead>
+                                    <tr style="background:#f3f4f6">
+                                        <th style="padding:.3rem .4rem;width:1.8rem;border-bottom:1px solid #e5e7eb"></th>
+                                        <th style="padding:.3rem .5rem;text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI Target</th>
+                                        <th style="padding:.3rem .5rem;text-align:right;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $ibwRows = [
+                                            22 => ['label'=>'BMI 22','val'=>$patient->ibw22,'color'=>'var(--text-primary)'],
+                                            25 => ['label'=>'BMI 25','val'=>$patient->ibw25,'color'=>'var(--text-primary)'],
+                                            30 => ['label'=>'BMI 30','val'=>$patient->ibw30,'color'=>'#c2410c'],
+                                        ];
+                                        $activeTarget = (int) ($patient->ibw_bmi_target ?? 22);
+                                    @endphp
+                                    @foreach($ibwRows as $bmiVal => $row)
+                                        @php
+                                            $isActive    = ($bmiVal === $activeTarget);
+                                            $isIbwActive = ($bmiVal === 30 && $useIbwWeight);
+                                            $rowBg = $isIbwActive
+                                                ? 'background:#f0fdf4'
+                                                : ($loop->even ? 'background:#f9fafb' : 'background:#fff');
+                                        @endphp
+                                        <tr data-bmi="{{ $bmiVal }}"
+                                            style="{{ $rowBg }};{{ $isActive && !$isIbwActive ? 'outline:2px solid var(--primary);outline-offset:-2px;' : '' }}{{ $isIbwActive ? 'outline:2px solid #15803d;outline-offset:-2px;' : '' }}cursor:pointer"
+                                            onclick="selectIbwTarget({{ $bmiVal }})">
+                                            <td style="padding:.35rem .4rem;text-align:center;border-bottom:1px solid #f3f4f6">
+                                                <span id="ibw-radio-{{ $bmiVal }}"
+                                                      style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;border:2px solid {{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#9ca3af' }};background:{{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#fff' }};vertical-align:middle"></span>
+                                            </td>
+                                            <td style="padding:.3rem .5rem;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6">
+                                                {{ $row['label'] }}
+                                                @if($isIbwActive)
+                                                    <span style="display:inline-flex;align-items:center;gap:.2rem;margin-left:.3rem;padding:.1rem .35rem;background:#dcfce7;color:#15803d;border-radius:999px;font-size:.62rem;font-weight:700;white-space:nowrap">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" style="width:.55rem;height:.55rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                                        Using IBW
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td style="padding:.3rem .5rem;text-align:right;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6"
+                                                id="ibw-weight-{{ $bmiVal }}">
+                                                {{ $row['val'] ? number_format($row['val'], 2).' kg' : '—' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <p id="ibw-save-msg" style="font-size:.72rem;color:#15803d;margin-top:.35rem;display:none">✓ Saving…</p>
+                            @if($useIbwWeight)
+                            <div id="ibw-weight-notice" style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding:.5rem .75rem;background:#dcfce7;border:1px solid #bbf7d0;border-radius:8px;font-size:.75rem;font-weight:600;color:#15803d">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                IBW active — RMR, TEE &amp; macros are calculated using <strong>&nbsp;{{ number_format($patient->ibw, 2) }} kg&nbsp;</strong> (IBW at BMI&nbsp;30) instead of actual weight. Click BMI&nbsp;22 or BMI&nbsp;25 to revert.
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- Right: Energy stats --}}
+                        <div style="padding:1rem 1.25rem">
+                            <dl style="display:flex;flex-direction:column;gap:.7rem;margin:0">
+                                <div class="info-item"><dt>Activity Factor</dt><dd>{{ $patient->activity_factor }}</dd></div>
+                                <div class="info-item">
+                                    <dt>RMR (kcal)@if($isObese) <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px">Adj.</span>@endif</dt>
+                                    <dd id="anthro-rmr-kcal">{{ $patient->bmr ? number_format(round($patient->bmr), 0).' kcal/day' : '—' }}</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>RMR (kJ)@if($isObese) <span style="font-size:.65rem;font-weight:700;padding:.1rem .45rem;background:#fff7ed;color:#c2410c;border-radius:999px">Adj.</span>@endif</dt>
+                                    <dd id="anthro-rmr-kj">{{ $patient->bmr ? number_format(round($patient->bmr * 4.184), 0).' kJ/day' : '—' }}</dd>
+                                </div>
+                                <div class="info-item"><dt>TEE</dt><dd id="anthro-tee-kj">{{ $patient->tee ? number_format(round($patient->tee), 0).' kJ/day' : '—' }}</dd></div>
+                                <div class="info-item"><dt>TEE (kcal)</dt><dd id="anthro-tee-kcal">{{ $teeKcal ? number_format($teeKcal).' kcal' : '—' }}</dd></div>
+                            </dl>
+                        </div>
+                    </div>
 
                     @if($isObese)
                     {{-- ── Obesity energy adjustment panel ── --}}
@@ -681,7 +680,7 @@
                 .then(function (data) {
                     if (data.error) throw new Error(data.error);
 
-                    /* Update Current: badge immediately */
+                    /* Update Current: badge */
                     var badge = document.getElementById('preset-current-badge');
                     if (badge) {
                         badge.innerHTML = 'Current: <strong id="preset-current-name">' + data.preset_name + '</strong>'
@@ -690,12 +689,60 @@
                             + '× Change</button>';
                     }
 
-                    status.style.color = '#15803d';
-                    status.textContent = '✓ ' + data.preset_name + ' applied — reloading…';
+                    /* Build id→item map */
+                    var itemMap = {};
+                    (data.items || []).forEach(function(i) { itemMap[i.id] = i; });
 
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 900);
+                    /* Update exchange template table rows */
+                    var etRows = document.querySelectorAll('#exchange-table tbody tr[data-item-id]');
+                    etRows.forEach(function(row) {
+                        var id   = Number(row.dataset.itemId);
+                        var item = itemMap[id];
+                        if (item) {
+                            row.dataset.nu     = item.nu;
+                            row.dataset.cho    = item.cho_g          != null ? item.cho_g          : '';
+                            row.dataset.proMin = item.protein_min_g  != null ? item.protein_min_g  : '';
+                            row.dataset.fatMin = item.fat_min_g      != null ? item.fat_min_g      : '';
+                            row.dataset.kj     = item.kj             != null ? item.kj             : '';
+                        } else {
+                            row.dataset.nu = 0;
+                        }
+                        var nuInput = row.querySelector('.nu-input');
+                        if (nuInput) nuInput.value = Number(row.dataset.nu);
+                    });
+
+                    /* Update meal plan slot inputs */
+                    document.querySelectorAll('.mp-row[data-item-id]').forEach(function(mpRow) {
+                        var id   = Number(mpRow.dataset.itemId);
+                        var item = itemMap[id];
+                        var nu   = item ? item.nu : 0;
+                        mpRow.dataset.nu = nu;
+                        var noCell = mpRow.querySelector('td.td-no');
+                        if (noCell) noCell.textContent = nu;
+                        ['breakfast','snack1','lunch','snack2','supper','snack3'].forEach(function(slot) {
+                            var inp = mpRow.querySelector('input[name*="[' + id + '][' + slot + ']"]');
+                            if (!inp) return;
+                            var val = item && item['slot_' + slot] ? item['slot_' + slot] : '';
+                            inp.value = val;
+                            val ? inp.classList.add('has-value') : inp.classList.remove('has-value');
+                        });
+                        if (window._mpUpdateRow) window._mpUpdateRow(id);
+                    });
+
+                    /* Recalculate exchange table and meal plan totals */
+                    if (window._etRecalcRow && window._etRecalcTotals) {
+                        etRows.forEach(function(r) { window._etRecalcRow(r); });
+                        window._etRecalcTotals();
+                    }
+                    if (window._mpUpdateColTotals)  window._mpUpdateColTotals();
+                    if (window._mpUpdateSaveButton) window._mpUpdateSaveButton();
+
+                    status.style.color = '#15803d';
+                    status.textContent = '✓ ' + data.preset_name + ' applied';
+                    btn.textContent    = 'Apply Preset';
+                    btn.disabled       = false;
+                    btn.style.opacity      = '1';
+                    btn.style.pointerEvents = 'auto';
                 })
                 .catch(function (err) {
                     status.style.color = '#b91c1c';
@@ -2011,6 +2058,9 @@
             if (window._mpUpdateSaveButton) window._mpUpdateSaveButton();
         }
 
+        window._etRecalcRow    = recalcRow;
+        window._etRecalcTotals = recalcTotals;
+
         // initialize totals on page load
         if(document.getElementById('exchange-table')) {
             document.querySelectorAll('#exchange-table tbody tr').forEach(recalcRow);
@@ -2190,16 +2240,35 @@
             <div style="display:flex;align-items:center;gap:.75rem">
 
                 {{-- Bell icon --}}
-                <div style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:{{ $patient->weekly_reminder_enabled ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;color:{{ $patient->weekly_reminder_enabled ? '#15803d' : '#9ca3af' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <div id="reminder-bell-bg"
+                     style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:{{ $patient->weekly_reminder_enabled ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg id="reminder-bell-svg" xmlns="http://www.w3.org/2000/svg"
+                         style="width:1.1rem;height:1.1rem;color:{{ $patient->weekly_reminder_enabled ? '#15803d' : '#9ca3af' }}"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
                 </div>
 
-                {{-- Label --}}
+                {{-- Label + Toggle inline --}}
                 <div>
-                    <p style="font-size:.88rem;font-weight:700;color:var(--text-primary);margin:0;line-height:1.2">Weekly Email Reminders</p>
-                    <p style="font-size:.78rem;color:var(--text-muted);margin:.2rem 0 0;line-height:1.3">
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <p style="font-size:.88rem;font-weight:700;color:var(--text-primary);margin:0;line-height:1.2">Weekly Email Reminders</p>
+                        @if($patient->email)
+                        <button id="reminder-toggle-btn"
+                            type="button"
+                            role="switch"
+                            aria-checked="{{ $patient->weekly_reminder_enabled ? 'true' : 'false' }}"
+                            data-enabled="{{ $patient->weekly_reminder_enabled ? '1' : '0' }}"
+                            data-email="{{ $patient->email }}"
+                            data-url="{{ route('patients.weekly-reminder.toggle', $patient) }}"
+                            title="{{ $patient->weekly_reminder_enabled ? 'Turn off reminders' : 'Turn on reminders' }}"
+                            onclick="toggleReminder(this)"
+                            style="position:relative;display:inline-flex;align-items:center;width:3rem;height:1.625rem;border-radius:999px;border:none;cursor:pointer;padding:0;transition:background .25s;background:{{ $patient->weekly_reminder_enabled ? '#22c55e' : '#d1d5db' }};flex-shrink:0">
+                            <span id="reminder-knob" style="position:absolute;top:.1875rem;left:{{ $patient->weekly_reminder_enabled ? '1.4375rem' : '.1875rem' }};width:1.25rem;height:1.25rem;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .25s"></span>
+                        </button>
+                        @endif
+                    </div>
+                    <p id="reminder-desc" style="font-size:.78rem;color:var(--text-muted);margin:.2rem 0 0;line-height:1.3">
                         @if(!$patient->email)
                             <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;font-weight:600;text-decoration:underline">Add an email address</a> to enable reminders
                         @elseif($patient->weekly_reminder_enabled)
@@ -2210,32 +2279,69 @@
                     </p>
                 </div>
 
-                {{-- Toggle switch (immediately after the text) --}}
-                @if($patient->email)
-                <form method="POST" action="{{ route('patients.weekly-reminder.toggle', $patient) }}" style="margin-left:.25rem">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit"
-                        role="switch"
-                        aria-checked="{{ $patient->weekly_reminder_enabled ? 'true' : 'false' }}"
-                        title="{{ $patient->weekly_reminder_enabled ? 'Turn off reminders' : 'Turn on reminders' }}"
-                        style="position:relative;display:inline-flex;align-items:center;width:3rem;height:1.625rem;border-radius:999px;border:none;cursor:pointer;padding:0;transition:background .25s;background:{{ $patient->weekly_reminder_enabled ? '#22c55e' : '#d1d5db' }};flex-shrink:0"
-                        onclick="this.style.opacity='.7'">
-                        <span style="position:absolute;top:.1875rem;left:{{ $patient->weekly_reminder_enabled ? '1.4375rem' : '.1875rem' }};width:1.25rem;height:1.25rem;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .25s"></span>
-                    </button>
-                </form>
-                @endif
-
             </div>
 
-            @if(session('reminder_success'))
-                <div style="margin-top:.75rem;padding:.45rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.5rem;color:#15803d;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:.4rem">
-                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    {{ session('reminder_success') }}
-                </div>
-            @endif
+            <div id="reminder-toast" style="display:none;margin-top:.75rem;padding:.45rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.5rem;color:#15803d;font-size:.82rem;font-weight:600;align-items:center;gap:.4rem">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span id="reminder-toast-msg"></span>
+            </div>
         </div>
     </div>
+
+    <script>
+    function toggleReminder(btn) {
+        btn.disabled = true;
+        btn.style.opacity = '.7';
+        var enabled = btn.dataset.enabled === '1';
+        var email   = btn.dataset.email || '';
+
+        fetch(btn.dataset.url, {
+            method: 'PATCH',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        })
+        .then(function(r) { return r.ok ? r.json() : r.json().then(function(e) { throw new Error(e.message || 'HTTP ' + r.status); }); })
+        .then(function(data) {
+            var on = data.enabled;
+            btn.dataset.enabled = on ? '1' : '0';
+            btn.setAttribute('aria-checked', on ? 'true' : 'false');
+            btn.title = on ? 'Turn off reminders' : 'Turn on reminders';
+            btn.style.background = on ? '#22c55e' : '#d1d5db';
+            btn.style.opacity = '1';
+            btn.disabled = false;
+
+            var knob = document.getElementById('reminder-knob');
+            if (knob) knob.style.left = on ? '1.4375rem' : '.1875rem';
+
+            var bellBg  = document.getElementById('reminder-bell-bg');
+            var bellSvg = document.getElementById('reminder-bell-svg');
+            if (bellBg)  bellBg.style.background  = on ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6';
+            if (bellSvg) bellSvg.style.color       = on ? '#15803d' : '#9ca3af';
+
+            var desc = document.getElementById('reminder-desc');
+            if (desc) desc.innerHTML = on
+                ? 'Sending weekly reminders to <strong>' + email + '</strong>'
+                : 'Reminders are off — patient will not receive weekly emails';
+
+            var toast    = document.getElementById('reminder-toast');
+            var toastMsg = document.getElementById('reminder-toast-msg');
+            if (toast && toastMsg) {
+                toastMsg.textContent = data.message;
+                toast.style.display = 'flex';
+                setTimeout(function() { toast.style.display = 'none'; }, 4000);
+            }
+        })
+        .catch(function(err) {
+            btn.style.opacity = '1';
+            btn.disabled = false;
+            alert(err.message || 'Could not update reminder setting.');
+        });
+    }
+    </script>
     @endif
 
 </x-app-layout>

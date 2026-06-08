@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <style>
   @page {
+    size: A4 portrait;
     background-color: #f3e9e9;
   }
   html, body {
@@ -11,20 +12,20 @@
   }
   body {
     font-family: 'DejaVu Serif', serif;
-    font-size: 8pt;
+    font-size: 7.5pt;
     color: #2d5a43;
     background-color: #f3e9e9;
     margin: 0;
-    padding: 20px 24px;
+    padding: 14px 16px;
   }
 
   /* ── Header layout table ─────────────────────────────── */
   table.hdr {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 18px;
+    margin-bottom: 10px;
     border-bottom: 2px solid #2d5a43;
-    padding-bottom: 8px;
+    padding-bottom: 5px;
   }
   td.hdr-left  { vertical-align: middle; background-color: #f3e9e9; }
   td.hdr-right { vertical-align: middle; text-align: right; width: 230px; background-color: #f3e9e9; }
@@ -52,51 +53,51 @@
 
   table.plan-grid th {
     color: #2d5a43;
-    padding: 7px 3px;
+    padding: 5px 2px;
     text-align: center;
-    font-size: 7pt;
+    font-size: 6.5pt;
     font-weight: bold;
     border-bottom: 2px solid #2d5a43;
     background-color: #f3e9e9;
   }
 
   table.plan-grid td {
-    padding: 5px 4px;
+    padding: 4px 3px;
     vertical-align: top;
     border: 1px solid #c8ddd6;
     border-bottom: 2px solid #2d5a43;
-    height: 54px;
+    height: 44px;
     background-color: #f3e9e9;
   }
 
   td.day-col, th.day-col {
-    width: 40px;
+    width: 28px;
     text-align: center;
     vertical-align: middle;
     font-weight: bold;
-    font-size: 7.5pt;
+    font-size: 7pt;
     border-right: 2px solid #2d5a43;
     border-left: none;
     color: #2d5a43;
   }
 
   td.total-col, th.total-col {
-    width: 46px;
+    width: 36px;
     text-align: center;
     vertical-align: middle;
-    font-size: 7pt;
+    font-size: 6.5pt;
     font-weight: bold;
     color: #2d5a43;
     border-right: none;
   }
 
-  td.fluids-col, th.fluids-col { width: 54px; }
+  td.fluids-col, th.fluids-col { width: 36px; }
 
   /* Per-item layout */
-  .meal-entry  { margin-bottom: 2px; line-height: 1.3; }
-  .entry-name  { font-size: 6.5pt; font-weight: bold; color: #1a3d2b; }
-  .entry-serv  { font-size: 6pt; color: #4a7a60; }
-  .entry-mac   { font-size: 6pt; color: #6b9c80; margin-top: 1px; }
+  .meal-entry  { margin-bottom: 1px; line-height: 1.2; }
+  .entry-name  { font-size: 6pt; font-weight: bold; color: #1a3d2b; }
+  .entry-serv  { font-size: 5.5pt; color: #4a7a60; }
+  .entry-mac   { font-size: 5.5pt; color: #6b9c80; margin-top: 0; }
 
   /* Footer */
   .pdf-footer {

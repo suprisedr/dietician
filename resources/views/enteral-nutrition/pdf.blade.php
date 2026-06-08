@@ -135,7 +135,7 @@ body {
             <td class="pat-lbl">Height</td>
             <td class="pat-val">{{ $patient->height ? $patient->height.' cm' : '—' }}</td>
             <td class="pat-lbl">BMI</td>
-            <td class="pat-val">{{ $patient->bmi ? number_format($patient->bmi,1).' kg/m²' : '—' }}</td>
+            <td class="pat-val">{{ $patient->bmi ? number_format($patient->bmi,1).' kg/m<sup>2</sup>' : '—' }}</td>
         </tr>
     </table>
 </div>
@@ -202,10 +202,6 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
             over {{ $calc->feeding_hours_per_day }}h
         </div>
         <div class="banner-detail">
-            &#x25B8; {{ number_format($calc->protein_target_g,1) }} g protein/day
-            ({{ $calc->protein_g_per_kg }} g/kg &middot; {{ $wtLabel }})
-        </div>
-        <div class="banner-detail">
             &#x25B8; Water flush: {{ $flushVolMl }} mL every {{ $calc->water_flush_frequency ?? '6-hourly' }}
             ({{ $flushesPerDay }}&times;/day &mdash; {{ number_format($flushTotalMl) }} mL/day)
         </div>
@@ -233,13 +229,6 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
 
                 <div class="row-lbl">Total Fat</div>
                 <div class="row-val">{{ $fmlFat }} g</div>
-                <div class="row-sub">
-                    @if($adequate)
-                        <span class="badge-ok">&#10003; Formula meets protein goal</span>
-                    @else
-                        <span class="badge-err">&#9888; Formula protein {{ $fmlPro }} g &lt; goal {{ number_format($calc->protein_target_g,1) }} g</span>
-                    @endif
-                </div>
             </td>
 
             {{-- Fluid --}}
@@ -261,7 +250,7 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
 
             {{-- Anthropometrics --}}
             <td width="34%">
-                <div class="col-head">Anthropometrics</div>
+                <div class="col-head">Anthropometry</div>
 
                 <div class="row-lbl">Ideal Body Weight (Devine)</div>
                 <div class="row-val">{{ $devineIbw !== null ? number_format($devineIbw,1).' kg' : '—' }}</div>
@@ -276,7 +265,7 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
                 <div class="row-sub">{{ $wtLabel }}</div>
 
                 <div class="row-lbl">BMI</div>
-                <div class="row-val">{{ $bmi > 0 ? number_format($bmi,1).' kg/m²' : '—' }}</div>
+                <div class="row-val">{{ $bmi > 0 ? number_format($bmi,1).' kg/m<sup>2</sup>' : '—' }}</div>
                 <div class="row-sub">{{ $bmiClass }}</div>
             </td>
 

@@ -26,7 +26,7 @@ class PatientVisitController extends Controller
         $visits = $patient->visits()->latest('visited_at')->get();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('patients.visits-pdf', compact('patient', 'visits'))
-            ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'portrait');
 
         $filename = 'visit-log-' . \Illuminate\Support\Str::slug($patient->full_name) . '-' . now()->format('Y-m-d') . '.pdf';
 

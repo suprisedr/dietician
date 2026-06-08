@@ -362,14 +362,14 @@
                 <td>
                     <div class="m-box">
                         <div class="m-label">Weight</div>
-                        <div class="m-val">{{ $patient->weight }}</div>
+                        <div class="m-val">{{ $patient->weight ? number_format($patient->weight, 1) : '—' }}</div>
                         <div class="m-unit">kg (actual)</div>
                     </div>
                 </td>
                 <td>
                     <div class="m-box">
                         <div class="m-label">Height</div>
-                        <div class="m-val">{{ $patient->height }}</div>
+                        <div class="m-val">{{ $patient->height ? number_format($patient->height, 1) : '—' }}</div>
                         <div class="m-unit">cm</div>
                     </div>
                 </td>
@@ -394,7 +394,7 @@
                 <td>
                     <div class="m-box">
                         <div class="m-label">Activity Factor</div>
-                        <div class="m-val">{{ $patient->activity_factor ?? '—' }}</div>
+                        <div class="m-val">{{ $patient->activity_factor ? number_format($patient->activity_factor, 2) : '—' }}</div>
                         <div class="m-unit">multiplier</div>
                     </div>
                 </td>

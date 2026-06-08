@@ -70,7 +70,17 @@ class PatientController extends Controller
             'avg_bmi' => $allForStats->filter(fn ($p) => $p->bmi)->avg(fn ($p) => $p->bmi),
         ];
 
-        $patients = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        $sortable  = ['name', 'age', 'weight', 'height', 'activity_factor', 'bmi', 'consent_status', 'created_at'];
+        $sort      = in_array($request->input('sort'), $sortable) ? $request->input('sort') : 'created_at';
+        $direction = $request->input('direction') === 'asc' ? 'asc' : 'desc';
+
+        if ($sort === 'bmi') {
+            $query->orderByRaw('(weight / NULLIF(POW(height / 100, 2), 0)) ' . $direction);
+        } else {
+            $query->orderBy($sort, $direction);
+        }
+
+        $patients = $query->paginate(15)->withQueryString();
 
         return view('patients.index', compact('patients', 'stats'));
     }
@@ -243,6 +253,10 @@ class PatientController extends Controller
         $msg = $enabled
             ? "Weekly meal plan reminders enabled for {$patient->full_name}."
             : "Weekly meal plan reminders disabled for {$patient->full_name}.";
+
+        if ($request->wantsJson()) {
+            return response()->json(['enabled' => $enabled, 'message' => $msg]);
+        }
 
         return back()->with('reminder_success', $msg);
     }

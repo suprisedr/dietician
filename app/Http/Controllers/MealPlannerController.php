@@ -437,7 +437,7 @@ class MealPlannerController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('meal-planner.pdf', compact(
             'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj', 'letterhead'
-        ))->setPaper('a4', 'landscape');
+        ))->setPaper('a4', 'portrait');
 
         $label    = $mealPlanner->label ?: $mealPlanner->week_start->format('Y-m-d');
         $patient  = $mealPlanner->patient;
@@ -476,7 +476,7 @@ class MealPlannerController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('meal-planner.pdf', compact(
             'mealPlanner', 'days', 'slots', 'slotLabels', 'grid', 'dayKj', 'cellKj', 'letterhead'
-        ))->setPaper('a4', 'landscape');
+        ))->setPaper('a4', 'portrait');
 
         $label    = $mealPlanner->label ?: $mealPlanner->week_start->format('Y-m-d');
         $patient  = $mealPlanner->patient;

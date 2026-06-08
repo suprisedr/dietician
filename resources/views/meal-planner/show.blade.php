@@ -599,20 +599,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 @endif
             </div>
         </div>
-        <div class="mp-actions">
-            @if($mealPlanner->groceryList)
-                <a href="{{ route('grocery-lists.show', $mealPlanner->groceryList) }}" class="mp-btn mp-btn-indigo">&#x1F6D2; View Grocery List</a>
-            @else
-                <form method="POST" action="{{ route('grocery-lists.generate-from-plan', $mealPlanner) }}" style="display:contents">
-                    @csrf
-                    <button type="submit" class="mp-btn mp-btn-indigo">&#x1F6D2; Generate Grocery List</button>
-                </form>
-            @endif
-            <button type="button" class="mp-btn mp-btn-indigo"
-                onclick="openPdfPreview('{{ route('meal-planner.pdf-preview', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}','{{ route('meal-planner.pdf', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}')">&#x1F441; Preview PDF</button>
-            <button type="button" class="mp-btn" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff"
-                onclick="openRepeatModal()">&#x1F501; Repeat Plan</button>
-        </div>
     </div>
 
     @if(session('success'))
@@ -808,8 +794,24 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
         <div class="mp-save-bar">
             <button type="submit" class="mp-btn mp-btn-orange">&#x1F4BE; Save Plan</button>
             <span id="mp-autosave-status" class="mp-save-hint"></span>
+            <span style="flex:1"></span>
+            @if($mealPlanner->groceryList)
+                <a href="{{ route('grocery-lists.show', $mealPlanner->groceryList) }}" class="mp-btn mp-btn-indigo">&#x1F6D2; View Grocery List</a>
+            @else
+                <button type="button" class="mp-btn mp-btn-indigo" onclick="document.getElementById('grocery-gen-form').submit()">&#x1F6D2; Generate Grocery List</button>
+            @endif
+            <button type="button" class="mp-btn mp-btn-indigo"
+                onclick="openPdfPreview('{{ route('meal-planner.pdf-preview', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}','{{ route('meal-planner.pdf', [$mealPlanner->patient_id ?? 0, $mealPlanner]) }}')">&#x1F441; Preview PDF</button>
+            <button type="button" class="mp-btn" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff"
+                onclick="openRepeatModal()">&#x1F501; Repeat Plan</button>
         </div>
     </form>
+
+    @if(!$mealPlanner->groceryList)
+    <form id="grocery-gen-form" method="POST" action="{{ route('grocery-lists.generate-from-plan', $mealPlanner) }}" style="display:none">
+        @csrf
+    </form>
+    @endif
 
     {{-- Monthly Overview --}}
     <details class="mp-details-card" open>
