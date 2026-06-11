@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Fix for Heroku HTTPS load balancers
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'device.limit'   => \App\Http\Middleware\EnforceDeviceLimit::class,
             'plan'           => \App\Http\Middleware\RequiresPlan::class,
