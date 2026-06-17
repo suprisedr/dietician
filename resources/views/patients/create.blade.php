@@ -209,64 +209,49 @@
                     <p style="font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--primary-dark);padding-bottom:.3rem;border-bottom:1.5px solid var(--border);margin:.6rem 0 .9rem">Clinical Details</p>
 
                     {{-- Reason for Assessment --}}
-                    <div style="margin-bottom:1rem">
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">
-                            Reason for Assessment
-                        </label>
-                        <textarea name="reason_for_assessment" rows="2"
-                                  placeholder="e.g. Weight management, diabetes follow-up, sports nutrition…"
-                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
-                                  onfocus="this.style.borderColor='var(--primary)'"
-                                  onblur="this.style.borderColor='#d1d5db'">{{ old('reason_for_assessment') }}</textarea>
-                        @error('reason_for_assessment')
-                            <p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <x-chip-multiselect
+                        name="reason_for_assessment"
+                        label="Reason for Assessment"
+                        :options="config('patient_clinical.reasons')"
+                        :value="old('reason_for_assessment', '')"
+                        placeholder="Add a custom reason"/>
+                    @error('reason_for_assessment')<p style="margin-top:-.5rem;margin-bottom:.75rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
 
                     {{-- Referred By --}}
-                    <div style="margin-bottom:1rem">
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Referred By</label>
-                        <input type="text" name="referred_by"
-                               placeholder="e.g. Dr. Smith (GP)"
-                               value="{{ old('referred_by') }}"
-                               style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;transition:border-color .15s;box-sizing:border-box"
-                               onfocus="this.style.borderColor='var(--primary)'"
-                               onblur="this.style.borderColor='#d1d5db'">
-                        @error('referred_by')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
-                    </div>
+                    <x-chip-multiselect
+                        name="referred_by"
+                        label="Referred By"
+                        :options="config('patient_clinical.referrers')"
+                        :value="old('referred_by', '')"
+                        placeholder="e.g. Dr. Smith (GP)"/>
+                    @error('referred_by')<p style="margin-top:-.5rem;margin-bottom:.75rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
 
                     {{-- Allergies --}}
-                    <div style="margin-bottom:1rem">
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Allergies / Intolerances</label>
-                        <textarea name="allergies" rows="2"
-                                  placeholder="e.g. Peanuts, lactose intolerance, shellfish…"
-                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
-                                  onfocus="this.style.borderColor='var(--primary)'"
-                                  onblur="this.style.borderColor='#d1d5db'">{{ old('allergies') }}</textarea>
-                        @error('allergies')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
-                    </div>
+                    <x-chip-multiselect
+                        name="allergies"
+                        label="Allergies / Intolerances"
+                        :options="config('patient_clinical.allergies')"
+                        :value="old('allergies', '')"
+                        placeholder="Add another allergy"/>
+                    @error('allergies')<p style="margin-top:-.5rem;margin-bottom:.75rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
 
-                    {{-- Medical History --}}
-                    <div style="margin-bottom:1rem">
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Medical History</label>
-                        <textarea name="medical_history" rows="3"
-                                  placeholder="e.g. Type 2 diabetes (2018), hypertension…"
-                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
-                                  onfocus="this.style.borderColor='var(--primary)'"
-                                  onblur="this.style.borderColor='#d1d5db'">{{ old('medical_history') }}</textarea>
-                        @error('medical_history')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
-                    </div>
+                    {{-- Medical History / Conditions --}}
+                    <x-chip-multiselect
+                        name="medical_history"
+                        label="Medical History / Conditions"
+                        :options="config('patient_clinical.conditions')"
+                        :value="old('medical_history', '')"
+                        placeholder="Add another condition"/>
+                    @error('medical_history')<p style="margin-top:-.5rem;margin-bottom:.75rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
 
                     {{-- Medications --}}
-                    <div style="margin-bottom:1rem">
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">Current Medications</label>
-                        <textarea name="medications" rows="2"
-                                  placeholder="e.g. Metformin 500mg BD, Lisinopril 10mg OD…"
-                                  style="width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #d1d5db;border-radius:6px;outline:none;resize:vertical;transition:border-color .15s;box-sizing:border-box"
-                                  onfocus="this.style.borderColor='var(--primary)'"
-                                  onblur="this.style.borderColor='#d1d5db'">{{ old('medications') }}</textarea>
-                        @error('medications')<p style="margin-top:.3rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
-                    </div>
+                    <x-chip-multiselect
+                        name="medications"
+                        label="Current Medications"
+                        :options="config('patient_clinical.medications')"
+                        :value="old('medications', '')"
+                        placeholder="e.g. Metformin 500mg BD"/>
+                    @error('medications')<p style="margin-top:-.5rem;margin-bottom:.75rem;font-size:.75rem;color:#dc2626">{{ $message }}</p>@enderror
 
                     {{-- Dietary History --}}
                     <div style="margin-bottom:1rem">
@@ -374,13 +359,12 @@
                             Choose which BMI value to use when calculating the patient's Ideal Body Weight.
                         </p>
                         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem">
-                            @foreach([22=>'Medical ideal',25=>'Healthy upper',30=>'Obesity threshold'] as $bmiVal=>$bmiLabel)
+                            @foreach([22, 25, 30] as $bmiVal)
                                 <label style="display:flex;flex-direction:column;align-items:center;padding:.6rem .5rem;border:1.5px solid {{ old('ibw_bmi_target',22)==$bmiVal ? 'var(--primary)' : '#d1d5db' }};border-radius:7px;cursor:pointer;transition:border-color .15s;background:{{ old('ibw_bmi_target',22)==$bmiVal ? 'rgba(103,159,95,.07)' : '#fff' }}">
                                     <input type="radio" name="ibw_bmi_target" value="{{ $bmiVal }}"
                                            {{ old('ibw_bmi_target',22)==$bmiVal ? 'checked' : '' }}
                                            style="accent-color:var(--primary);margin-bottom:.25rem">
                                     <span style="font-size:.82rem;font-weight:700;color:var(--text-primary)">BMI {{ $bmiVal }}</span>
-                                    <span style="font-size:.7rem;color:var(--text-muted);text-align:center">{{ $bmiLabel }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -410,7 +394,6 @@
                                 <span style="color:#92400e">Oedema Present</span>
                             </label>
                         </div>
-                        <p style="margin-top:.35rem;font-size:.74rem;color:var(--text-muted)">Timestamp is recorded automatically when oedema status is set or changes.</p>
                     </div>
 
                     {{-- Actions --}}

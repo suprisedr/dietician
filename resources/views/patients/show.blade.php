@@ -242,7 +242,7 @@
                        price: 'R{{ number_format($pkg3?->price_zar ?? 0) }}/mo',
                        isFree: {{ ($pkg3?->price_zar ?? 1) == 0 ? 'true' : 'false' }},
                        features: {!! json_encode($pkg3?->features ?? []) !!},
-                       checkoutUrl: '{{ $pkg3 ? route('subscription.checkout', $pkg3->slug) : '' }}'
+                       checkoutUrl: ('{{ $pkg3 ? route('subscription.checkout', $pkg3->slug) : '' }}' || '') + (window.location.href ? '?return_to=' + encodeURIComponent(window.location.href) : '')
                    }}))"
                    style="display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.1rem;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.82rem;font-weight:700;cursor:pointer;transition:border-color .15s,box-shadow .15s"
                    onmouseover="this.style.borderColor='#f59e0b';this.style.boxShadow='0 0 0 3px rgba(245,158,11,.1)'"
@@ -668,10 +668,31 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                     },
                     body: JSON.stringify({ preset: _selectedPreset }),
                 })
                 .then(function (r) {
+                    if (r.status === 402) {
+                        return r.json().then(function (data) {
+                            btn.disabled = false;
+                            btn.textContent = 'Apply Preset';
+                            status.textContent = '';
+                            @foreach(\App\Models\PricingPackage::all() as $pkg)
+                            if (data.upgrade_required === '{{ $pkg->slug }}') {
+                                window.dispatchEvent(new CustomEvent('open-upgrade-modal', { detail: {
+                                    slug: '{{ $pkg->slug }}',
+                                    planName: '{{ $pkg->name }}',
+                                    price: 'R{{ number_format($pkg->price_zar) }}/mo',
+                                    isFree: {{ $pkg->price_zar == 0 ? 'true' : 'false' }},
+                                    features: {!! json_encode($pkg->features ?? []) !!},
+                                    checkoutUrl: '{{ route('subscription.checkout', $pkg->slug) }}?return_to=' + encodeURIComponent(window.location.href)
+                                }}));
+                            }
+                            @endforeach
+                            throw new Error('__UPGRADE__');
+                        });
+                    }
                     if (!r.ok) {
                         return r.json().then(function (e) { throw new Error(e.error || ('HTTP ' + r.status)); });
                     }
@@ -745,6 +766,8 @@
                     btn.style.pointerEvents = 'auto';
                 })
                 .catch(function (err) {
+                    /* __UPGRADE__ is a signal that the upgrade modal handled the response — stay quiet */
+                    if (err && err.message === '__UPGRADE__') return;
                     status.style.color = '#b91c1c';
                     status.textContent = '⚠ ' + (err.message || 'Something went wrong');
                     btn.textContent = 'Apply Preset';
@@ -1368,7 +1391,7 @@
                             price: 'R{{ number_format($pkg->price_zar) }}/mo',
                             isFree: {{ $pkg->price_zar == 0 ? 'true' : 'false' }},
                             features: {!! json_encode($pkg->features ?? []) !!},
-                            checkoutUrl: '{{ route('subscription.checkout', $pkg->slug) }}'
+                            checkoutUrl: '{{ route('subscription.checkout', $pkg->slug) }}?return_to=' + encodeURIComponent(window.location.href)
                         }}));
                     }
                     @endforeach

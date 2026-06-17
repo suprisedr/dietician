@@ -62,7 +62,7 @@
                     </div>
                 @endif
 
-                <a href="{{ route('subscription.checkout', $requiredPackage->slug) }}"
+                <a href="{{ route('subscription.checkout', $requiredPackage->slug) }}{{ url()->previous() ? '?return_to='.urlencode(url()->previous()) : '' }}"
                    class="inline-flex items-center gap-2
                           bg-[#429677] hover:bg-[#679F5F]
                           text-white font-semibold px-8 py-3 rounded-xl

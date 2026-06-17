@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :minimal="true">
 
     {{-- ── Hero banner ─────────────────────────────────────────────────────── --}}
     <div class="dash-hero" style="padding-bottom:5rem">

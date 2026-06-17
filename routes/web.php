@@ -39,8 +39,20 @@ Route::get('invite/{token}', [InvitationController::class, 'accept'])->name('tea
 // ── Dashboard (auth + verified + admin approved) ─────────────────────────────
 
 Route::get('/dashboard', function () {
-    $patientCount = \App\Models\Patient::where('user_id', Auth::id())->count();
-    return view('dashboard', compact('patientCount'));
+    $userId = Auth::id();
+    $startOfWeek = now()->startOfWeek();
+
+    $patientCount     = \App\Models\Patient::where('user_id', $userId)->count();
+    $newThisWeek      = \App\Models\Patient::where('user_id', $userId)
+                            ->where('created_at', '>=', $startOfWeek)->count();
+    $followUps        = \App\Models\PatientVisit::whereHas('patient', function ($q) use ($userId) {
+                            $q->where('user_id', $userId);
+                        })->where('visited_at', '>=', now()->subDays(7))->count();
+    $mealPlansCreated = \App\Models\MealPlannerWeek::where('user_id', $userId)->count();
+
+    return view('dashboard', compact(
+        'patientCount', 'newThisWeek', 'followUps', 'mealPlansCreated'
+    ));
 })->middleware(['auth', 'two-factor', 'verified', 'admin.approved'])->name('dashboard');
 
 // ── Pending admin approval holding page ───────────────────────────────────────

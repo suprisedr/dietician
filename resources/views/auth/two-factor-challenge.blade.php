@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :minimal="true">
 
     @php
         $activeMethod = $methods[0] ?? 'totp';

@@ -56,7 +56,7 @@
                     Upgrade to unlock it.
                 </p>
 
-                <a href="{{ route('subscription.checkout', $min) }}"
+                <a href="{{ route('subscription.checkout', $min) }}{{ url()->previous() ? '?return_to='.urlencode(url()->previous()) : '' }}"
                    class="inline-flex items-center gap-2 bg-[#429677] hover:bg-[#679F5F]
                           text-white text-sm font-semibold px-5 py-2.5 rounded-lg
                           transition-colors duration-150 shadow-sm">

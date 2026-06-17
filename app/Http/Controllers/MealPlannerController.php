@@ -313,7 +313,7 @@ class MealPlannerController extends Controller
                         'meal_slot'         => $slot,
                         'exchange_category' => $item['exchCat'] ?? null,
                         'sort_order'        => (int) $order,
-                        'qty'               => max(1, (int) ($item['qty'] ?? 1)),
+                        'qty'               => max(0.25, (float) ($item['qty'] ?? 1)),
                         'meal_text'         => $text,
                         'meal_item_id'      => $itemId,
                     ]);
@@ -426,7 +426,7 @@ class MealPlannerController extends Controller
             foreach ($slots as $slot) {
                 $kj = 0;
                 foreach ($grid[$d][$slot] as $entry) {
-                    $kj += ($entry->mealItem?->energy_kj ?? 0) * max(1, (int)($entry->qty ?? 1));
+                    $kj += ($entry->mealItem?->energy_kj ?? 0) * max(0.25, (float)($entry->qty ?? 1));
                 }
                 $cellKj[$d][$slot] = $kj;
                 $dayKj[$d] += $kj;
@@ -465,7 +465,7 @@ class MealPlannerController extends Controller
             foreach ($slots as $slot) {
                 $kj = 0;
                 foreach ($grid[$d][$slot] as $entry) {
-                    $kj += ($entry->mealItem?->energy_kj ?? 0) * max(1, (int)($entry->qty ?? 1));
+                    $kj += ($entry->mealItem?->energy_kj ?? 0) * max(0.25, (float)($entry->qty ?? 1));
                 }
                 $cellKj[$d][$slot] = $kj;
                 $dayKj[$d] += $kj;

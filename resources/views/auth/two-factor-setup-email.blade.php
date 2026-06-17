@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :minimal="true">
 
     <div class="dash-hero" style="padding-bottom:5rem">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -664,7 +664,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                             'id'      => $e->meal_item_id ? (string)$e->meal_item_id : null,
                             'text'    => $e->meal_text ?? '',
                             'exchCat' => $e->exchange_category ?? null,
-                            'qty'     => (int) ($e->qty ?? 1),
+                            'qty'     => (float) ($e->qty ?? 1),
                         ])->values()->all()
                     );
                 @endphp
@@ -893,7 +893,8 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                         @forelse($cellArr as $ce)
                                             @php
                                                 $mi      = $ce->mealItem;
-                                                $qty     = max(1, (int)($ce->qty ?? 1));
+                                                $qty     = max(0.25, (float)($ce->qty ?? 1));
+                                                $qtyLbl  = rtrim(rtrim(number_format($qty, 2, '.', ''), '0'), '.');
                                                 $serving = $mi?->serving_size;
                                                 $kj  = $mi?->energy_kj  ? round($mi->energy_kj  * $qty) : null;
                                                 $cho = $mi?->cho_g      ? round($mi->cho_g      * $qty, 1) : null;
@@ -909,7 +910,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                                 ]);
                                             @endphp
                                             <div class="mo-item">
-                                                <div class="mo-item-name">{{ $qty > 1 ? $qty.'× ' : '' }}{{ $ce->meal_text }}@if($serving)<span class="mo-item-serving">({{ $serving }})</span>@endif</div>
+                                                <div class="mo-item-name">{{ $qty != 1 ? $qtyLbl.'× ' : '' }}{{ $ce->meal_text }}@if($serving)<span class="mo-item-serving">({{ $serving }})</span>@endif</div>
                                                 @if($macroParts)
                                                     <div class="mo-macros">{{ implode(' · ', $macroParts) }}</div>
                                                 @endif
@@ -949,7 +950,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 <span class="ie-label">Servings</span>
                 <div class="ie-qty-row">
                     <button type="button" class="ie-qty-btn" id="item-edit-qty-minus">&#x2212;</button>
-                    <input type="number" id="item-edit-qty" class="ie-qty-inp" value="1" min="1" max="99">
+                    <input type="number" id="item-edit-qty" class="ie-qty-inp" value="1" min="0.25" max="99" step="0.25">
                     <button type="button" class="ie-qty-btn" id="item-edit-qty-plus">&#x2B;</button>
                     <span class="fp-serving-desc" id="item-edit-serving-unit" style="font-size:.72rem;color:var(--text-muted)"></span>
                 </div>
@@ -1150,7 +1151,8 @@ function renderCatCell(di, slot, catName, catSlug){
         var allIdx = allItems.indexOf(item);
         var qty    = item.qty||1;
         var kj     = toKj(item)*qty;
-        var qtyLbl = qty>1 ? qty+'\u00D7 ' : '';
+        var qtyDisp = (Math.round(qty * 100) / 100).toString();
+        var qtyLbl = qty!=1 ? qtyDisp+'\u00D7 ' : '';
         var tag    = document.createElement('span');
         tag.className='cell-tag';
         tag.style.cssText='background:'+bg+';color:'+txt+';border-color:'+brd;
@@ -1183,7 +1185,7 @@ function fmt(v){ return (v!==null&&v!==undefined&&!isNaN(v)&&v!=='')?Math.round(
 function ieSet(id,v){ document.getElementById(id).textContent = v!==null?v:'\u2014'; }
 
 function refreshItemEdit(){
-    var qty=Math.max(1,parseInt(document.getElementById('item-edit-qty').value)||1);
+    var qty=Math.max(0.25,parseFloat(document.getElementById('item-edit-qty').value)||1);
     var lib=_ieLib;
     function sc(v){ return v?Math.round(v*qty*10)/10:null; }
     var kj  = lib&&lib.kj   ? Math.round(lib.kj*qty)   : null;
@@ -1224,7 +1226,7 @@ window.confirmItemEdit=function(){
     if(_editDi===null) return;
     var item=(STATE[_editDi+'_'+_editSlot]||[])[_editIdx];
     if(!item){ closeItemEdit(); return; }
-    item.qty=Math.max(1,parseInt(document.getElementById('item-edit-qty').value)||1);
+    item.qty=Math.max(0.25,parseFloat(document.getElementById('item-edit-qty').value)||1);
     item.note=document.getElementById('item-edit-note').value.trim();
     renderAll(_editDi,_editSlot);
     closeItemEdit();
@@ -1232,12 +1234,12 @@ window.confirmItemEdit=function(){
 
 document.getElementById('item-edit-qty-minus').addEventListener('click',function(){
     var inp=document.getElementById('item-edit-qty');
-    inp.value=Math.max(1,(parseInt(inp.value)||1)-1);
+    inp.value=Math.max(0.25,(parseFloat(inp.value)||1)-0.5);
     refreshItemEdit();
 });
 document.getElementById('item-edit-qty-plus').addEventListener('click',function(){
     var inp=document.getElementById('item-edit-qty');
-    inp.value=Math.min(99,(parseInt(inp.value)||1)+1);
+    inp.value=Math.min(99,(parseFloat(inp.value)||1)+0.5);
     refreshItemEdit();
 });
 document.getElementById('item-edit-qty').addEventListener('input',refreshItemEdit);

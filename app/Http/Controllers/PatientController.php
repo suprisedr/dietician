@@ -506,7 +506,11 @@ class PatientController extends Controller
         }
 
         $patient->refresh();
-        broadcast(new PatientUpdated($patient))->toOthers();
+        try {
+            broadcast(new PatientUpdated($patient))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('PatientUpdated broadcast failed', ['error' => $e->getMessage()]);
+        }
 
         return response()->json([
             'ibw_bmi_target' => $patient->ibw_bmi_target,
@@ -609,7 +613,11 @@ class PatientController extends Controller
         }
 
         $event = new PatientUpdated($patient->fresh('macronutrients'));
-        broadcast($event)->toOthers();
+        try {
+            broadcast($event)->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('PatientUpdated broadcast failed', ['error' => $e->getMessage()]);
+        }
 
         if ($request->expectsJson()) {
             return response()->json($event->payload);

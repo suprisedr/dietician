@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :minimal="true">
 
     @php
         $isAdding = ! empty($confirmedMethods);

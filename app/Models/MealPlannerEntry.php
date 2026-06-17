@@ -19,6 +19,10 @@ class MealPlannerEntry extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'qty' => 'float',
+    ];
+
     public function week(): BelongsTo
     {
         return $this->belongsTo(MealPlannerWeek::class, 'week_id');

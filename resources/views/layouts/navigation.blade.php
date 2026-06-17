@@ -1,152 +1,147 @@
-<nav x-data="{ open: false }" style="background:#fff;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(13,31,12,.07)">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+<div x-data="{ open: false }">
 
-            <!-- ── Logo + Nav links ── -->
-            <div class="flex items-center">
-                <!-- Brand -->
-                <a href="{{ route('dashboard') }}" class="shrink-0 flex items-center gap-2.5 no-underline" style="text-decoration:none;margin-right:1.5rem">
-                    <img src="{{ asset('images/mindful-nutrico.png') }}"
-                         alt="MindfulNutrico"
-                         style="height:2.4rem;width:auto;object-fit:contain;display:block">
-                    <span style="font-weight:800;font-size:1.05rem;color:var(--primary-dark);letter-spacing:-.025em;line-height:1">mindful<span style="color:var(--secondary)">nutrico</span></span>
-                </a>
+    {{-- ── Mobile top bar (hamburger + logo + user) ───────────── --}}
+    <div class="app-mobilebar">
+        <button @click="open = true" class="app-mobile-burger" aria-label="Open menu">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+        <a href="{{ route('dashboard') }}" class="app-mobile-logo">
+            <img src="{{ asset('images/mindful-nutrico.png') }}" alt="MindfulNutrico"/>
+            <span>mindful<em>nutrico</em></span>
+        </a>
+        <div style="width:2.5rem"></div>
+    </div>
 
-                <!-- Desktop nav links -->
-                <div class="hidden space-x-0.5 sm:flex sm:items-center">
+    {{-- ── Overlay backdrop (mobile) ───────────────────────────── --}}
+    <div class="app-sidebar-backdrop"
+         :class="{ 'is-open': open }"
+         @click="open = false"></div>
 
-                    {{-- Dashboard --}}
-                    <a href="{{ route('dashboard') }}"
-                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;border-radius:.6rem;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .15s;
-                              {{ request()->routeIs('dashboard') ? 'background:#e8f5e6;color:var(--primary-dark)' : 'color:var(--text-muted)' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                        </svg>
-                        Dashboard
-                    </a>
+    {{-- ── Sidebar ─────────────────────────────────────────────── --}}
+    <aside class="app-sidebar" :class="{ 'is-open': open }">
+
+        <div class="app-sidebar-brand">
+            <a href="{{ route('dashboard') }}">
+                <img src="{{ asset('images/mindful-nutrico.png') }}" alt="MindfulNutrico"/>
+                <div class="app-sidebar-brand-text">
+                    <div class="app-sidebar-brand-name">mindful<em>nutrico</em></div>
+                    <div class="app-sidebar-brand-tag">NUTRITION &amp; WELLNESS</div>
                 </div>
-            </div>
+            </a>
+        </div>
 
-            <!-- ── User dropdown ── -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button style="display:inline-flex;align-items:center;gap:.6rem;padding:.38rem .75rem;border-radius:.75rem;border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all .15s" class="hover:border-green-400">
-                            <div style="width:2rem;height:2rem;background:linear-gradient(135deg,var(--primary-dark),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                            </div>
-                            <div style="text-align:left">
-                                <div style="font-size:.8rem;font-weight:700;color:var(--text-primary);line-height:1.1">{{ Auth::user()->name }}</div>
-                                <div style="font-size:.68rem;color:var(--text-muted);letter-spacing:.03em">{{ Auth::user()->dietician_number }}</div>
-                                @unless(Auth::user()->admin_verified_at)
-                                <div style="margin-top:.2rem;display:inline-flex;align-items:center;gap:.3rem;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;padding:.1rem .5rem;font-size:.6rem;font-weight:700;color:#92400e;letter-spacing:.02em">
-                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:.65rem;height:.65rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                    Pending DT Confirmation
-                                </div>
-                                @endunless
-                            </div>
-                            <svg class="fill-current" style="width:.85rem;height:.85rem;color:var(--text-muted)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </x-slot>
-                        <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
-                        <x-dropdown-link :href="route('billing')">
-                            <span style="display:flex;align-items:center;gap:.45rem">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem" fill="none"
-                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                                </svg>
-                                Billing
-                            </span>
-                        </x-dropdown-link>
-                        <x-dropdown-link :href="route('devices.index')">
-                            <span style="display:flex;align-items:center;gap:.45rem">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem" fill="none"
-                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <rect x="2" y="3" width="20" height="14" rx="2"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4"/>
-                                </svg>
-                                Devices
-                            </span>
-                        </x-dropdown-link>
-                        @if (auth()->user()->isSubscriptionOwner())
-                        <x-dropdown-link :href="route('team.index')">
-                            <span style="display:flex;align-items:center;gap:.45rem">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem" fill="none"
-                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                                Team
-                            </span>
-                        </x-dropdown-link>
-                        @endif
-                            <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">{{ __('Log Out') }}</x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
+        <nav class="app-sidebar-nav">
 
-            <!-- ── Hamburger ── -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <a href="{{ route('dashboard') }}"
+               class="app-sidebar-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ route('patients.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('patients.index') || request()->routeIs('patients.show') || request()->routeIs('patients.edit') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>Patients</span>
+            </a>
+
+            <a href="{{ route('patients.create') }}"
+               class="app-sidebar-link {{ request()->routeIs('patients.create') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                <span>New Patient</span>
+            </a>
+
+            <a href="{{ route('meal-planner.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('meal-planner.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Meal Plans</span>
+            </a>
+
+            <a href="{{ route('recipes.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('recipes.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Recipes</span>
+            </a>
+
+            <a href="{{ route('meal-items.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('meal-items.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                <span>Meal Library</span>
+            </a>
+
+            <a href="{{ route('grocery-lists.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('grocery-lists.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>Grocery Lists</span>
+            </a>
+
+            <a href="{{ route('food-diary.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('food-diary.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                <span>Food Diaries</span>
+            </a>
+
+            <a href="{{ route('email-templates.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('email-templates.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span>Email Templates</span>
+            </a>
+
+            <a href="{{ route('reports.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('reports.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Reports</span>
+            </a>
+
+            <a href="{{ route('profile.edit') }}"
+               class="app-sidebar-link {{ request()->routeIs('profile.edit') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Profile</span>
+            </a>
+
+            <a href="{{ route('devices.index') }}"
+               class="app-sidebar-link {{ request()->routeIs('devices.*') || request()->routeIs('billing') || request()->routeIs('team.*') ? 'is-active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="app-sidebar-foot">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="app-sidebar-link app-sidebar-logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
+                    <span>Logout</span>
                 </button>
-            </div>
+            </form>
         </div>
-    </div>
-
-    <!-- ── Dropdown link styles ── -->
-    <style>
-        .mn-dd-link {
-            display:flex;align-items:center;gap:.5rem;
-            padding:.6rem 1rem;font-size:.83rem;font-weight:600;
-            color:var(--text-primary);text-decoration:none;
-            transition:background .12s;
-        }
-        .mn-dd-link:hover { background:var(--bg-page); color:var(--primary-dark); }
-    </style>
-
-    <!-- ── Mobile menu ── -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden" style="border-top:1px solid var(--border)">
-        <div class="pt-2 pb-3 space-y-1 px-3">
-            <x-responsive-nav-link :href="route('dashboard')"             :active="request()->routeIs('dashboard')">{{ __('Dashboard') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('patients.index')"        :active="request()->routeIs('patients.*')">{{ __('Patients') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('meal-items.index')"      :active="request()->routeIs('meal-items.*')">{{ __('Meal Library') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('email-templates.index')" :active="request()->routeIs('email-templates.*')">{{ __('Email Templates') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('meal-planner.index')"    :active="request()->routeIs('meal-planner.*')">{{ __('Weekly Plans') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('recipes.index')"         :active="request()->routeIs('recipes.*')">{{ __('Recipes') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('grocery-lists.index')"   :active="request()->routeIs('grocery-lists.*')">{{ __('Grocery Lists') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('food-diary.index')"      :active="request()->routeIs('food-diary.*')">{{ __('Food Diaries') }}</x-responsive-nav-link>
-        </div>
-        <div class="pt-4 pb-3 border-t border-gray-200 px-4">
-            <div style="font-weight:700;font-size:.9rem;color:var(--text-primary)">{{ Auth::user()->name }}</div>
-            <div style="font-size:.8rem;color:var(--text-muted)">{{ Auth::user()->dietician_number }}</div>
-            @unless(Auth::user()->admin_verified_at)
-            <div style="margin-top:.4rem;display:inline-flex;align-items:center;gap:.35rem;background:#fef3c7;border:1px solid #fcd34d;border-radius:20px;padding:.2rem .65rem;font-size:.7rem;font-weight:700;color:#92400e">
-                <svg xmlns="http://www.w3.org/2000/svg" style="width:.75rem;height:.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                Pending DT Confirmation
-            </div>
-            @endunless
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('devices.index')" :active="request()->routeIs('devices.*')">{{ __('Devices') }}</x-responsive-nav-link>
-                    @if (auth()->user()->isSubscriptionOwner())
-                    <x-responsive-nav-link :href="route('team.index')" :active="request()->routeIs('team.*')">{{ __('Team') }}</x-responsive-nav-link>
-                    @endif
-                    <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">{{ __('Log Out') }}</x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+    </aside>
+</div>

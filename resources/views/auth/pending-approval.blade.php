@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :minimal="true">
     <x-slot name="header">
         <div class="flex items-center gap-3">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">

@@ -13,7 +13,7 @@
         price: @js($flashPackage ? 'R' . number_format($flashPackage->price_zar) . '/month' : ''),
         isFree: @js($flashPackage ? $flashPackage->price_zar === 0 : false),
         features: @js($flashPackage?->features ?? []),
-        checkoutUrl: @js($flashPackage ? route('subscription.checkout', $flashSlug) : ''),
+        checkoutUrl: @js($flashPackage ? route('subscription.checkout', $flashSlug) . '?return_to=' . urlencode(url()->previous()) : ''),
         billingUrl: @js(route('billing')),
 
         open(slug, planName, price, isFree, features, checkoutUrl) {

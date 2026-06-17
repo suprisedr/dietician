@@ -158,7 +158,8 @@
             @foreach($grid[$di][$slot] as $entry)
               @php
                 $mi      = $entry->mealItem;
-                $qty     = max(1, (int)($entry->qty ?? 1));
+                $qty     = max(0.25, (float)($entry->qty ?? 1));
+                $qtyLbl  = rtrim(rtrim(number_format($qty, 2, '.', ''), '0'), '.');
                 $serving = $mi?->serving_size;
                 $kj  = $mi?->energy_kj  ? round($mi->energy_kj  * $qty) : null;
                 $cho = $mi?->cho_g      ? round($mi->cho_g      * $qty, 1) : null;
@@ -174,7 +175,7 @@
                 ]);
               @endphp
               <div class="meal-entry">
-                <span class="entry-name">@if($qty > 1){{ $qty }}x @endif{{ $entry->meal_text }}</span>@if($serving)<span class="entry-serv"> ({{ $serving }})</span>@endif
+                <span class="entry-name">@if($qty != 1){{ $qtyLbl }}x @endif{{ $entry->meal_text }}</span>@if($serving)<span class="entry-serv"> ({{ $serving }})</span>@endif
                 @if($macroParts)
                   <div class="entry-mac">{!! implode(' · ', $macroParts) !!}</div>
                 @endif

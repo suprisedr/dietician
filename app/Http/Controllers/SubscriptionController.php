@@ -34,6 +34,16 @@ class SubscriptionController extends Controller
             ->where('price_zar', '>', 0)
             ->firstOrFail();
 
+        // Remember the page the user came from so we can send them back after the callback.
+        // Only accept same-origin paths to avoid open-redirect.
+        $returnTo = $request->query('return_to');
+        if ($returnTo && filter_var($returnTo, FILTER_VALIDATE_URL)
+            && parse_url($returnTo, PHP_URL_HOST) === $request->getHost()) {
+            $request->session()->put('subscription.return_to', $returnTo);
+        } else {
+            $request->session()->forget('subscription.return_to');
+        }
+
         $url = $this->subscriptions->initiateCheckout($request->user(), $package);
 
         return redirect($url);
@@ -45,6 +55,7 @@ class SubscriptionController extends Controller
     public function callback(Request $request): RedirectResponse
     {
         $reference = $request->query('reference') ?? $request->query('trxref');
+        $returnTo  = $request->session()->pull('subscription.return_to');
 
         if (! $reference) {
             return redirect()->route('billing')
@@ -53,9 +64,11 @@ class SubscriptionController extends Controller
 
         try {
             $subscription = $this->subscriptions->handleCallback($reference);
+            $msg = 'Subscription activated! You are now on ' . $subscription->package->name . '.';
 
-            return redirect()->route('billing')
-                ->with('success', 'Subscription activated! You are now on ' . $subscription->package->name . '.');
+            return $returnTo
+                ? redirect($returnTo)->with('success', $msg)
+                : redirect()->route('billing')->with('success', $msg);
         } catch (\Throwable $e) {
             return redirect()->route('billing')
                 ->withErrors(['payment' => 'Payment could not be verified: ' . $e->getMessage()]);

@@ -29,22 +29,66 @@
         </script>
     </head>
     <body class="font-sans antialiased" style="background:var(--bg-page,#f8fafc)">
-        <div class="min-h-screen">
-            @include('layouts.navigation')
+        <div class="app-shell {{ ($minimal ?? false) ? 'is-minimal' : '' }}">
+            @unless($minimal ?? false)
+                @include('layouts.navigation')
+            @endunless
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
+            <div class="app-main">
+                @auth
+                @unless($minimal ?? false)
+                <header class="app-topbar-desktop">
+                    <button class="app-bell" type="button" aria-label="Notifications">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span class="app-bell-dot">3</span>
+                    </button>
+
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <button class="app-userpill" type="button">
+                                <div class="app-userpill-avatar">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                                <div class="app-userpill-text">
+                                    <div class="app-userpill-name">{{ Auth::user()->name }}</div>
+                                    <div class="app-userpill-id">{{ Auth::user()->dietician_number }}</div>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="app-userpill-chev">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                        </x-slot>
+                        <x-slot name="content">
+                            <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
+                            <x-dropdown-link :href="route('billing')">Billing</x-dropdown-link>
+                            <x-dropdown-link :href="route('devices.index')">Devices</x-dropdown-link>
+                            @if (auth()->user()->isSubscriptionOwner())
+                            <x-dropdown-link :href="route('team.index')">Team</x-dropdown-link>
+                            @endif
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">{{ __('Log Out') }}</x-dropdown-link>
+                            </form>
+                        </x-slot>
+                    </x-dropdown>
                 </header>
-            @endisset
+                @endunless
+                @endauth
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+                @isset($header)
+                    <header class="bg-white shadow">
+                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
+
+                <main>
+                    {{ $slot }}
+                </main>
+            </div>
         </div>
 
         {{-- Global upgrade modal — triggered by RequiresPlan middleware on save attempts --}}
