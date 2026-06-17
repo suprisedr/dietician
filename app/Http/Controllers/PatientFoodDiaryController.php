@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FoodDiary;
+use App\Notifications\FoodDiarySubmitted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -43,6 +44,14 @@ class PatientFoodDiaryController extends Controller
         ]);
 
         $diary->update(array_merge($data, ['submitted_at' => now()]));
+
+        // Notify the dietician who owns this diary
+        $diary->load('patient');
+        try {
+            $diary->user->notify(new FoodDiarySubmitted($diary));
+        } catch (\Throwable $e) {
+            \Log::warning('FoodDiarySubmitted notification failed', ['error' => $e->getMessage()]);
+        }
 
         return redirect()->route('food-diary.patient-show', $token);
     }

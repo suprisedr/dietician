@@ -76,6 +76,18 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     Route::delete('/profile/letterhead', [ProfileController::class, 'removeLetterhead'])->name('profile.letterhead.remove');
     Route::get('/profile/letterhead/preview', [ProfileController::class, 'previewLetterhead'])->name('profile.letterhead.preview');
 
+    // ── Notifications ────────────────────────────────────────────────────────
+    Route::post('notifications/read-all', function () {
+        Auth::user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.read-all');
+
+    Route::post('notifications/{id}/read', function (string $id) {
+        $notification = Auth::user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return redirect($notification->data['url'] ?? route('food-diary.index'));
+    })->name('notifications.read');
+
     // ── Subscription / Billing ───────────────────────────────────────────────
     Route::get('billing', [SubscriptionController::class, 'billing'])->name('billing');
     Route::get('subscribe/{slug}', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');

@@ -37,13 +37,72 @@
             <div class="app-main">
                 @auth
                 @unless($minimal ?? false)
+                @php
+                    $unreadCount         = Auth::user()->unreadNotifications()->count();
+                    $recentNotifications = Auth::user()->notifications()->latest()->take(10)->get();
+                @endphp
                 <header class="app-topbar-desktop">
-                    <button class="app-bell" type="button" aria-label="Notifications">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                        <span class="app-bell-dot">3</span>
-                    </button>
+                    {{-- ── Notification bell ── --}}
+                    <div class="app-notif-wrap" id="app-notif-wrap">
+                        <button class="app-bell" type="button" aria-label="Notifications"
+                                onclick="appNotifToggle()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            @if($unreadCount > 0)
+                            <span class="app-bell-dot">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                            @endif
+                        </button>
+
+                        <div class="app-notif-panel" id="app-notif-panel" style="display:none" role="dialog" aria-label="Notifications">
+                            <div class="app-notif-head">
+                                <span class="app-notif-head-title">Notifications</span>
+                                @if($unreadCount > 0)
+                                <form method="POST" action="{{ route('notifications.read-all') }}" style="display:inline">
+                                    @csrf
+                                    <button type="submit" class="app-notif-readall">Mark all read</button>
+                                </form>
+                                @endif
+                            </div>
+
+                            <div class="app-notif-list">
+                                @forelse($recentNotifications as $notif)
+                                <form method="POST" action="{{ route('notifications.read', $notif->id) }}">
+                                    @csrf
+                                    <button type="submit" class="app-notif-item {{ $notif->read_at ? '' : 'is-unread' }}">
+                                        <span class="app-notif-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="app-notif-body">
+                                            <span class="app-notif-title">
+                                                {{ $notif->data['patient_name'] }} submitted a food diary
+                                            </span>
+                                            <span class="app-notif-meta">
+                                                {{ $notif->data['diary_date'] }}
+                                                @if(!empty($notif->data['rating']))
+                                                · {{ $notif->data['rating'] }}/5 ★
+                                                @endif
+                                            </span>
+                                            <span class="app-notif-time">{{ $notif->created_at->diffForHumans() }}</span>
+                                        </span>
+                                        @if(!$notif->read_at)
+                                        <span class="app-notif-unread-dot"></span>
+                                        @endif
+                                    </button>
+                                </form>
+                                @empty
+                                <div class="app-notif-empty">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                    </svg>
+                                    <span>No notifications yet</span>
+                                </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>{{-- /.app-notif-wrap --}}
 
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -242,6 +301,27 @@
             });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape' && overlay.classList.contains('open')) closeGlobalPdfPreview();
+            });
+        }());
+        </script>
+
+        {{-- ── Notification panel toggle ────────────────────────────────── --}}
+        <script>
+        (function () {
+            var panel = document.getElementById('app-notif-panel');
+
+            window.appNotifToggle = function () {
+                if (!panel) return;
+                var open = panel.style.display !== 'none';
+                panel.style.display = open ? 'none' : 'block';
+            };
+
+            document.addEventListener('click', function (e) {
+                if (!panel || panel.style.display === 'none') return;
+                var wrap = document.getElementById('app-notif-wrap');
+                if (wrap && !wrap.contains(e.target)) {
+                    panel.style.display = 'none';
+                }
             });
         }());
         </script>

@@ -79,6 +79,10 @@ Route::middleware('auth')->group(function () {
     Route::post('two-factor/passkey/authenticate', [PasskeyController::class, 'authenticate'])
         ->middleware('throttle:6,1')
         ->name('two-factor.passkey.authenticate');
+
+    // Logout is reachable before 2FA is completed so a user can switch accounts
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('logout');
 });
 
 Route::middleware(['auth', 'two-factor'])->group(function () {
@@ -99,7 +103,4 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
-
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
 });
