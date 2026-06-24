@@ -14,24 +14,25 @@
     <form method="POST" action="{{ route('login') }}" style="width:100%">
         @csrf
 
-        {{-- HPCSA Number --}}
+        {{-- Credential (DT number or email) --}}
         <div class="auth-field">
-            <label class="auth-label" for="dietician_number">HPCSA Registration Number</label>
+            <label class="auth-label" for="credential">DT Number or Email</label>
+            <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:.45rem">Use your email if you haven't completed onboarding, or your DT number if you have.</p>
             <div class="auth-input-wrap">
                 <input
-                    id="dietician_number"
+                    id="credential"
                     type="text"
-                    name="dietician_number"
-                    value="{{ old('dietician_number') }}"
+                    name="credential"
+                    value="{{ old('credential') }}"
                     class="auth-input"
                     required autofocus autocomplete="username"
-                    placeholder="DT0012345"
+                    placeholder="DT0012345 or jane@clinic.com"
                 />
                 <svg xmlns="http://www.w3.org/2000/svg" class="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-5m-4 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1m-4 0h4"/>
                 </svg>
             </div>
-            @error('dietician_number')
+            @error('credential')
                 <p class="auth-field-error">{{ $message }}</p>
             @enderror
         </div>

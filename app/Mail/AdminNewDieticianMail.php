@@ -8,18 +8,18 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\URL;
 
 class AdminNewDieticianMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public string $verifyUrl;
-    public string $hpcsaLookupUrl = 'https://isystems.hpcsa.co.za/iregister/';
+    public string $hpcsaLookupUrl = 'https://hpcsaonline.custhelp.com/app/i_reg_form';
 
     public function __construct(public User $dietician)
     {
-        $this->verifyUrl = URL::signedRoute('admin.verify-dietician', ['user' => $dietician->id]);
+        $token           = hash_hmac('sha256', $dietician->id . $dietician->email, config('app.key'));
+        $this->verifyUrl = route('admin.verify-dietician', ['user' => $dietician->id, 'token' => $token]);
     }
 
     public function envelope(): Envelope

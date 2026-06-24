@@ -14,7 +14,10 @@ class AdminController extends Controller
      */
     public function verifyDietician(Request $request, User $user)
     {
-        if (! $request->hasValidSignature()) {
+        $adminEmail = env('ADMIN_EMAIL', 'support@mindfulnutrico.co.za');
+        $token      = hash_hmac('sha256', $user->id . $user->email, config('app.key'));
+
+        if (! hash_equals($token, (string) $request->query('token'))) {
             abort(403, 'This verification link is invalid or has been tampered with.');
         }
 

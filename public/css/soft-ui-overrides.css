@@ -287,13 +287,13 @@ details[open] > summary::before {
     font-weight: 700;
     border-radius: .75rem;
     text-decoration: none;
-    box-shadow: 0 4px 14px rgba(249,115,22,.40);
+    box-shadow: 0 2px 8px rgba(66,150,119,.30);
     transition: transform .2s, box-shadow .2s;
 }
 
 .btn-add:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(249,115,22,.50);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(66,150,119,.40);
     color: #fff;
 }
 
@@ -1042,7 +1042,8 @@ select.edit-input { cursor: pointer; }
     display: flex;
     flex-direction: column;
     z-index: 60;
-    transition: transform .25s ease;
+    overflow: visible;
+    transition: width .25s ease, transform .25s ease;
 }
 
 .app-sidebar-brand {
@@ -1082,6 +1083,110 @@ select.edit-input { cursor: pointer; }
     letter-spacing: .15em;
     color: var(--text-muted);
     margin-top: .25rem;
+}
+
+/* ── Sidebar collapse toggle ─────────────────────────────── */
+.app-sidebar-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(212,230,209,.55);
+    background: #fff;
+    cursor: pointer;
+    position: absolute;
+    top: 1.6rem;
+    right: -14px;
+    z-index: 61;
+    transition: background .15s, transform .15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+.app-sidebar-collapse-btn svg {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    transition: transform .25s ease;
+}
+.app-sidebar-collapse-btn:hover {
+    background: #e5f0e2;
+}
+
+/* ── Collapsed sidebar (desktop only) ────────────────────── */
+@media (min-width: 1025px) {
+    .app-sidebar.is-collapsed {
+        width: 72px;
+        overflow: visible;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-brand-text {
+        display: none;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-brand {
+        padding: 1.4rem .85rem 1.1rem;
+        display: flex;
+        justify-content: center;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-brand a {
+        justify-content: center;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-nav {
+        padding: 1rem .5rem;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-link {
+        justify-content: center;
+        padding: .7rem;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-link span {
+        display: none;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-foot {
+        padding: .85rem .5rem 1.25rem;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-logout {
+        justify-content: center;
+        padding: .7rem;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-logout span {
+        display: none;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-collapse-btn {
+        right: -14px;
+    }
+    /* Tooltip on hover for collapsed links */
+    .app-sidebar.is-collapsed .app-sidebar-link {
+        position: relative;
+    }
+    .app-sidebar.is-collapsed .app-sidebar-link::after {
+        content: attr(title);
+        display: none;
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #1a1a1a;
+        color: #fff;
+        font-size: .75rem;
+        font-weight: 500;
+        padding: .35rem .65rem;
+        border-radius: .4rem;
+        white-space: nowrap;
+        z-index: 999;
+        pointer-events: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .app-sidebar.is-collapsed .app-sidebar-link:hover::after {
+        display: block;
+    }
+    /* Main content shift */
+    body.sidebar-collapsed .app-main {
+        margin-left: 72px;
+    }
+}
+
+/* Hide collapse button on mobile */
+@media (max-width: 1024px) {
+    .app-sidebar-collapse-btn { display: none; }
 }
 
 .app-sidebar-nav {
@@ -1197,6 +1302,7 @@ select.edit-input { cursor: pointer; }
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: margin-left .25s ease;
 }
 
 /* ── Desktop top header (bell + user pill) ───────────────── */
@@ -1811,4 +1917,91 @@ select.edit-input { cursor: pointer; }
     margin-top: .3rem;
 }
 
+/* ── Pending admin approval banner & input lock ─────────────────────────── */
 
+.pending-approval-banner {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .75rem 1.25rem;
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-bottom: 2px solid #fbbf24;
+    color: #92400e;
+    font-size: .85rem;
+    line-height: 1.5;
+}
+.pending-approval-banner svg { flex-shrink: 0; color: #d97706; }
+.pending-approval-banner code {
+    padding: .1rem .4rem;
+    background: rgba(255,255,255,.6);
+    border: 1px solid #fbbf24;
+    border-radius: .3rem;
+    font-weight: 700;
+    font-size: .8rem;
+}
+
+body.is-pending-approval input:not([type="hidden"]),
+body.is-pending-approval select,
+body.is-pending-approval textarea,
+body.is-pending-approval button[type="submit"],
+body.is-pending-approval .btn-primary,
+body.is-pending-approval .btn-save {
+    pointer-events: none;
+    opacity: .5;
+    cursor: not-allowed;
+}
+body.is-pending-approval button[type="submit"][formaction*="logout"],
+body.is-pending-approval form[action*="logout"] button,
+body.is-pending-approval form[action*="notifications"] button,
+body.is-pending-approval .app-bell,
+body.is-pending-approval .app-userpill,
+body.is-pending-approval .app-notif-readall,
+body.is-pending-approval .app-sidebar a,
+body.is-pending-approval nav a,
+body.is-pending-approval a {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+}
+
+/* ── Upgrade required banner & input lock ────────────────────────────── */
+
+.upgrade-required-banner {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .75rem 1.25rem;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border-bottom: 2px solid #34d399;
+    color: #065f46;
+    font-size: .85rem;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: background .15s;
+}
+.upgrade-required-banner:hover { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+.upgrade-required-banner svg { flex-shrink: 0; color: #059669; }
+
+body.is-upgrade-locked input:not([type="hidden"]),
+body.is-upgrade-locked select,
+body.is-upgrade-locked textarea,
+body.is-upgrade-locked button[type="submit"],
+body.is-upgrade-locked .btn-primary,
+body.is-upgrade-locked .btn-save {
+    pointer-events: none;
+    opacity: .5;
+    cursor: not-allowed;
+}
+body.is-upgrade-locked form[action*="logout"] button,
+body.is-upgrade-locked form[action*="notifications"] button,
+body.is-upgrade-locked .app-bell,
+body.is-upgrade-locked .app-userpill,
+body.is-upgrade-locked .app-notif-readall,
+body.is-upgrade-locked .app-sidebar a,
+body.is-upgrade-locked .upgrade-required-banner,
+body.is-upgrade-locked nav a,
+body.is-upgrade-locked a {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+}

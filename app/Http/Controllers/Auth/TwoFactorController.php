@@ -50,7 +50,7 @@ class TwoFactorController extends Controller
             return view('auth.two-factor-setup-email', [
                 'gracePeriodEndsAt' => $user->twoFactorGracePeriodEndsAt(),
                 'canSkip'           => $user->canSkipTwoFactorSetup(),
-                'email'             => $user->email,
+                'email'             => $this->maskEmail($user->email),
             ]);
         }
 
@@ -82,9 +82,16 @@ class TwoFactorController extends Controller
         $user->forceFill([
             'two_factor_method'      => $method,
             'two_factor_prompted_at' => $user->two_factor_prompted_at ?? now(),
-            // Regenerate TOTP secret whenever TOTP is (re)selected
             'two_factor_secret'      => $method === 'totp' ? null : $user->two_factor_secret,
         ])->save();
+
+        if ($method === 'email') {
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            Cache::put("2fa_email_{$user->id}", $code, now()->addMinutes(10));
+            Mail::to($user->email)->send(new \App\Mail\TwoFactorCodeMail($user, $code));
+
+            return redirect()->route('two-factor.setup')->with('code_sent', true);
+        }
 
         return redirect()->route('two-factor.setup');
     }
@@ -161,7 +168,7 @@ class TwoFactorController extends Controller
         return view('auth.two-factor-challenge', [
             'methods'   => $user->confirmedMethods(),
             'codeSent'  => session('code_sent', false),
-            'userEmail' => $user->email,
+            'userEmail' => $this->maskEmail($user->email),
         ]);
     }
 
@@ -261,6 +268,15 @@ class TwoFactorController extends Controller
         $label  = rawurlencode($issuer . ':' . $email);
 
         return sprintf('otpauth://totp/%s?secret=%s&issuer=%s', $label, $secret, rawurlencode($issuer));
+    }
+
+    protected function maskEmail(string $email): string
+    {
+        [$local, $domain] = explode('@', $email);
+        $visible = substr($local, 0, 2);
+        $masked  = str_repeat('*', max(1, strlen($local) - 2));
+
+        return $visible . $masked . '@' . $domain;
     }
 
     protected function qrCodeSvg(string $contents): string

@@ -53,12 +53,14 @@ Route::get('/dashboard', function () {
     return view('dashboard', compact(
         'patientCount', 'newThisWeek', 'followUps', 'mealPlansCreated'
     ));
-})->middleware(['auth', 'two-factor', 'verified', 'admin.approved'])->name('dashboard');
+})->middleware(['auth', 'two-factor', 'verified'])->name('dashboard');
 
-// ── Pending admin approval holding page ───────────────────────────────────────
-Route::get('/pending-approval', function () {
-    return view('auth.pending-approval');
-})->middleware(['auth', 'two-factor', 'verified'])->name('pending-approval');
+// ── Onboarding wizard (auth, exempt from onboarding middleware) ───────────────
+Route::middleware(['auth'])->prefix('onboarding')->name('onboarding.')->group(function () {
+    Route::post('skip', [\App\Http\Controllers\OnboardingController::class, 'skip'])->name('skip');
+    Route::get('{step?}', [\App\Http\Controllers\OnboardingController::class, 'show'])->name('show')->where('step', '[0-9]+');
+    Route::post('{step}', [\App\Http\Controllers\OnboardingController::class, 'store'])->name('store')->where('step', '[0-9]+');
+});
 
 // ── Admin: verify dietician via signed URL (public — no auth required) ────────
 Route::get('/admin/verify-dietician/{user}', [AdminController::class, 'verifyDietician'])
@@ -115,7 +117,7 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
     // ════════════════════════════════════════════════════════════════════════
     // CLINICAL FEATURES — require admin approval in addition to auth
     // ════════════════════════════════════════════════════════════════════════
-    Route::middleware(['verified', 'admin.approved'])->group(function () {
+    Route::middleware(['verified'])->group(function () {
 
     // FREE TIER — Patients (CRUD + calculations: BMI, ABW/IBW/AF, RMR/BMR)
     // All approved authenticated users may create/view/edit/delete patients and

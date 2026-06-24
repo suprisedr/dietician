@@ -28,7 +28,12 @@
             }
         </script>
     </head>
-    <body class="font-sans antialiased" style="background:var(--bg-page,#f8fafc)">
+    <body class="font-sans antialiased {{ !empty($pendingApproval) ? 'is-pending-approval' : '' }} {{ !empty($upgradeRequired) ? 'is-upgrade-locked' : '' }}" style="background:var(--bg-page,#f8fafc)">
+        <script>
+            if (JSON.parse(localStorage.getItem('sidebar_collapsed') || 'false')) {
+                document.body.classList.add('sidebar-collapsed');
+            }
+        </script>
         <div class="app-shell {{ ($minimal ?? false) ? 'is-minimal' : '' }}">
             @unless($minimal ?? false)
                 @include('layouts.navigation')
@@ -135,6 +140,33 @@
                 </header>
                 @endunless
                 @endauth
+
+                @if(!empty($pendingApproval))
+                <div class="pending-approval-banner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span>
+                        <strong>Account pending approval</strong> — your DT number
+                        <code>{{ auth()->user()->dietician_number }}</code>
+                        is being verified. You can explore the app, but saving changes is disabled until approval.
+                    </span>
+                </div>
+                @endif
+
+                @if(!empty($upgradeRequired))
+                <div class="upgrade-required-banner" onclick="document.dispatchEvent(new CustomEvent('open-upgrade-modal', {detail: {{ Js::from($upgradeRequired) }} })); window.dispatchEvent(new CustomEvent('open-upgrade-modal', {detail: {{ Js::from($upgradeRequired) }} }));">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>
+                        <strong>Upgrade required</strong> — this feature is part of the
+                        <strong>{{ $upgradeRequired['planName'] }}</strong> plan.
+                        You can browse but saving is disabled.
+                        <u style="cursor:pointer">Upgrade now</u>
+                    </span>
+                </div>
+                @endif
 
                 @isset($header)
                     <header class="bg-white shadow">
@@ -325,5 +357,23 @@
             });
         }());
         </script>
+
+        @if(!empty($upgradeRequired))
+        <script>
+        (function () {
+            var data = @json($upgradeRequired);
+            document.body.addEventListener('click', function (e) {
+                if (!document.body.classList.contains('is-upgrade-locked')) return;
+                var t = e.target;
+                if (t.matches('input, select, textarea, button[type="submit"], .btn-primary, .btn-save')) {
+                    if (t.closest('form[action*="logout"]') || t.closest('form[action*="notifications"]') || t.closest('.upgrade-required-banner')) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.dispatchEvent(new CustomEvent('open-upgrade-modal', { detail: data }));
+                }
+            }, true);
+        }());
+        </script>
+        @endif
     </body>
 </html>

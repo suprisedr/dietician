@@ -25,3 +25,5 @@ Homestead.yaml
 Thumbs.db
 *.json filter:lfs diff:lfs merge:lfs -text
 chainbook-f41a997ac2b1.json
+database/database.sqlite
+.claude/
