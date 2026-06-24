@@ -3,17 +3,29 @@
     $flashPackage = $flashSlug
         ? \App\Models\PricingPackage::where('slug', $flashSlug)->first()
         : null;
+
+    // Also pick up the middleware-shared view variable for GET requests
+    $mw = $upgradeRequired ?? null;
+    $initShow = (bool) $flashSlug || (bool) $mw;
+    $initSlug = $flashSlug ?? ($mw['slug'] ?? '');
+    $initName = $flashPackage?->name ?? ($mw['planName'] ?? '');
+    $initPrice = $flashPackage ? 'R' . number_format($flashPackage->price_zar) . '/month' : ($mw['price'] ?? '');
+    $initIsFree = $flashPackage ? $flashPackage->price_zar === 0 : ($mw['isFree'] ?? false);
+    $initFeatures = $flashPackage?->features ?? ($mw['features'] ?? []);
+    $initCheckout = $flashPackage
+        ? route('subscription.checkout', $flashSlug) . '?return_to=' . urlencode(url()->previous())
+        : ($mw['checkoutUrl'] ?? '');
 @endphp
 
 <div
     x-data="{
-        show: @js((bool) $flashSlug),
-        slug: @js($flashSlug ?? ''),
-        planName: @js($flashPackage?->name ?? ''),
-        price: @js($flashPackage ? 'R' . number_format($flashPackage->price_zar) . '/month' : ''),
-        isFree: @js($flashPackage ? $flashPackage->price_zar === 0 : false),
-        features: @js($flashPackage?->features ?? []),
-        checkoutUrl: @js($flashPackage ? route('subscription.checkout', $flashSlug) . '?return_to=' . urlencode(url()->previous()) : ''),
+        show: @js($initShow),
+        slug: @js($initSlug),
+        planName: @js($initName),
+        price: @js($initPrice),
+        isFree: @js($initIsFree),
+        features: @js($initFeatures),
+        checkoutUrl: @js($initCheckout),
         billingUrl: @js(route('billing')),
 
         open(slug, planName, price, isFree, features, checkoutUrl) {
