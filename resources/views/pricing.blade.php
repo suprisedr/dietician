@@ -202,7 +202,7 @@
             <ul class="pc-features">
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Everything in Free</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Macronutrient distribution (C &middot; P &middot; F) &amp; fibre/fluid targets</li>
-                <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Exchange Food Items Package</li>
+                <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Food exchange list items</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Meal plan template (downloadable)</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Grocery list generator</li>
                 <li><svg class="pc-check" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Generate downloadable reports for your client statistics</li>
@@ -273,7 +273,7 @@
                 <tr><td class="feature-label">RMR &middot; BMR calculations</td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
                 <tr><td class="feature-label">BMI distribution &amp; patient statistics</td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
                 <tr><td class="feature-label">Macronutrient distribution (C &middot; P &middot; F)</td><td><span class="dash">&mdash;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
-                <tr><td class="feature-label">Exchange food item package (500+ items)</td><td><span class="dash">&mdash;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
+                <tr><td class="feature-label">Food exchange list items</td><td><span class="dash">&mdash;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
                 <tr><td class="feature-label">Meal plan template (downloadable)</td><td><span class="dash">&mdash;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
                 <tr><td class="feature-label">Downloadable client statistics report</td><td><span class="dash">&mdash;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
                 <tr><td class="feature-label">Grocery list generator</td><td><span class="dash">&mdash;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td><td><span class="tick">&#10003;</span></td></tr>
@@ -292,11 +292,11 @@
         <h2 class="faq-h2">Frequently asked questions</h2>
         <div class="faq-item">
             <div class="faq-q">What is the Panamarex Outpatient Clinical Nutrition Toolkit?</div>
-            <div class="faq-a">It is the all-in-one platform for registered dietitians to manage outpatient consultations — covering patient records, macronutrient calculations, exchange food item packages, meal planning and downloadable reports. Package 1, 2 and 3 all belong to this toolkit.</div>
+            <div class="faq-a">It is the all-in-one platform for registered dietitians to manage outpatient consultations — covering patient records, macronutrient calculations, food exchange list items, meal planning and downloadable reports. Package 1, 2 and 3 all belong to this toolkit.</div>
         </div>
         <div class="faq-item">
             <div class="faq-q">What does the Free plan include?</div>
-            <div class="faq-a">The Free plan is a limited trial that gives you access to essential clinical calculators: BMI, ABW, IBW, Activity Factor, RMR and BMR. It also includes BMI distribution and basic patient statistics. Full toolkit features (exchange items, meal planning, reports) require Package 1 or higher.</div>
+            <div class="faq-a">The Free plan is a limited trial that gives you access to essential clinical calculators: BMI, ABW, IBW, Activity Factor, RMR and BMR. It also includes BMI distribution and basic patient statistics. Full toolkit features (food exchange list items, meal planning, reports) require Package 1 or higher.</div>
         </div>
         <div class="faq-item">
             <div class="faq-q">Can I start on the Free plan and upgrade later?</div>

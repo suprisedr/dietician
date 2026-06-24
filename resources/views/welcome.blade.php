@@ -220,7 +220,7 @@
     <div class="stats-band">
         <div class="stat-band-item">
             <div class="stat-band-val">&nbsp;</div>
-            <div class="stat-band-label">Exchange Food Items Package</div>
+            <div class="stat-band-label">Food exchange list items</div>
         </div>
         <div class="stat-band-item"><div class="stat-band-val">∞</div><div class="stat-band-label">Patient profiles</div></div>
         <div class="stat-band-item"><div class="stat-band-val">Live</div><div class="stat-band-label">Macro calculations</div></div>

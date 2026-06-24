@@ -49,7 +49,7 @@ class PricingPackageSeeder extends Seeder
                 'features'           => [
                     'Everything in Free',
                     'Macro distribution (C · P · F) & fibre/fluid targets',
-                    'Food exchange list (500+ items)',
+                    'Food exchange list items',
                     'Meal plan template (downloadable)',
                     'Grocery list generator',
                     '1 device / 1 user',
