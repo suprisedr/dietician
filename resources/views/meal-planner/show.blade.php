@@ -109,7 +109,6 @@
 .macro-row-cho .mp-macro-td.has-val { color:#92400e; }
 .macro-row-pro .mp-macro-td.has-val { color:#3730a3; }
 .macro-row-fat .mp-macro-td.has-val { color:#0f766e; }
-.macro-row-fib .mp-macro-td.has-val { color:#15803d; }
 
 /* ── Combined table ───────────────────────────────────────── */
 .mp-combined-card {
@@ -428,7 +427,6 @@
 .fp-nut-cell.nut-pro .fp-nut-val  { color:#6366f1; }
 .fp-nut-cell.nut-fat .fp-nut-val  { color:#0d9488; }
 .fp-nut-cell.nut-kcal .fp-nut-val { color:#64748b; }
-.fp-nut-cell.nut-fib .fp-nut-val  { color:#16a34a; }
 #fs-portion-ftr {
     display:flex; gap:.5rem; justify-content:flex-end;
     padding:.75rem 1.1rem; border-top:1px solid var(--border); background:#fafafa; border-radius:0 0 14px 14px;
@@ -639,12 +637,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                     <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#0d9488"></span>Fat (g)</td>
                     @foreach($days as $di => $dayName)
                         <td class="mp-macro-td" id="grand-fat-{{ $di }}">0</td>
-                    @endforeach
-                </tr>
-                <tr class="mp-macro-row macro-row-fib">
-                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#16a34a"></span>Fiber (g)</td>
-                    @foreach($days as $di => $dayName)
-                        <td class="mp-macro-td" id="grand-fib-{{ $di }}">0</td>
                     @endforeach
                 </tr>
             </tbody>
@@ -906,7 +898,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                                     $cho ? $cho.'g C'     : null,
                                                     $pro ? $pro.'g P'     : null,
                                                     $fat ? $fat.'g F'     : null,
-                                                    $fib ? $fib.'g Fb'    : null,
                                                 ]);
                                             @endphp
                                             <div class="mo-item">
@@ -961,7 +952,6 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 <div class="fp-nut-cell nut-cho"> <span class="fp-nut-val" id="ie-cho">&#x2014;</span> <span class="fp-nut-lbl">CHO (g)</span></div>
                 <div class="fp-nut-cell nut-pro"> <span class="fp-nut-val" id="ie-pro">&#x2014;</span> <span class="fp-nut-lbl">Protein (g)</span></div>
                 <div class="fp-nut-cell nut-fat"> <span class="fp-nut-val" id="ie-fat">&#x2014;</span> <span class="fp-nut-lbl">Fat (g)</span></div>
-                <div class="fp-nut-cell nut-fib"> <span class="fp-nut-val" id="ie-fib">&#x2014;</span> <span class="fp-nut-lbl">Fiber (g)</span></div>
             </div>
             <div class="ie-field-row">
                 <span class="ie-label">Note</span>
@@ -1316,7 +1306,7 @@ function recalcWithState(stateMap){
         var m=dayMacros[di];
         var kjEl=document.getElementById('grand-kj-'+di);
         if(kjEl){ kjEl.textContent=m.kj>0?Math.round(m.kj):0; kjEl.classList.toggle('has-val',m.kj>0); }
-        ['cho','pro','fat','fib'].forEach(function(mac){
+        ['cho','pro','fat'].forEach(function(mac){
             var el=document.getElementById('grand-'+mac+'-'+di);
             if(el){
                 var v=Math.round(m[mac]*10)/10;

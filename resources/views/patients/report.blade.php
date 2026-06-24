@@ -51,8 +51,6 @@
         .btn-toolbar svg { width: .9rem; height: .9rem; flex-shrink: 0; }
         .btn-pdf   { background: linear-gradient(135deg,#679F5F,#429677); color:#fff; box-shadow:0 3px 10px rgba(66,150,119,.35); }
         .btn-pdf:hover { opacity:.88; }
-        .btn-print { background: linear-gradient(135deg,#4b6a7c,#2e4d5e); color:#fff; }
-        .btn-print:hover { opacity:.88; }
 
         /* ── PAGE ── */
         .page {
@@ -286,18 +284,12 @@
                style="font-size:.72rem;color:#fbbf24;font-weight:700;text-decoration:none;white-space:nowrap">&#x2715; Clear</a>
             @endif
         </form>
-        <button type="button" class="btn-toolbar btn-pdf" id="btn-pdf-report"
-                onclick="openPdfPreviewModal(
-                    '{{ route('patients.report.pdf', $patient->id) }}?stream=1' + (document.getElementById('report-as-of').value ? '&as_of=' + document.getElementById('report-as-of').value : ''),
-                    '{{ route('patients.report.pdf', $patient->id) }}' + (document.getElementById('report-as-of').value ? '?as_of=' + document.getElementById('report-as-of').value : '')
-                )">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            Preview / Download PDF
-        </button>
-        <button class="btn-toolbar btn-print" onclick="window.print()">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m2 4h6a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2zm1-4h4v6H10v-6z"/></svg>
-            Print
-        </button>
+        <a class="btn-toolbar btn-pdf" id="btn-pdf-report"
+           href="{{ route('patients.report.pdf', $patient->id) }}{{ $asOf ? '?as_of=' . $asOf : '' }}"
+           download>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download PDF
+        </a>
     </div>
 </div>
 

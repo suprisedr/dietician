@@ -289,6 +289,41 @@
         </table>
         <table class="f-row-table" cellpadding="0" cellspacing="0">
             <tr>
+                <td class="fl">Medical History:</td>
+                <td class="fv">{{ $patient->medical_history ?? '—' }}</td>
+            </tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Medications:</td>
+                <td class="fv">{{ $patient->medications ?? '—' }}</td>
+            </tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Allergies:</td>
+                <td class="fv" @if($patient->allergies) style="color:#b91c1c;font-weight:600" @endif>{{ $patient->allergies ?? '—' }}</td>
+            </tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Dietary History:</td>
+                <td class="fv">{{ $patient->dietary_history ?? '—' }}</td>
+            </tr>
+        </table>
+        @php $ap = strtolower($patient->appetite ?? ''); @endphp
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="fl">Appetite:</td>
+                <td class="fv">
+                    {{ $ap === 'good' ? '☑' : '☐' }} Good &nbsp;
+                    {{ $ap === 'fair' ? '☑' : '☐' }} Fair &nbsp;
+                    {{ $ap === 'poor' ? '☑' : '☐' }} Poor
+                </td>
+            </tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr>
                 <td class="fl">Oedema:</td>
                 <td class="fv">
                     @if($patient->oedema)
@@ -323,6 +358,12 @@
         </table>
         <table class="f-row-table" cellpadding="0" cellspacing="0">
             <tr><td class="fl">Address:</td><td class="fv">{{ $patient->address ?? '—' }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Referred By:</td><td class="fv">{{ $patient->referred_by ?? '—' }}</td></tr>
+        </table>
+        <table class="f-row-table" cellpadding="0" cellspacing="0">
+            <tr><td class="fl">Diagnosis:</td><td class="fv">{{ $patient->medical_history ?? '—' }}</td></tr>
         </table>
 
         @if($lastVisit)

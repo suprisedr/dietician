@@ -165,13 +165,11 @@
                 $cho = $mi?->cho_g      ? round($mi->cho_g      * $qty, 1) : null;
                 $pro = $mi?->protein_g  ? round($mi->protein_g  * $qty, 1) : null;
                 $fat = $mi?->fat_g      ? round($mi->fat_g      * $qty, 1) : null;
-                $fib = ($mi?->fiber_g && $mi->fiber_g > 0) ? round($mi->fiber_g * $qty, 1) : null;
                 $macroParts = array_filter([
                     $kj  ? $kj.'kJ'  : null,
                     $cho ? $cho.'g C' : null,
                     $pro ? $pro.'g P' : null,
                     $fat ? $fat.'g F' : null,
-                    $fib ? $fib.'g Fb': null,
                 ]);
               @endphp
               <div class="meal-entry">
