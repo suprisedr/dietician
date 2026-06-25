@@ -212,6 +212,8 @@ Route::middleware(['auth', 'two-factor'])->group(function () {
         Route::get ('meal-planner/create',                                  [\App\Http\Controllers\MealPlannerController::class, 'create']) ->name('meal-planner.create');
         Route::post('meal-planner',                                         [\App\Http\Controllers\MealPlannerController::class, 'store'])  ->name('meal-planner.store');
         Route::get ('meal-planner/food-search',                             [\App\Http\Controllers\MealPlannerController::class, 'foodSearch'])->name('meal-planner.food-search');
+        Route::get ('meal-planner/presets',                                  [\App\Http\Controllers\MealPlannerController::class, 'presetList'])->name('meal-planner.presets');
+        Route::get ('meal-planner/presets/{slug}',                           [\App\Http\Controllers\MealPlannerController::class, 'presetApply'])->name('meal-planner.preset-apply');
         Route::get ('meal-planner/{patient}/{mealPlanner}',                 [\App\Http\Controllers\MealPlannerController::class, 'show'])   ->name('meal-planner.show');
         Route::get ('meal-planner/{patient}/{mealPlanner}/pdf',              [\App\Http\Controllers\MealPlannerController::class, 'pdf'])        ->name('meal-planner.pdf');
         Route::get ('meal-planner/{patient}/{mealPlanner}/pdf/preview',     [\App\Http\Controllers\MealPlannerController::class, 'pdfPreview']) ->name('meal-planner.pdf-preview');

@@ -16,81 +16,134 @@ class MealItemSeeder extends Seeder
 
         $items = [
 
-            // ── FRUIT & VEGETABLES ─────────────────────────────────────────
-            ['category' => 'Fruit & Vegetables', 'name' => 'Root vegetables',            'serving_size' => 'Three heaped tablespoons (80g)',                  'cho_g' => 7,  'protein_g' => 1,   'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Corn on the cob',             'serving_size' => 'One whole',                                       'cho_g' => 16, 'protein_g' => 3,   'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Salad',                       'serving_size' => 'One dessert bowl',                                'cho_g' => 3,  'protein_g' => 1,   'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Whole fresh fruit',           'serving_size' => 'One fruit',                                       'cho_g' => 15, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Medium fruits',               'serving_size' => 'Two fruits (80g)',                                'cho_g' => 10, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Small fruits',                'serving_size' => 'One handful (80g)',                               'cho_g' => 10, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Large fruits',                'serving_size' => 'One slice, about 5cm thick (80g)',                'cho_g' => 10, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Grapefruit',                  'serving_size' => 'Half (80g)',                                      'cho_g' => 8,  'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Tinned fruit in juice',       'serving_size' => 'Three heaped tablespoons',                        'cho_g' => 15, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 2],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Stewed fruit',                'serving_size' => 'Three heaped tablespoons',                        'cho_g' => 12, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Dried fruit',                 'serving_size' => 'One heaped tablespoon (30g)',                     'cho_g' => 20, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Fruit & Vegetables', 'name' => 'Fruit juice',                 'serving_size' => 'One small glass or carton (150ml); max one/day',  'cho_g' => 15, 'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 1],
+            // ══════════════════════════════════════════════════════════════
+            //  STARCH
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Starch', 'name' => 'Brown/whole wheat bread',    'serving_size' => '1 slice (35g)',             'cho_g' => 15, 'protein_g' => 3,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'White bread',                'serving_size' => '1 slice (35g)',             'cho_g' => 15, 'protein_g' => 3,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Pap, stiff',                 'serving_size' => '1/2 cup cooked (100g)',     'cho_g' => 25, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Soft maize porridge',        'serving_size' => '1 cup cooked (250ml)',      'cho_g' => 38, 'protein_g' => 4,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Oats, cooked',              'serving_size' => '1 cup cooked (230ml)',      'cho_g' => 27, 'protein_g' => 5,  'fat_g' => 3,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Weet-Bix',                  'serving_size' => '2 biscuits (30g)',          'cho_g' => 22, 'protein_g' => 4,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Cornflakes',                'serving_size' => '1 cup (30g)',               'cho_g' => 25, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Rice, cooked',              'serving_size' => '1/2 cup (80g)',             'cho_g' => 23, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Brown rice, cooked',        'serving_size' => '1/2 cup (90g)',             'cho_g' => 23, 'protein_g' => 2,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Samp, cooked',              'serving_size' => '1/2 cup (100g)',            'cho_g' => 27, 'protein_g' => 3,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Pasta, cooked',             'serving_size' => '1/2 cup (80g)',             'cho_g' => 22, 'protein_g' => 4,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Sweet potato',              'serving_size' => '1/2 cup (100g)',            'cho_g' => 20, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Potato',                    'serving_size' => '1 small (100g)',            'cho_g' => 19, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Butternut',                 'serving_size' => '1 cup (160g)',              'cho_g' => 18, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Pumpkin',                   'serving_size' => '1 cup (160g)',              'cho_g' => 12, 'protein_g' => 2,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Cream crackers',            'serving_size' => '2 crackers (15g)',          'cho_g' => 10, 'protein_g' => 1,  'fat_g' => 3,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Mageu',                     'serving_size' => '1 cup (250ml)',             'cho_g' => 36, 'protein_g' => 3,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Starch', 'name' => 'Sorghum/Ting porridge',     'serving_size' => '1 cup cooked (250ml)',      'cho_g' => 38, 'protein_g' => 5,  'fat_g' => 1,  'fruit_veg_portions' => 0],
 
-            // ── STARCHY FOODS ──────────────────────────────────────────────
-            ['category' => 'Starchy Foods', 'name' => 'Muesli (not crunchy)',             'serving_size' => 'Two tablespoons (20g)',                           'cho_g' => 13, 'protein_g' => 2,   'fat_g' => 1.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Muesli (crunchy/granola)',         'serving_size' => 'One tablespoon (20g)',                            'cho_g' => 14, 'protein_g' => 2,   'fat_g' => 3,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Weetabix',                         'serving_size' => 'One biscuit',                                     'cho_g' => 13, 'protein_g' => 2,   'fat_g' => 0.5, 'fruit_veg_portions' => 2],
-            ['category' => 'Starchy Foods', 'name' => 'Shredded wheat',                   'serving_size' => 'One biscuit',                                     'cho_g' => 13, 'protein_g' => 2,   'fat_g' => 0.5, 'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Bread or toast',                   'serving_size' => 'One slice, medium thickness',                     'cho_g' => 15, 'protein_g' => 2.5, 'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Bread bun or roll',                'serving_size' => 'Half a large bun/roll (30g)',                     'cho_g' => 15, 'protein_g' => 2.5, 'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Pitta bread',                      'serving_size' => 'Half a pitta or one mini',                        'cho_g' => 15, 'protein_g' => 2.5, 'fat_g' => 0.5, 'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Chapatti',                         'serving_size' => 'One small',                                       'cho_g' => 15, 'protein_g' => 2,   'fat_g' => 2,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Crumpet / pikelet',                'serving_size' => 'One',                                             'cho_g' => 14, 'protein_g' => 2,   'fat_g' => 0.5, 'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'English muffin',                   'serving_size' => 'Half a whole',                                    'cho_g' => 15, 'protein_g' => 2.5, 'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Malt loaf',                        'serving_size' => 'One small slice (35g)',                           'cho_g' => 20, 'protein_g' => 2,   'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Crackers',                         'serving_size' => 'Three',                                           'cho_g' => 14, 'protein_g' => 1.5, 'fat_g' => 2,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Crispbreads',                      'serving_size' => 'Four',                                            'cho_g' => 14, 'protein_g' => 1.5, 'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Oats',                             'serving_size' => 'Three tablespoons (20g uncooked / 40g cooked)',   'cho_g' => 14, 'protein_g' => 2,   'fat_g' => 1.5, 'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Yam (boiled)',                     'serving_size' => 'Two egg-sized pieces (60g cooked)',                'cho_g' => 14, 'protein_g' => 1,   'fat_g' => 0,   'fruit_veg_portions' => 1],
-            ['category' => 'Starchy Foods', 'name' => 'Rice (plain boiled)',              'serving_size' => 'Two heaped tablespoons (80g)',                    'cho_g' => 28, 'protein_g' => 2,   'fat_g' => 0,   'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Couscous (plain cooked)',          'serving_size' => 'Two tablespoons (40g)',                            'cho_g' => 11, 'protein_g' => 1.5, 'fat_g' => 0,   'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Quinoa (plain cooked)',            'serving_size' => 'Two heaped tablespoons (80g)',                    'cho_g' => 18, 'protein_g' => 3,   'fat_g' => 1.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Breakfast cereal (flakes etc)',   'serving_size' => 'Three tablespoons (20g)',                          'cho_g' => 15, 'protein_g' => 1.5, 'fat_g' => 0.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Wrap',                            'serving_size' => 'Half',                                             'cho_g' => 18, 'protein_g' => 2.5, 'fat_g' => 2,   'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Egg noodles',                     'serving_size' => 'Half dry serving (25g) / 3 tbsp cooked (80g)',    'cho_g' => 18, 'protein_g' => 3,   'fat_g' => 0.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Potatoes (boiled)',               'serving_size' => 'Two egg-sized',                                    'cho_g' => 20, 'protein_g' => 2,   'fat_g' => 0,   'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Plantain (steamed)',              'serving_size' => 'One medium-sized',                                 'cho_g' => 28, 'protein_g' => 1,   'fat_g' => 0,   'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Bagel (plain/cinnamon & raisin)','serving_size' => 'Half',                                              'cho_g' => 25, 'protein_g' => 3,   'fat_g' => 0.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Starchy Foods', 'name' => 'Pasta (plain boiled)',            'serving_size' => 'Three heaped tablespoons (80g)',                   'cho_g' => 25, 'protein_g' => 3,   'fat_g' => 0.5, 'fruit_veg_portions' => 0],
+            // ══════════════════════════════════════════════════════════════
+            //  PROTEIN – ANIMAL
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Protein - Animal', 'name' => 'Chicken, skinless',           'serving_size' => '30g cooked',              'cho_g' => 0,  'protein_g' => 9,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Chicken with skin',           'serving_size' => '30g cooked',              'cho_g' => 0,  'protein_g' => 8,  'fat_g' => 4,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Lean beef',                   'serving_size' => '30g cooked',              'cho_g' => 0,  'protein_g' => 8,  'fat_g' => 4,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Beef stew meat',              'serving_size' => '60g cooked',              'cho_g' => 0,  'protein_g' => 14, 'fat_g' => 10, 'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Mince, lean',                 'serving_size' => '60g cooked',              'cho_g' => 0,  'protein_g' => 14, 'fat_g' => 8,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Fish, grilled',               'serving_size' => '40g cooked',              'cho_g' => 0,  'protein_g' => 9,  'fat_g' => 2,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Pilchards in tomato sauce',   'serving_size' => '1/2 small tin (80g)',     'cho_g' => 3,  'protein_g' => 14, 'fat_g' => 8,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Tuna in water',               'serving_size' => '1/2 tin (60g)',           'cho_g' => 0,  'protein_g' => 15, 'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Egg',                          'serving_size' => '1 large (50g)',           'cho_g' => 0,  'protein_g' => 6,  'fat_g' => 5,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Boiled egg whites',           'serving_size' => '2 whites (60g)',          'cho_g' => 0,  'protein_g' => 7,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Vienna/processed meat',       'serving_size' => '1 small (40g)',           'cho_g' => 2,  'protein_g' => 5,  'fat_g' => 9,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Animal', 'name' => 'Polony',                      'serving_size' => '2 thin slices (30g)',     'cho_g' => 2,  'protein_g' => 4,  'fat_g' => 7,  'fruit_veg_portions' => 0],
 
-            // ── PROTEIN ────────────────────────────────────────────────────
-            ['category' => 'Protein', 'name' => 'Cooked lean meat (skinless)',    'serving_size' => 'Pack-of-cards sized piece (60–90g)',         'cho_g' => 0,  'protein_g' => 20,  'fat_g' => 4,   'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'White fish',                     'serving_size' => 'One medium fillet (150g raw)',                'cho_g' => 0,  'protein_g' => 25,  'fat_g' => 1,   'fruit_veg_portions' => 1],
-            ['category' => 'Protein', 'name' => 'Oily fish',                      'serving_size' => 'One medium fillet (140g raw)',                'cho_g' => 0,  'protein_g' => 24,  'fat_g' => 8,   'fruit_veg_portions' => 1],
-            ['category' => 'Protein', 'name' => 'Fish fingers',                   'serving_size' => 'Three',                                       'cho_g' => 12, 'protein_g' => 10,  'fat_g' => 6,   'fruit_veg_portions' => 1],
-            ['category' => 'Protein', 'name' => 'Baked beans in tomato sauce',    'serving_size' => 'One small tin (200g)',                        'cho_g' => 24, 'protein_g' => 10,  'fat_g' => 0.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'Lentils',                        'serving_size' => 'Five tablespoons cooked',                     'cho_g' => 20, 'protein_g' => 9,   'fat_g' => 0.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'Beans (kidney/butter/chickpea)', 'serving_size' => 'Five tablespoons cooked (140g)',              'cho_g' => 22, 'protein_g' => 9,   'fat_g' => 0.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'Peanut butter (unsalted)',       'serving_size' => 'Two level tablespoons',                       'cho_g' => 6,  'protein_g' => 7,   'fat_g' => 16,  'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'Quorn, tofu or soya',            'serving_size' => 'Two sausages or 120g uncooked',               'cho_g' => 3,  'protein_g' => 14,  'fat_g' => 5,   'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'Eggs',                           'serving_size' => 'Two',                                         'cho_g' => 0,  'protein_g' => 12,  'fat_g' => 10,  'fruit_veg_portions' => 0],
-            ['category' => 'Protein', 'name' => 'Nuts (unsalted)',                'serving_size' => 'Two level tablespoons',                       'cho_g' => 3,  'protein_g' => 4,   'fat_g' => 12,  'fruit_veg_portions' => 0],
+            // ══════════════════════════════════════════════════════════════
+            //  PROTEIN – PLANT
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Protein - Plant', 'name' => 'Sugar beans, cooked',  'serving_size' => '1/2 cup (90g)',   'cho_g' => 20, 'protein_g' => 7,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Baked beans',          'serving_size' => '1/2 cup (130g)',  'cho_g' => 20, 'protein_g' => 6,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Lentils, cooked',      'serving_size' => '1/2 cup (100g)', 'cho_g' => 20, 'protein_g' => 9,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Chickpeas, cooked',    'serving_size' => '1/2 cup (90g)',  'cho_g' => 22, 'protein_g' => 7,  'fat_g' => 2,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Split peas, cooked',   'serving_size' => '1/2 cup (100g)', 'cho_g' => 20, 'protein_g' => 8,  'fat_g' => 1,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Soya mince, cooked',   'serving_size' => '1/2 cup (80g)',  'cho_g' => 10, 'protein_g' => 15, 'fat_g' => 3,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Tofu',                 'serving_size' => '100g',           'cho_g' => 2,  'protein_g' => 8,  'fat_g' => 5,  'fruit_veg_portions' => 0],
+            ['category' => 'Protein - Plant', 'name' => 'Peanut butter',        'serving_size' => '1 tbsp (15g)',   'cho_g' => 3,  'protein_g' => 4,  'fat_g' => 8,  'fruit_veg_portions' => 0],
 
-            // ── MILK & DAIRY ───────────────────────────────────────────────
-            ['category' => 'Milk & Dairy', 'name' => 'Milk (semi-skimmed or skimmed)', 'serving_size' => 'One glass (200ml)',           'cho_g' => 10, 'protein_g' => 7,   'fat_g' => 2,   'fruit_veg_portions' => 0],
-            ['category' => 'Milk & Dairy', 'name' => 'Yoghurt (low-fat, low-sugar)',   'serving_size' => 'Large pot (200g)',             'cho_g' => 14, 'protein_g' => 10,  'fat_g' => 1,   'fruit_veg_portions' => 0],
-            ['category' => 'Milk & Dairy', 'name' => 'Cheese (lower-fat e.g. Edam)',   'serving_size' => 'Matchbox-sized piece (30g)',  'cho_g' => 0,  'protein_g' => 7,   'fat_g' => 7,   'fruit_veg_portions' => 0],
-            ['category' => 'Milk & Dairy', 'name' => 'Cream cheese (reduced-fat)',     'serving_size' => 'Matchbox-sized piece (80g)',  'cho_g' => 2,  'protein_g' => 5,   'fat_g' => 9,   'fruit_veg_portions' => 0],
-            ['category' => 'Milk & Dairy', 'name' => 'Fromage frais',                  'serving_size' => 'Small pot (150g)',             'cho_g' => 8,  'protein_g' => 8,   'fat_g' => 2,   'fruit_veg_portions' => 1],
-            ['category' => 'Milk & Dairy', 'name' => 'Low-fat cottage cheese',         'serving_size' => 'Large pot (200g)',             'cho_g' => 6,  'protein_g' => 24,  'fat_g' => 2,   'fruit_veg_portions' => 1],
+            // ══════════════════════════════════════════════════════════════
+            //  FRUIT
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Fruit', 'name' => 'Apple',             'serving_size' => '1 medium (150g)',      'cho_g' => 20, 'protein_g' => 0, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Banana',            'serving_size' => '1 small (100g)',       'cho_g' => 23, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Orange',            'serving_size' => '1 medium (130g)',      'cho_g' => 15, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Pear',              'serving_size' => '1 medium (150g)',      'cho_g' => 22, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Naartjie',          'serving_size' => '2 small (140g)',       'cho_g' => 17, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Grapes',            'serving_size' => '1 cup (150g)',         'cho_g' => 26, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Watermelon',        'serving_size' => '1 cup cubes (150g)',   'cho_g' => 11, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Pawpaw',            'serving_size' => '1 cup cubes (140g)',   'cho_g' => 15, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Mango',             'serving_size' => '1/2 medium (100g)',    'cho_g' => 16, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Pineapple',         'serving_size' => '1 cup (160g)',         'cho_g' => 20, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Peach',             'serving_size' => '1 medium (150g)',      'cho_g' => 15, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Fruit', 'name' => 'Dried fruit',       'serving_size' => '2 tbsp (25g)',         'cho_g' => 19, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
 
-            // ── SPREADING FAT, OIL & SAUCE ─────────────────────────────────
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Low-fat spread',                  'serving_size' => 'Two teaspoons',    'cho_g' => 0,  'protein_g' => 0,   'fat_g' => 4,   'fruit_veg_portions' => 0],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Oil (unsaturated)',               'serving_size' => 'One teaspoon',     'cho_g' => 0,  'protein_g' => 0,   'fat_g' => 4.5, 'fruit_veg_portions' => 0],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Butter / margarine / ghee',      'serving_size' => 'One teaspoon',     'cho_g' => 0,  'protein_g' => 0,   'fat_g' => 4.5, 'fruit_veg_portions' => 2],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Mayonnaise',                      'serving_size' => 'One teaspoon',     'cho_g' => 0,  'protein_g' => 0,   'fat_g' => 4,   'fruit_veg_portions' => 2],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Blue cheese dressing',            'serving_size' => 'One teaspoon',     'cho_g' => 0.5,'protein_g' => 0.5, 'fat_g' => 4,   'fruit_veg_portions' => 1],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Salad cream',                     'serving_size' => 'One tablespoon',   'cho_g' => 2,  'protein_g' => 0,   'fat_g' => 3,   'fruit_veg_portions' => 1],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Gravy / white sauce (fat base)',  'serving_size' => 'Two tablespoons',  'cho_g' => 4,  'protein_g' => 0.5, 'fat_g' => 3,   'fruit_veg_portions' => 0],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Gravy / white sauce (cornflour)', 'serving_size' => 'Four tablespoons', 'cho_g' => 5,  'protein_g' => 0.5, 'fat_g' => 0,   'fruit_veg_portions' => 0],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Cream (single)',                  'serving_size' => 'Two tablespoons',  'cho_g' => 1,  'protein_g' => 0.5, 'fat_g' => 6,   'fruit_veg_portions' => 2],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Low-fat crème fraîche',           'serving_size' => 'Six tablespoons',  'cho_g' => 4,  'protein_g' => 2,   'fat_g' => 5,   'fruit_veg_portions' => 1],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Low-calorie mayonnaise',          'serving_size' => 'Two tablespoons',  'cho_g' => 2,  'protein_g' => 0,   'fat_g' => 2,   'fruit_veg_portions' => 2],
-            ['category' => 'Spreading Fat, Oil & Sauce', 'name' => 'Cream (double) / crème fraîche',  'serving_size' => 'Two tablespoons', 'cho_g' => 1,  'protein_g' => 0.5, 'fat_g' => 12,  'fruit_veg_portions' => 0],
+            // ══════════════════════════════════════════════════════════════
+            //  VEGETABLE
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Vegetable', 'name' => 'Spinach/morogo',      'serving_size' => '1 cup cooked (100g)',  'cho_g' => 5,  'protein_g' => 3, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Cabbage',             'serving_size' => '1 cup cooked (100g)',  'cho_g' => 6,  'protein_g' => 2, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Green beans',         'serving_size' => '1 cup cooked (100g)',  'cho_g' => 7,  'protein_g' => 2, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Mixed vegetables',    'serving_size' => '1 cup cooked (150g)', 'cho_g' => 15, 'protein_g' => 3, 'fat_g' => 1, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Carrots',             'serving_size' => '1 cup cooked (130g)', 'cho_g' => 12, 'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Tomato',              'serving_size' => '1 medium (120g)',      'cho_g' => 5,  'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Onion',               'serving_size' => '1/2 cup cooked (80g)','cho_g' => 8,  'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Chakalaka',           'serving_size' => '1/2 cup (100g)',       'cho_g' => 12, 'protein_g' => 3, 'fat_g' => 4, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Beetroot',            'serving_size' => '1/2 cup (85g)',        'cho_g' => 8,  'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Broccoli',            'serving_size' => '1 cup cooked (150g)', 'cho_g' => 10, 'protein_g' => 4, 'fat_g' => 1, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Cauliflower',         'serving_size' => '1 cup cooked (125g)', 'cho_g' => 7,  'protein_g' => 3, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+            ['category' => 'Vegetable', 'name' => 'Lettuce/salad',       'serving_size' => '2 cups (100g)',        'cho_g' => 5,  'protein_g' => 1, 'fat_g' => 0, 'fruit_veg_portions' => 1],
+
+            // ══════════════════════════════════════════════════════════════
+            //  DAIRY
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Dairy', 'name' => 'Low-fat milk',               'serving_size' => '1 cup (250ml)',     'cho_g' => 12, 'protein_g' => 8,  'fat_g' => 3,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Full cream milk',            'serving_size' => '1 cup (250ml)',     'cho_g' => 12, 'protein_g' => 8,  'fat_g' => 8,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Skim milk',                  'serving_size' => '1 cup (250ml)',     'cho_g' => 12, 'protein_g' => 8,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Amasi, plain',               'serving_size' => '1 cup (250ml)',     'cho_g' => 12, 'protein_g' => 8,  'fat_g' => 6,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Low-fat yoghurt, plain',     'serving_size' => '175g tub',          'cho_g' => 15, 'protein_g' => 8,  'fat_g' => 2,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Full cream yoghurt, plain',  'serving_size' => '175g tub',          'cho_g' => 15, 'protein_g' => 7,  'fat_g' => 6,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Cheese, low-fat',            'serving_size' => '30g',               'cho_g' => 1,  'protein_g' => 8,  'fat_g' => 4,  'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Cheese, cheddar',            'serving_size' => '30g',               'cho_g' => 1,  'protein_g' => 7,  'fat_g' => 10, 'fruit_veg_portions' => 0],
+            ['category' => 'Dairy', 'name' => 'Custard',                    'serving_size' => '1/2 cup (125ml)',   'cho_g' => 22, 'protein_g' => 4,  'fat_g' => 3,  'fruit_veg_portions' => 0],
+
+            // ══════════════════════════════════════════════════════════════
+            //  FAT
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Fat', 'name' => 'Cooking oil',      'serving_size' => '1 tsp (5ml)',        'cho_g' => 0, 'protein_g' => 0, 'fat_g' => 5,  'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Margarine',        'serving_size' => '1 tsp (5g)',         'cho_g' => 0, 'protein_g' => 0, 'fat_g' => 4,  'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Butter',           'serving_size' => '1 tsp (5g)',         'cho_g' => 0, 'protein_g' => 0, 'fat_g' => 4,  'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Mayonnaise',       'serving_size' => '1 tbsp (15ml)',      'cho_g' => 0, 'protein_g' => 0, 'fat_g' => 11, 'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Avocado',          'serving_size' => '1/4 medium (50g)',   'cho_g' => 4, 'protein_g' => 1, 'fat_g' => 7,  'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Peanuts',          'serving_size' => '1 tbsp (15g)',       'cho_g' => 3, 'protein_g' => 4, 'fat_g' => 7,  'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Almonds',          'serving_size' => '6 nuts (10g)',       'cho_g' => 2, 'protein_g' => 2, 'fat_g' => 5,  'fruit_veg_portions' => 0],
+            ['category' => 'Fat', 'name' => 'Sunflower seeds',  'serving_size' => '1 tbsp (10g)',       'cho_g' => 2, 'protein_g' => 2, 'fat_g' => 5,  'fruit_veg_portions' => 0],
+
+            // ══════════════════════════════════════════════════════════════
+            //  OTHER / LIMIT
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'Other/Limit', 'name' => 'Sugar',          'serving_size' => '1 tsp (5g)',            'cho_g' => 5,  'protein_g' => 0,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Honey/jam',      'serving_size' => '1 tsp (7g)',            'cho_g' => 5,  'protein_g' => 0,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Soft drink',     'serving_size' => '1 cup (250ml)',         'cho_g' => 25, 'protein_g' => 0,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Fruit juice',    'serving_size' => '1/2 cup (125ml)',       'cho_g' => 13, 'protein_g' => 0,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Sweets',         'serving_size' => 'Small packet (25g)',    'cho_g' => 24, 'protein_g' => 0,  'fat_g' => 0,  'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Vetkoek',        'serving_size' => '1 medium (80g)',        'cho_g' => 35, 'protein_g' => 5,  'fat_g' => 10, 'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Boerewors',      'serving_size' => '60g cooked',            'cho_g' => 2,  'protein_g' => 10, 'fat_g' => 16, 'fruit_veg_portions' => 0],
+            ['category' => 'Other/Limit', 'name' => 'Atchar',         'serving_size' => '1 tbsp (15g)',          'cho_g' => 2,  'protein_g' => 0,  'fat_g' => 3,  'fruit_veg_portions' => 0],
+
+            // ══════════════════════════════════════════════════════════════
+            //  HEHP / HOSPITAL
+            // ══════════════════════════════════════════════════════════════
+            ['category' => 'HEHP / Hospital', 'name' => 'Oral nutrition supplement powder',      'serving_size' => '1 serving mixed (50g)',    'cho_g' => 30, 'protein_g' => 8,  'fat_g' => 5,  'fruit_veg_portions' => 0],
+            ['category' => 'HEHP / Hospital', 'name' => 'Peanut butter fortified porridge',      'serving_size' => '1 bowl (300g)',             'cho_g' => 45, 'protein_g' => 12, 'fat_g' => 12, 'fruit_veg_portions' => 0],
+            ['category' => 'HEHP / Hospital', 'name' => 'Milk powder fortifier',                 'serving_size' => '2 tbsp (20g)',              'cho_g' => 8,  'protein_g' => 7,  'fat_g' => 5,  'fruit_veg_portions' => 0],
+            ['category' => 'HEHP / Hospital', 'name' => 'Full cream milk + milk powder',         'serving_size' => '1 cup fortified (270ml)',   'cho_g' => 20, 'protein_g' => 16, 'fat_g' => 12, 'fruit_veg_portions' => 0],
+            ['category' => 'HEHP / Hospital', 'name' => 'Egg enriched soft diet',                'serving_size' => '1 serving (250g)',           'cho_g' => 20, 'protein_g' => 18, 'fat_g' => 12, 'fruit_veg_portions' => 0],
+            ['category' => 'HEHP / Hospital', 'name' => 'Soup fortified with milk powder',       'serving_size' => '1 bowl (250ml)',             'cho_g' => 25, 'protein_g' => 12, 'fat_g' => 8,  'fruit_veg_portions' => 0],
         ];
 
         $rows = [];

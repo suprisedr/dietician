@@ -315,6 +315,7 @@ class MealItemController extends Controller
             'max_results'       => (string)$maxResults,
             'method'            => 'foods.search',
             'page_number'       => '0',
+            'region'            => 'ZA',
             'search_expression' => $query,
         ]);
 
@@ -337,6 +338,7 @@ class MealItemController extends Controller
             'max_results'       => $maxResults,
             'method'            => 'foods.search',
             'page_number'       => 0,
+            'region'            => 'ZA',
             'search_expression' => $query,
         ]);
 

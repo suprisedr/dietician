@@ -208,6 +208,21 @@
 .cell-tag-row  { display:flex; align-items:center; gap:3px; width:100%; justify-content:space-between; }
 .cell-tag-name { line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:76px; }
 .cell-tag-kcal { font-size:.58rem; opacity:.75; font-weight:700; }
+.cell-tag-qty-row { display:flex; align-items:center; gap:2px; margin-top:2px; }
+.cell-tag-qty-btn {
+    background:rgba(0,0,0,.08); border:none; border-radius:4px; cursor:pointer;
+    width:18px; height:18px; font-size:.65rem; line-height:1; display:flex;
+    align-items:center; justify-content:center; color:inherit; padding:0;
+}
+.cell-tag-qty-btn:hover { background:rgba(0,0,0,.16); }
+.cell-tag-qty-inp {
+    font-size:.68rem; font-weight:700; width:36px; text-align:center;
+    border:1px solid rgba(0,0,0,.12); border-radius:4px; padding:0 2px;
+    height:18px; background:transparent; color:inherit;
+    -moz-appearance:textfield;
+}
+.cell-tag-qty-inp::-webkit-inner-spin-button,
+.cell-tag-qty-inp::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 .cell-tag-rm   {
     cursor:pointer; opacity:.55; font-size:.82rem; font-weight:700;
     line-height:1; border:none; background:none; padding:0; color:inherit;
@@ -506,6 +521,75 @@
 .cell-tag-name:hover { text-decoration:underline dotted; }
 .cell-tag-note { display:block; font-size:.66rem; opacity:.8; margin-top:.1rem; font-style:italic; }
 
+/* ── Template button ──────────────────────────────────────── */
+.mp-btn-template { background:linear-gradient(135deg,#0d9488,#059669); color:#fff; }
+.mp-btn-template:hover { opacity:.88; }
+
+/* ── Template modal ──────────────────────────────────────── */
+#template-overlay {
+    display:none; position:fixed; inset:0; z-index:9990;
+    background:rgba(0,0,0,.5); backdrop-filter:blur(3px);
+    align-items:center; justify-content:center;
+}
+#template-overlay.is-open { display:flex; }
+#template-modal {
+    background:#fff; border-radius:14px; width:min(520px,94vw); max-height:82vh;
+    display:flex; flex-direction:column;
+    box-shadow:0 24px 60px rgba(0,0,0,.25);
+    overflow:hidden; animation:modalIn .18s ease;
+}
+#template-modal-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.85rem 1.2rem; border-bottom:1px solid var(--border,#e5e7eb); flex-shrink:0;
+    background:linear-gradient(135deg,#f0fdf4,#ecfdf5);
+}
+#template-modal-hdr h3 {
+    font-size:.92rem; font-weight:800; color:var(--text-primary,#1e293b); margin:0;
+    display:flex; align-items:center; gap:.45rem;
+}
+#template-modal-hdr button {
+    background:none; border:none; font-size:1.3rem; cursor:pointer;
+    color:#6b7280; padding:.15rem .3rem; border-radius:6px; line-height:1;
+    transition:background .12s;
+}
+#template-modal-hdr button:hover { background:rgba(0,0,0,.06); }
+.tpl-list {
+    padding:.4rem .5rem; overflow-y:auto; flex:1;
+}
+.tpl-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.65rem .9rem; border-radius:10px; cursor:pointer;
+    transition:all .12s; border:1.5px solid transparent; margin-bottom:2px;
+}
+.tpl-item:hover { background:#f0fdf4; border-color:#bbf7d0; }
+.tpl-item.is-selected { background:#ecfdf5; border-color:#86efac; }
+.tpl-item-name { font-size:.82rem; font-weight:600; color:var(--text-primary,#1e293b); }
+.tpl-item-meta {
+    display:flex; gap:.4rem; align-items:center;
+}
+.tpl-item-kcal {
+    font-size:.68rem; color:#059669; background:#dcfce7; padding:.15rem .5rem;
+    border-radius:20px; font-weight:600;
+}
+.tpl-item-arrow { color:#9ca3af; font-size:.65rem; transition:transform .12s; }
+.tpl-item:hover .tpl-item-arrow { transform:translateX(2px); color:#059669; }
+.tpl-confirm {
+    padding:.85rem 1.2rem; border-top:1px solid var(--border,#e5e7eb);
+    display:none; background:#fefce8; flex-shrink:0;
+}
+.tpl-confirm p {
+    font-size:.78rem; color:#92400e; margin:0 0 .6rem;
+    display:flex; align-items:center; gap:.35rem;
+}
+.tpl-confirm-btns { display:flex; gap:.5rem; }
+.tpl-confirm-btns button {
+    flex:1; padding:.55rem; border-radius:8px; font-size:.8rem;
+    font-weight:700; cursor:pointer; border:none; transition:opacity .12s;
+}
+.tpl-confirm-btns button:hover { opacity:.85; }
+.tpl-confirm-cancel { background:#f3f4f6; color:var(--text-primary,#1e293b); }
+.tpl-confirm-apply { background:linear-gradient(135deg,#0d9488,#059669); color:#fff; }
+
 /* ── Save bar ─────────────────────────────────────────────── */
 .mp-save-bar {
     display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
@@ -536,6 +620,16 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 .mo-item-serving { font-size:.6rem; font-weight:400; color:var(--text-muted); margin-left:.2rem; }
 .mo-macros { font-size:.59rem; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:.05rem; }
 .mp-flash { padding:.65rem 1rem; background:#dcfce7; color:#15803d; border-radius:8px; font-size:.82rem; font-weight:600; margin-bottom:1.1rem; border:1px solid #86efac; }
+
+/* ── Copy-slot button ────────────────────────────────── */
+.copy-slot-btn {
+    position:absolute; top:3px; right:3px; z-index:2;
+    background:rgba(255,255,255,.6); border:1px solid rgba(0,0,0,.08); border-radius:4px;
+    padding:2px 4px; cursor:pointer; opacity:0; transition:opacity .15s;
+    color:var(--text-muted); line-height:1; display:flex; align-items:center;
+}
+.sday-col:hover .copy-slot-btn { opacity:1; }
+.copy-slot-btn:hover { background:rgba(255,255,255,.9); color:var(--primary); }
 
 /* ── Copy-day button ─────────────────────────────────── */
 .copy-day-btn {
@@ -597,6 +691,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                 @endif
             </div>
         </div>
+        <button type="button" class="mp-btn mp-btn-template" onclick="openTemplateModal()" title="Apply a meal plan template to all days">&#x1F4CB; Apply Template</button>
     </div>
 
     @if(session('success'))
@@ -702,7 +797,11 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 
                         {{-- Day cells for this slot --}}
                         @foreach($days as $di => $dayName)
-                            <div class="sday-col" style="background:{{ $theme['bg'] }}">
+                            <div class="sday-col" style="background:{{ $theme['bg'] }};position:relative">
+                                <button type="button" class="copy-slot-btn" title="Copy {{ $slotLabels[$slot] }} to other days"
+                                    onclick="openCopySlotPopover(event,{{ $di }},'{{ $slot }}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
                                 @if(count($distForSlot) > 0)
                                     @foreach($distForSlot as $catEntry)
                                         @php $catSlug = Str::slug($catEntry['name']); @endphp
@@ -1148,8 +1247,13 @@ function renderCatCell(di, slot, catName, catSlug){
         tag.style.cssText='background:'+bg+';color:'+txt+';border-color:'+brd;
         tag.innerHTML=
             '<div class="cell-tag-row">'+
-              '<span class="cell-tag-name" onclick="editItem(\''+di+'\',\''+slot+'\','+allIdx+',event)">'+esc(qtyLbl+item.text)+'</span>'+
+              '<span class="cell-tag-name" onclick="editItem(\''+di+'\',\''+slot+'\','+allIdx+',event)">'+esc(item.text)+'</span>'+
               '<button class="cell-tag-rm" type="button" data-day="'+di+'" data-slot="'+slot+'" data-idx="'+allIdx+'" onclick="removeItem(this,event)">&#xD7;</button>'+
+            '</div>'+
+            '<div class="cell-tag-qty-row">'+
+              '<button type="button" class="cell-tag-qty-btn" onclick="inlineQty(\''+di+'\',\''+slot+'\','+allIdx+',-0.1,event)">&#x2212;</button>'+
+              '<input type="number" class="cell-tag-qty-inp" value="'+qtyDisp+'" min="0.1" step="0.1" onclick="event.stopPropagation()" onchange="inlineQtySet(\''+di+'\',\''+slot+'\','+allIdx+',this)" />'+
+              '<button type="button" class="cell-tag-qty-btn" onclick="inlineQty(\''+di+'\',\''+slot+'\','+allIdx+',0.1,event)">&#x2B;</button>'+
             '</div>'+
             (item.note?'<span class="cell-tag-note">'+esc(item.note)+'</span>':'')+
             (kj>0?'<span class="cell-tag-kcal">'+kj+' kJ</span>':'');
@@ -1798,6 +1902,163 @@ document.addEventListener('click', function(e) {
     }
 });
 
+/* ── Copy-slot logic ──────────────────────────────────── */
+var _cpsSourceDay = null;
+var _cpsSourceSlot = null;
+window.openCopySlotPopover = function(e, di, slot) {
+    e.stopPropagation();
+    closeCopyPopover();
+    _cpsSourceDay = di;
+    _cpsSourceSlot = slot;
+    var days = @json($days);
+    var slotLabels = @json($slotLabels);
+    document.getElementById('cps-source-name').textContent = days[di] + ' — ' + slotLabels[slot];
+    document.querySelectorAll('.cps-day-check').forEach(function(cb) { cb.checked = false; });
+    document.querySelectorAll('#cps-day-list .cp-day-row').forEach(function(row) {
+        var val = parseInt(row.querySelector('input').value, 10);
+        if (val === di) { row.classList.add('cp-source'); } else { row.classList.remove('cp-source'); }
+    });
+    var pop = document.getElementById('copy-slot-popover');
+    pop.style.display = 'block';
+    var rect = e.currentTarget.getBoundingClientRect();
+    var popW = 220;
+    var left = Math.min(rect.left, window.innerWidth - popW - 12);
+    pop.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+    pop.style.left = Math.max(8, left) + 'px';
+};
+window.closeCopySlotPopover = function() {
+    document.getElementById('copy-slot-popover').style.display = 'none';
+    _cpsSourceDay = null;
+    _cpsSourceSlot = null;
+};
+window.applyCopySlot = function() {
+    if (_cpsSourceDay === null || !_cpsSourceSlot) return;
+    var targets = [];
+    document.querySelectorAll('.cps-day-check:checked').forEach(function(cb) {
+        targets.push(parseInt(cb.value, 10));
+    });
+    if (targets.length === 0) { closeCopySlotPopover(); return; }
+    var srcKey = _cpsSourceDay + '_' + _cpsSourceSlot;
+    var srcItems = STATE[srcKey] || [];
+    targets.forEach(function(tdi) {
+        var tKey = tdi + '_' + _cpsSourceSlot;
+        STATE[tKey] = JSON.parse(JSON.stringify(srcItems));
+        renderAll(tdi, _cpsSourceSlot);
+    });
+    closeCopySlotPopover();
+    recalc();
+    scheduleAutosave();
+};
+document.addEventListener('click', function(e) {
+    var pop = document.getElementById('copy-slot-popover');
+    if (pop && pop.style.display === 'block' && !pop.contains(e.target) && !e.target.closest('.copy-slot-btn')) {
+        closeCopySlotPopover();
+    }
+});
+
+/* ── Inline qty adjustment on tags ────────────────────── */
+window.inlineQty = function(di, slot, idx, delta, e) {
+    e.stopPropagation();
+    var key = di + '_' + slot;
+    var item = (STATE[key]||[])[idx];
+    if (!item) return;
+    var newQty = Math.max(0.1, (item.qty||1) + delta);
+    item.qty = Math.round(newQty * 100) / 100;
+    renderAll(di, slot);
+};
+window.inlineQtySet = function(di, slot, idx, inp) {
+    var key = di + '_' + slot;
+    var item = (STATE[key]||[])[idx];
+    if (!item) return;
+    var val = parseFloat(inp.value);
+    if (isNaN(val) || val < 0.1) val = 0.1;
+    item.qty = Math.round(val * 100) / 100;
+    renderAll(di, slot);
+};
+
+/* ── Template (preset) logic ──────────────────────────── */
+var _tplSlug = null;
+var PRESETS_URL = '{{ route("meal-planner.presets") }}';
+
+window.openTemplateModal = function() {
+    _tplSlug = null;
+    document.getElementById('tpl-confirm').style.display = 'none';
+    document.getElementById('template-overlay').classList.add('is-open');
+    fetch(PRESETS_URL, {headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
+    .then(function(r){ return r.json(); })
+    .then(function(list){
+        var html = '';
+        list.forEach(function(p){
+            var kcalBadge = p.kcal ? '<span class="tpl-item-kcal">' + p.kcal + ' kcal</span>' : '';
+            html += '<div class="tpl-item" data-slug="' + p.slug + '" onclick="selectTemplate(\'' + p.slug + '\')">'
+                + '<span class="tpl-item-name">' + p.name + '</span>'
+                + '<span class="tpl-item-meta">' + kcalBadge + '<span class="tpl-item-arrow">&#x25B6;</span></span>'
+                + '</div>';
+        });
+        document.getElementById('tpl-list').innerHTML = html;
+    });
+};
+
+window.closeTemplateModal = function() {
+    document.getElementById('template-overlay').classList.remove('is-open');
+    _tplSlug = null;
+};
+
+window.selectTemplate = function(slug) {
+    _tplSlug = slug;
+    document.querySelectorAll('.tpl-item').forEach(function(el){
+        el.classList.toggle('is-selected', el.dataset.slug === slug);
+    });
+    document.getElementById('tpl-confirm').style.display = 'block';
+};
+
+window.cancelTemplateApply = function() {
+    _tplSlug = null;
+    document.getElementById('tpl-confirm').style.display = 'none';
+    document.querySelectorAll('.tpl-item').forEach(function(el){
+        el.classList.remove('is-selected');
+    });
+};
+
+window.confirmTemplateApply = function() {
+    if (!_tplSlug) return;
+    var btn = document.getElementById('tpl-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = 'Applying…';
+
+    fetch(PRESETS_URL + '/' + _tplSlug, {headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        var slots = data.slots;
+        for (var di = 0; di < 7; di++) {
+            SLOTS.forEach(function(slot) {
+                var key = di + '_' + slot;
+                STATE[key] = slots[slot]
+                    ? JSON.parse(JSON.stringify(slots[slot]))
+                    : [];
+                renderAll(di, slot);
+            });
+        }
+        recalc();
+        closeTemplateModal();
+        btn.disabled = false;
+        btn.textContent = 'Apply Template';
+        // auto-save immediately
+        for (var si = 0; si < 7; si++) {
+            SLOTS.forEach(function(s) {
+                var h = document.getElementById('cell_' + si + '_' + s);
+                if (h) h.value = JSON.stringify(STATE[si + '_' + s] || []);
+            });
+        }
+        scheduleAutosave();
+    })
+    .catch(function(){
+        btn.disabled = false;
+        btn.textContent = 'Apply Template';
+        alert('Failed to apply template. Please try again.');
+    });
+};
+
 /* ── Sync on submit ───────────────────────────────────── */
 document.getElementById('mp-form').addEventListener('submit',function(){
     for(var di=0;di<7;di++){
@@ -1943,6 +2204,52 @@ function submitRepeat() {
     <p class="cp-note">Existing items in target day(s) will be replaced.</p>
 </div>
 
+{{-- ── Copy-slot popover ──────────────────────────────────────── --}}
+<div id="copy-slot-popover" role="dialog" aria-modal="true" aria-label="Copy meal slot" style="display:none;position:absolute;z-index:120;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.18);width:220px;padding:0;overflow:hidden">
+    <h4 style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;margin:0;font-size:.78rem;font-weight:700;background:#f8fafc;border-bottom:1px solid #e5e7eb">
+        <span id="cps-title">Copy <strong id="cps-source-name"></strong> to…</span>
+        <button class="cp-close" type="button" onclick="closeCopySlotPopover()" aria-label="Close">&times;</button>
+    </h4>
+    <div id="cps-day-list" style="padding:.5rem .75rem">
+        @foreach($days as $di => $dayName)
+            <label class="cp-day-row" id="cps-row-{{ $di }}" style="display:flex;align-items:center;gap:.4rem;padding:.3rem 0;font-size:.8rem;cursor:pointer">
+                <input type="checkbox" class="cps-day-check" value="{{ $di }}">
+                <span>{{ $dayName }}</span>
+                <span style="font-size:.68rem;color:var(--text-muted);margin-left:auto">{{ $mealPlanner->week_start->addDays($di)->format('d M') }}</span>
+            </label>
+        @endforeach
+    </div>
+    <div style="padding:0 .75rem .6rem">
+        <button type="button" class="cp-apply" onclick="applyCopySlot()" style="width:100%;padding:.5rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer">Copy items</button>
+        <p class="cp-note" style="font-size:.65rem;color:var(--text-muted);text-align:center;margin:.35rem 0 0">Only this meal slot will be copied.</p>
+    </div>
+</div>
+
+{{-- ── Template Modal ────────────────────────────────────────── --}}
+<div id="template-overlay" onclick="if(event.target===this)closeTemplateModal()">
+    <div id="template-modal">
+        <div id="template-modal-hdr">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Meal Plan Templates
+            </h3>
+            <button onclick="closeTemplateModal()" title="Close">&times;</button>
+        </div>
+        <div class="tpl-list" id="tpl-list">
+            <div style="padding:2.5rem;text-align:center;color:var(--text-muted,#94a3b8);font-size:.82rem">Loading templates&hellip;</div>
+        </div>
+        <div class="tpl-confirm" id="tpl-confirm">
+            <p>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                This will replace all existing items for every day. You can adjust portions after applying.
+            </p>
+            <div class="tpl-confirm-btns">
+                <button class="tpl-confirm-cancel" onclick="cancelTemplateApply()">Cancel</button>
+                <button class="tpl-confirm-apply" id="tpl-confirm-btn" onclick="confirmTemplateApply()">Apply &amp; Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 {{-- ── PDF Preview Modal ─────────────────────────────────────── --}}
 <div id="pdf-preview-overlay" role="dialog" aria-modal="true" aria-label="PDF Preview">
     <div id="pdf-preview-modal">

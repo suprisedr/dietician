@@ -6,9 +6,9 @@ use App\Models\MealPlannerWeek;
 use App\Models\MealPlannerEntry;
 use App\Models\MealItem;
 use App\Models\Patient;
-use Braunson\FatSecret\FatSecret;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class MealPlannerController extends Controller
 {
@@ -21,9 +21,7 @@ class MealPlannerController extends Controller
         }
 
         try {
-            $fs       = app(FatSecret::class);
-            $raw      = $fs->searchIngredients($q, 0, 25);
-            $foods    = $raw['foods']['food'] ?? [];
+            $foods = $this->fatSecretSearch($q, 25);
 
             // Single result comes back as an associative array, not a list
             if (isset($foods['food_id'])) {
@@ -68,6 +66,79 @@ class MealPlannerController extends Controller
             \Log::error('FatSecret search error: ' . $e->getMessage());
             return response()->json(['error' => 'Search unavailable'], 500);
         }
+    }
+
+    // ── Meal plan preset templates ──────────────────────────────────────────
+    public function presetList()
+    {
+        $presets = config('meal_presets', []);
+        $list = [];
+        foreach ($presets as $slug => $preset) {
+            $list[] = [
+                'slug' => $slug,
+                'name' => $preset['name'],
+                'kcal' => $preset['kcal'] ?? null,
+            ];
+        }
+        return response()->json($list);
+    }
+
+    public function presetApply(string $slug)
+    {
+        $preset = config("meal_presets.{$slug}");
+        if (!$preset) {
+            return response()->json(['error' => 'Preset not found'], 404);
+        }
+
+        $allNames = collect($preset['slots'])->flatten()->unique()->values()->all();
+
+        $items = MealItem::visibleTo(auth()->id())
+            ->whereIn('name', $allNames)
+            ->get()
+            ->keyBy('name');
+
+        $result = [];
+        foreach ($preset['slots'] as $slot => $foodNames) {
+            $slotItems = [];
+            foreach ($foodNames as $name) {
+                $mi = $items->get($name);
+                if ($mi) {
+                    $slotItems[] = [
+                        'id'      => (string) $mi->id,
+                        'text'    => $mi->name,
+                        'kcal'    => $mi->energy_kcal ? round($mi->energy_kcal) : 0,
+                        'kj'      => $mi->energy_kj ? round($mi->energy_kj) : 0,
+                        'cho'     => $mi->cho_g,
+                        'pro'     => $mi->protein_g,
+                        'fat'     => $mi->fat_g,
+                        'fib'     => null,
+                        'group'   => $mi->category,
+                        'exchCat' => null,
+                        'qty'     => 1,
+                    ];
+                } else {
+                    $slotItems[] = [
+                        'id'      => null,
+                        'text'    => $name,
+                        'kcal'    => 0,
+                        'kj'      => 0,
+                        'cho'     => null,
+                        'pro'     => null,
+                        'fat'     => null,
+                        'fib'     => null,
+                        'group'   => null,
+                        'exchCat' => null,
+                        'qty'     => 1,
+                    ];
+                }
+            }
+            $result[$slot] = $slotItems;
+        }
+
+        return response()->json([
+            'name'  => $preset['name'],
+            'slots' => $result,
+        ]);
     }
 
     // ── List all planner weeks for the authenticated user ─────────────────────
@@ -484,5 +555,60 @@ class MealPlannerController extends Controller
         $filename = 'meal-plan-' . $nameSlug . '-' . \Illuminate\Support\Str::slug($label) . '.pdf';
 
         return $pdf->stream($filename);
+    }
+
+    private function fatSecretSearch(string $query, int $maxResults = 25): array
+    {
+        $key    = config('services.fatsecret.key')    ?: config('fatsecret.key');
+        $secret = config('services.fatsecret.secret') ?: config('fatsecret.secret');
+
+        if (!$key || !$secret) return [];
+
+        $endpoint = 'https://platform.fatsecret.com/rest/server.api';
+
+        $oauthParams = [
+            'oauth_consumer_key'     => $key,
+            'oauth_nonce'            => md5(uniqid((string)mt_rand(), true)),
+            'oauth_signature_method' => 'HMAC-SHA1',
+            'oauth_timestamp'        => (string)time(),
+            'oauth_version'          => '1.0',
+        ];
+
+        $allParams = array_merge($oauthParams, [
+            'format'            => 'json',
+            'max_results'       => (string)$maxResults,
+            'method'            => 'foods.search',
+            'page_number'       => '0',
+            'region'            => 'ZA',
+            'search_expression' => $query,
+        ]);
+
+        ksort($allParams);
+        $paramString = http_build_query($allParams, '', '&', PHP_QUERY_RFC3986);
+        $baseString  = 'POST&' . rawurlencode($endpoint) . '&' . rawurlencode($paramString);
+
+        $signingKey = rawurlencode($secret) . '&';
+        $oauthParams['oauth_signature'] = base64_encode(
+            hash_hmac('sha1', $baseString, $signingKey, true)
+        );
+
+        $postBody = array_merge($oauthParams, [
+            'format'            => 'json',
+            'max_results'       => $maxResults,
+            'method'            => 'foods.search',
+            'page_number'       => 0,
+            'region'            => 'ZA',
+            'search_expression' => $query,
+        ]);
+
+        $response = Http::asForm()->post($endpoint, $postBody);
+        $data  = $response->json();
+        $foods = $data['foods']['food'] ?? [];
+
+        if (isset($foods['food_id'])) {
+            $foods = [$foods];
+        }
+
+        return is_array($foods) ? $foods : [];
     }
 }
