@@ -69,20 +69,8 @@
             align-items: flex-start;
             margin-bottom: 20px;
         }
-        .logo-placeholder {
-            width: 80px;
-            height: 80px;
-            border: 2px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #aaa;
-            flex-shrink: 0;
-        }
-        .logo-placeholder img { width: 80px; height: auto; }
+        .letterhead-banner { text-align: center; margin-bottom: 14px; }
+        .letterhead-banner img { width: 100%; max-height: 120px; height: auto; display: block; }
         .title-area { text-align: center; flex-grow: 1; padding: 0 12px; }
         .title-area h1 { color: #003366; font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: -.01em; margin-bottom: 4px; }
         .title-area .doc-sub { font-size: 11px; font-weight: 700; color: #555; letter-spacing: .03em; }
@@ -295,22 +283,15 @@
 
 <div class="page">
 
-    {{-- LETTERHEAD (full-width if set) --}}
+    {{-- LETTERHEAD --}}
     @if(!empty($letterhead))
-    <div style="text-align:center;margin-bottom:14px">
-        <img src="{{ $letterhead }}" style="width:100%;height:auto;display:block">
+    <div class="letterhead-banner">
+        <img src="{{ $letterhead }}">
     </div>
     @endif
 
     {{-- HEADER --}}
     <header>
-        <div class="logo-placeholder">
-            @if(!empty($letterhead))
-                <img src="{{ $letterhead }}" style="width:80px;height:auto">
-            @else
-                YOUR<br>LOGO
-            @endif
-        </div>
         <div class="title-area">
             <h1>Dietetic Assessment &amp; Care Plan</h1>
             <div class="doc-sub">ABCD GUIDELINES &mdash; PATIENT REPORT</div>

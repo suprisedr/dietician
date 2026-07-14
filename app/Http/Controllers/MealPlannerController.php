@@ -75,9 +75,12 @@ class MealPlannerController extends Controller
         $list = [];
         foreach ($presets as $slug => $preset) {
             $list[] = [
-                'slug' => $slug,
-                'name' => $preset['name'],
-                'kcal' => $preset['kcal'] ?? null,
+                'slug'        => $slug,
+                'name'        => $preset['name'],
+                'kcal'        => $preset['kcal'] ?? null,
+                'category'    => $preset['category'] ?? null,
+                'description' => $preset['description'] ?? null,
+                'is_7day'     => isset($preset['days']),
             ];
         }
         return response()->json($list);
@@ -90,54 +93,72 @@ class MealPlannerController extends Controller
             return response()->json(['error' => 'Preset not found'], 404);
         }
 
-        $allNames = collect($preset['slots'])->flatten()->unique()->values()->all();
+        $is7Day = isset($preset['days']);
+        $slotsSource = $is7Day ? $preset['days'] : ['_single' => $preset['slots']];
+
+        $allNames = collect($slotsSource)->flatten()->unique()->values()->all();
 
         $items = MealItem::visibleTo(auth()->id())
             ->whereIn('name', $allNames)
             ->get()
             ->keyBy('name');
 
-        $result = [];
-        foreach ($preset['slots'] as $slot => $foodNames) {
-            $slotItems = [];
-            foreach ($foodNames as $name) {
-                $mi = $items->get($name);
-                if ($mi) {
-                    $slotItems[] = [
-                        'id'      => (string) $mi->id,
-                        'text'    => $mi->name,
-                        'kcal'    => $mi->energy_kcal ? round($mi->energy_kcal) : 0,
-                        'kj'      => $mi->energy_kj ? round($mi->energy_kj) : 0,
-                        'cho'     => $mi->cho_g,
-                        'pro'     => $mi->protein_g,
-                        'fat'     => $mi->fat_g,
-                        'fib'     => null,
-                        'group'   => $mi->category,
-                        'exchCat' => null,
-                        'qty'     => 1,
-                    ];
-                } else {
-                    $slotItems[] = [
-                        'id'      => null,
-                        'text'    => $name,
-                        'kcal'    => 0,
-                        'kj'      => 0,
-                        'cho'     => null,
-                        'pro'     => null,
-                        'fat'     => null,
-                        'fib'     => null,
-                        'group'   => null,
-                        'exchCat' => null,
-                        'qty'     => 1,
-                    ];
+        $resolveSlots = function (array $slots) use ($items) {
+            $result = [];
+            foreach ($slots as $slot => $foodNames) {
+                $slotItems = [];
+                foreach ($foodNames as $name) {
+                    $mi = $items->get($name);
+                    if ($mi) {
+                        $slotItems[] = [
+                            'id'      => (string) $mi->id,
+                            'text'    => $mi->name,
+                            'kcal'    => $mi->energy_kcal ? round($mi->energy_kcal) : 0,
+                            'kj'      => $mi->energy_kj ? round($mi->energy_kj) : 0,
+                            'cho'     => $mi->cho_g,
+                            'pro'     => $mi->protein_g,
+                            'fat'     => $mi->fat_g,
+                            'fib'     => null,
+                            'group'   => $mi->category,
+                            'exchCat' => null,
+                            'qty'     => 1,
+                        ];
+                    } else {
+                        $slotItems[] = [
+                            'id'      => null,
+                            'text'    => $name,
+                            'kcal'    => 0,
+                            'kj'      => 0,
+                            'cho'     => null,
+                            'pro'     => null,
+                            'fat'     => null,
+                            'fib'     => null,
+                            'group'   => null,
+                            'exchCat' => null,
+                            'qty'     => 1,
+                        ];
+                    }
                 }
+                $result[$slot] = $slotItems;
             }
-            $result[$slot] = $slotItems;
+            return $result;
+        };
+
+        if ($is7Day) {
+            $days = [];
+            foreach ($preset['days'] as $dayIndex => $daySlots) {
+                $days[$dayIndex] = $resolveSlots($daySlots);
+            }
+            return response()->json([
+                'name'   => $preset['name'],
+                'is_7day' => true,
+                'days'   => $days,
+            ]);
         }
 
         return response()->json([
             'name'  => $preset['name'],
-            'slots' => $result,
+            'slots' => $resolveSlots($preset['slots']),
         ]);
     }
 

@@ -253,6 +253,53 @@
                 </button>
             @endif
 
+            {{-- Weekly Email Reminders toggle --}}
+            @if(auth()->user()->canAccessPlan('package_1'))
+            <div id="reminder-action-toggle"
+                 style="display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .85rem .4rem 1rem;background:#fff;border:1.5px solid {{ $patient->weekly_reminder_enabled ? '#86efac' : 'var(--border)' }};border-radius:8px;transition:border-color .15s,box-shadow .15s;margin-left:auto">
+                <div id="reminder-bell-bg"
+                     style="width:1.6rem;height:1.6rem;border-radius:.4rem;background:{{ $patient->weekly_reminder_enabled ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg id="reminder-bell-svg" xmlns="http://www.w3.org/2000/svg"
+                         style="width:.85rem;height:.85rem;color:{{ $patient->weekly_reminder_enabled ? '#15803d' : '#9ca3af' }}"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </div>
+                <div style="min-width:0">
+                    <div style="display:flex;align-items:center;gap:.4rem">
+                        <span style="font-size:.78rem;font-weight:700;color:var(--text-primary);white-space:nowrap">Email Reminders</span>
+                        @if($patient->email)
+                        <button id="reminder-toggle-btn"
+                            type="button"
+                            role="switch"
+                            aria-checked="{{ $patient->weekly_reminder_enabled ? 'true' : 'false' }}"
+                            data-enabled="{{ $patient->weekly_reminder_enabled ? '1' : '0' }}"
+                            data-email="{{ $patient->email }}"
+                            data-url="{{ route('patients.weekly-reminder.toggle', $patient) }}"
+                            title="{{ $patient->weekly_reminder_enabled ? 'Turn off reminders' : 'Turn on reminders' }}"
+                            onclick="toggleReminder(this)"
+                            style="position:relative;display:inline-flex;align-items:center;width:2.5rem;height:1.375rem;border-radius:999px;border:none;cursor:pointer;padding:0;transition:background .25s;background:{{ $patient->weekly_reminder_enabled ? '#22c55e' : '#d1d5db' }};flex-shrink:0">
+                            <span id="reminder-knob" style="position:absolute;top:.15rem;left:{{ $patient->weekly_reminder_enabled ? '1.2rem' : '.15rem' }};width:1.075rem;height:1.075rem;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .25s"></span>
+                        </button>
+                        @endif
+                    </div>
+                    <p id="reminder-desc" style="font-size:.68rem;color:var(--text-muted);margin:.1rem 0 0;line-height:1.2;white-space:nowrap">
+                        @if(!$patient->email)
+                            <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;font-weight:600;text-decoration:underline">Add email</a> to enable
+                        @elseif($patient->weekly_reminder_enabled)
+                            Sending to {{ $patient->email }}
+                        @else
+                            Off — no weekly emails
+                        @endif
+                    </p>
+                </div>
+            </div>
+            @endif
+
+        </div>
+        <div id="reminder-toast" style="display:none;margin-top:.5rem;padding:.4rem .85rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.5rem;color:#15803d;font-size:.78rem;font-weight:600;align-items:center;gap:.35rem">
+            <svg xmlns="http://www.w3.org/2000/svg" style="width:.8rem;height:.8rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span id="reminder-toast-msg"></span>
         </div>
     </div>
 
@@ -700,6 +747,11 @@
                 })
                 .then(function (data) {
                     if (data.error) throw new Error(data.error);
+
+                    if (data.reload_required) {
+                        window.location.reload();
+                        return;
+                    }
 
                     /* Update Current: badge */
                     var badge = document.getElementById('preset-current-badge');
@@ -1912,13 +1964,18 @@
             const fmin = Number(row.dataset.fatMin) || 0;
             const kj   = Number(row.dataset.kj)     || 0;
 
-            row.querySelector('.et-cho').textContent  = cho  ? Math.round(cho  * nu * 10) / 10 : '—';
-            row.querySelector('.et-pmin').textContent = pmin ? Math.round(pmin * nu * 10) / 10 : '—';
-            row.querySelector('.et-fmin').textContent = fmin ? Math.round(fmin * nu * 10) / 10 : '—';
-            row.querySelector('.et-kj').textContent   = '';
+            var elCho  = row.querySelector('.et-cho');
+            var elPmin = row.querySelector('.et-pmin');
+            var elFmin = row.querySelector('.et-fmin');
+            var elKj   = row.querySelector('.et-kj');
+            if (elCho)  elCho.textContent  = cho  ? Math.round(cho  * nu * 10) / 10 : '—';
+            if (elPmin) elPmin.textContent = pmin ? Math.round(pmin * nu * 10) / 10 : '—';
+            if (elFmin) elFmin.textContent = fmin ? Math.round(fmin * nu * 10) / 10 : '—';
+            if (elKj)   elKj.textContent   = '';
         }
 
         function recalcTotals() {
+            if (!document.getElementById('exchange-table')) return;
             const rows = Array.from(document.querySelectorAll('#exchange-table tbody tr'));
             const sums = {cho:0,pmin:0,fmin:0,kj:0};
             rows.forEach(r=>{
@@ -1933,20 +1990,21 @@
             const totFmin = Math.round(sums.fmin * 10) / 10;
             const totKj   = Math.round(sums.kj);
             const totG    = Math.round((totCho + totPmin + totFmin) * 10) / 10;
-            document.getElementById('tot-cho').textContent     = totCho  || '—';
-            document.getElementById('tot-pmin').textContent    = totPmin || '—';
-            document.getElementById('tot-fmin').textContent    = totFmin || '—';
+            var el;
+            if (el = document.getElementById('tot-cho'))  el.textContent = totCho  || '—';
+            if (el = document.getElementById('tot-pmin')) el.textContent = totPmin || '—';
+            if (el = document.getElementById('tot-fmin')) el.textContent = totFmin || '—';
 
             // kJ row: convert each macro gram total to kJ (CHO=17, Protein=17, Fat=37)
             const kjCho  = Math.round(totCho  * 17);
             const kjPmin = Math.round(totPmin * 17);
             const kjFmin = Math.round(totFmin * 37);
-            document.getElementById('tot-kj-cho').textContent  = kjCho  || '—';
-            document.getElementById('tot-kj-pmin').textContent = kjPmin || '—';
-            document.getElementById('tot-kj-fmin').textContent = kjFmin || '—';
+            if (el = document.getElementById('tot-kj-cho'))  el.textContent = kjCho  || '—';
+            if (el = document.getElementById('tot-kj-pmin')) el.textContent = kjPmin || '—';
+            if (el = document.getElementById('tot-kj-fmin')) el.textContent = kjFmin || '—';
             // total kJ excludes fat_max and protein_max — computed from min values only
             const totKjFromMins = kjCho + kjPmin + kjFmin;
-            document.getElementById('tot-kj-total').textContent = totKjFromMins || '—';
+            if (el = document.getElementById('tot-kj-total')) el.textContent = totKjFromMins || '—';
 
             // ── Nutrient Analysis Summary ──────────────────────────────
             const teeKjVal  = {{ $teeKj ?: 0 }};
@@ -2254,63 +2312,7 @@
     </div>
     @endif
 
-    {{-- ═══════════════════════════════════════════
-         EMAIL REMINDERS TOGGLE
-    ═══════════════════════════════════════════ --}}
     @if(auth()->user()->canAccessPlan('package_1'))
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="margin-top:1.5rem;padding-bottom:2.5rem">
-        <div class="dash-card" style="padding:1rem 1.5rem">
-            <div style="display:flex;align-items:center;gap:.75rem">
-
-                {{-- Bell icon --}}
-                <div id="reminder-bell-bg"
-                     style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:{{ $patient->weekly_reminder_enabled ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <svg id="reminder-bell-svg" xmlns="http://www.w3.org/2000/svg"
-                         style="width:1.1rem;height:1.1rem;color:{{ $patient->weekly_reminder_enabled ? '#15803d' : '#9ca3af' }}"
-                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
-                </div>
-
-                {{-- Label + Toggle inline --}}
-                <div>
-                    <div style="display:flex;align-items:center;gap:.5rem">
-                        <p style="font-size:.88rem;font-weight:700;color:var(--text-primary);margin:0;line-height:1.2">Weekly Email Reminders</p>
-                        @if($patient->email)
-                        <button id="reminder-toggle-btn"
-                            type="button"
-                            role="switch"
-                            aria-checked="{{ $patient->weekly_reminder_enabled ? 'true' : 'false' }}"
-                            data-enabled="{{ $patient->weekly_reminder_enabled ? '1' : '0' }}"
-                            data-email="{{ $patient->email }}"
-                            data-url="{{ route('patients.weekly-reminder.toggle', $patient) }}"
-                            title="{{ $patient->weekly_reminder_enabled ? 'Turn off reminders' : 'Turn on reminders' }}"
-                            onclick="toggleReminder(this)"
-                            style="position:relative;display:inline-flex;align-items:center;width:3rem;height:1.625rem;border-radius:999px;border:none;cursor:pointer;padding:0;transition:background .25s;background:{{ $patient->weekly_reminder_enabled ? '#22c55e' : '#d1d5db' }};flex-shrink:0">
-                            <span id="reminder-knob" style="position:absolute;top:.1875rem;left:{{ $patient->weekly_reminder_enabled ? '1.4375rem' : '.1875rem' }};width:1.25rem;height:1.25rem;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .25s"></span>
-                        </button>
-                        @endif
-                    </div>
-                    <p id="reminder-desc" style="font-size:.78rem;color:var(--text-muted);margin:.2rem 0 0;line-height:1.3">
-                        @if(!$patient->email)
-                            <a href="{{ route('patients.edit', $patient) }}" style="color:#d97706;font-weight:600;text-decoration:underline">Add an email address</a> to enable reminders
-                        @elseif($patient->weekly_reminder_enabled)
-                            Sending weekly reminders to <strong>{{ $patient->email }}</strong>
-                        @else
-                            Reminders are off — patient will not receive weekly emails
-                        @endif
-                    </p>
-                </div>
-
-            </div>
-
-            <div id="reminder-toast" style="display:none;margin-top:.75rem;padding:.45rem 1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.5rem;color:#15803d;font-size:.82rem;font-weight:600;align-items:center;gap:.4rem">
-                <svg xmlns="http://www.w3.org/2000/svg" style="width:.85rem;height:.85rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                <span id="reminder-toast-msg"></span>
-            </div>
-        </div>
-    </div>
-
     <script>
     function toggleReminder(btn) {
         btn.disabled = true;
@@ -2338,17 +2340,20 @@
             btn.disabled = false;
 
             var knob = document.getElementById('reminder-knob');
-            if (knob) knob.style.left = on ? '1.4375rem' : '.1875rem';
+            if (knob) knob.style.left = on ? '1.2rem' : '.15rem';
 
             var bellBg  = document.getElementById('reminder-bell-bg');
             var bellSvg = document.getElementById('reminder-bell-svg');
             if (bellBg)  bellBg.style.background  = on ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f3f4f6';
             if (bellSvg) bellSvg.style.color       = on ? '#15803d' : '#9ca3af';
 
+            var wrap = document.getElementById('reminder-action-toggle');
+            if (wrap) wrap.style.borderColor = on ? '#86efac' : 'var(--border)';
+
             var desc = document.getElementById('reminder-desc');
             if (desc) desc.innerHTML = on
-                ? 'Sending weekly reminders to <strong>' + email + '</strong>'
-                : 'Reminders are off — patient will not receive weekly emails';
+                ? 'Sending to <strong>' + email + '</strong>'
+                : 'Off — no weekly emails';
 
             var toast    = document.getElementById('reminder-toast');
             var toastMsg = document.getElementById('reminder-toast-msg');

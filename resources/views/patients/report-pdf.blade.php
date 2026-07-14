@@ -14,6 +14,10 @@
         background: #fff;
     }
 
+    .letterhead-banner { width: 100%; margin-bottom: 8px; border-collapse: collapse; }
+    .letterhead-banner td { text-align: center; }
+    .letterhead-banner img { width: 100%; max-height: 100px; height: auto; display: block; }
+
     .page-header { width: 100%; margin-bottom: 12px; border-collapse: collapse; }
     .page-header td { vertical-align: top; }
     .logo-cell { width: 80px; }
@@ -183,10 +187,10 @@
 
 {{-- LETTERHEAD --}}
 @if(!empty($letterhead))
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px">
+<table class="letterhead-banner" cellpadding="0" cellspacing="0">
   <tr>
-    <td style="text-align:center">
-      <img src="{{ $letterhead }}" style="width:100%;height:auto;display:block">
+    <td>
+      <img src="{{ $letterhead }}">
     </td>
   </tr>
 </table>
@@ -195,13 +199,9 @@
 {{-- PAGE HEADER --}}
 <table class="page-header" cellpadding="0" cellspacing="0">
     <tr>
-        <td class="logo-cell">
-            @if(empty($letterhead))
-                <div style="width:70px;height:60px;border:1.5px dashed #bbb;font-size:7px;color:#aaa;text-align:center;padding:20px 4px">
-                    Practice<br>Logo
-                </div>
-            @endif
-        </td>
+        @if(empty($letterhead))
+        <td class="logo-cell"></td>
+        @endif
         <td class="title-cell">
             <div class="doc-title">Dietetic Assessment &amp; Care Plan</div>
             <div class="doc-subtitle">ABC Assessment Framework &mdash; Patient Report</div>

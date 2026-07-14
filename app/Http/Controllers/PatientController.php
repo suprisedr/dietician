@@ -648,10 +648,12 @@ class PatientController extends Controller
         }
 
         // Ensure the patient has an exchange template
+        $freshTemplate = false;
         if (! $patient->exchange_template_id) {
             $template = ExchangeTemplate::create(['name' => "Template for patient {$patient->id}"]);
             $patient->update(['exchange_template_id' => $template->id]);
             $patient->refresh();
+            $freshTemplate = true;
         }
 
         // Record which preset is active on this patient
@@ -768,10 +770,11 @@ class PatientController extends Controller
         }
 
         return response()->json([
-            'preset_name' => $dbPreset->name,
-            'kcal_target' => $dbPreset->kcal_target,
-            'items'       => $resultItems,
-            'template_id' => $template->id,
+            'preset_name'    => $dbPreset->name,
+            'kcal_target'    => $dbPreset->kcal_target,
+            'items'          => $resultItems,
+            'template_id'    => $template->id,
+            'reload_required' => $freshTemplate,
         ]);
     }
 

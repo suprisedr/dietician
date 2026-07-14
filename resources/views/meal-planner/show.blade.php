@@ -1990,9 +1990,12 @@ window.openTemplateModal = function() {
         var html = '';
         list.forEach(function(p){
             var kcalBadge = p.kcal ? '<span class="tpl-item-kcal">' + p.kcal + ' kcal</span>' : '';
+            var dayBadge  = p.is_7day ? '<span class="tpl-item-kcal" style="background:#ede9fe;color:#6d28d9">7-day</span>' : '';
+            var catLine   = p.category ? '<span style="display:block;font-size:.7rem;color:#6b7280;margin-top:1px">' + p.category + '</span>' : '';
+            var descLine  = p.description ? '<span style="display:block;font-size:.68rem;color:#9ca3af;margin-top:2px;line-height:1.3">' + p.description + '</span>' : '';
             html += '<div class="tpl-item" data-slug="' + p.slug + '" onclick="selectTemplate(\'' + p.slug + '\')">'
-                + '<span class="tpl-item-name">' + p.name + '</span>'
-                + '<span class="tpl-item-meta">' + kcalBadge + '<span class="tpl-item-arrow">&#x25B6;</span></span>'
+                + '<span class="tpl-item-name">' + p.name + catLine + descLine + '</span>'
+                + '<span class="tpl-item-meta">' + dayBadge + kcalBadge + '<span class="tpl-item-arrow">&#x25B6;</span></span>'
                 + '</div>';
         });
         document.getElementById('tpl-list').innerHTML = html;
@@ -2029,12 +2032,13 @@ window.confirmTemplateApply = function() {
     fetch(PRESETS_URL + '/' + _tplSlug, {headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
     .then(function(r){ return r.json(); })
     .then(function(data){
-        var slots = data.slots;
+        var is7Day = data.is_7day && data.days;
         for (var di = 0; di < 7; di++) {
+            var daySlots = is7Day ? (data.days[di] || {}) : (data.slots || {});
             SLOTS.forEach(function(slot) {
                 var key = di + '_' + slot;
-                STATE[key] = slots[slot]
-                    ? JSON.parse(JSON.stringify(slots[slot]))
+                STATE[key] = daySlots[slot]
+                    ? JSON.parse(JSON.stringify(daySlots[slot]))
                     : [];
                 renderAll(di, slot);
             });
@@ -2043,7 +2047,6 @@ window.confirmTemplateApply = function() {
         closeTemplateModal();
         btn.disabled = false;
         btn.textContent = 'Apply Template';
-        // auto-save immediately
         for (var si = 0; si < 7; si++) {
             SLOTS.forEach(function(s) {
                 var h = document.getElementById('cell_' + si + '_' + s);
