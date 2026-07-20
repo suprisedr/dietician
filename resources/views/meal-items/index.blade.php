@@ -1,11 +1,15 @@
 <x-app-layout>
 @php
     $catColors = [
-        'Fruit & Vegetables'         => ['bg'=>'#dcfce7','text'=>'#15803d','dot'=>'#22c55e'],
-        'Starchy Foods'              => ['bg'=>'#fef9c3','text'=>'#854d0e','dot'=>'#eab308'],
-        'Protein'                    => ['bg'=>'#e0e7ff','text'=>'#3730a3','dot'=>'#6366f1'],
-        'Milk & Dairy'               => ['bg'=>'#e0f2fe','text'=>'#0369a1','dot'=>'#0ea5e9'],
-        'Spreading Fat, Oil & Sauce' => ['bg'=>'#ffedd5','text'=>'#c2410c','dot'=>'#f97316'],
+        'Starch'            => ['bg'=>'#fef9c3','text'=>'#854d0e','dot'=>'#eab308'],
+        'Protein - Animal'  => ['bg'=>'#e0e7ff','text'=>'#3730a3','dot'=>'#6366f1'],
+        'Protein - Plant'   => ['bg'=>'#ede9fe','text'=>'#5b21b6','dot'=>'#8b5cf6'],
+        'Fruit'             => ['bg'=>'#dcfce7','text'=>'#15803d','dot'=>'#22c55e'],
+        'Vegetable'         => ['bg'=>'#d1fae5','text'=>'#065f46','dot'=>'#10b981'],
+        'Dairy'             => ['bg'=>'#e0f2fe','text'=>'#0369a1','dot'=>'#0ea5e9'],
+        'Fat'               => ['bg'=>'#ffedd5','text'=>'#c2410c','dot'=>'#f97316'],
+        'HEHP / Hospital'   => ['bg'=>'#fce7f3','text'=>'#9d174d','dot'=>'#ec4899'],
+        'Other/Limit'       => ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8'],
     ];
     $catList = \App\Models\MealItem::categories();
 @endphp

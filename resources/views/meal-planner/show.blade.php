@@ -533,57 +533,88 @@
 }
 #template-overlay.is-open { display:flex; }
 #template-modal {
-    background:#fff; border-radius:14px; width:min(520px,94vw); max-height:82vh;
+    background:#fff; border-radius:16px; width:min(680px,96vw); max-height:88vh;
     display:flex; flex-direction:column;
     box-shadow:0 24px 60px rgba(0,0,0,.25);
     overflow:hidden; animation:modalIn .18s ease;
 }
 #template-modal-hdr {
     display:flex; align-items:center; justify-content:space-between;
-    padding:.85rem 1.2rem; border-bottom:1px solid var(--border,#e5e7eb); flex-shrink:0;
+    padding:1rem 1.4rem; border-bottom:1px solid var(--border,#e5e7eb); flex-shrink:0;
     background:linear-gradient(135deg,#f0fdf4,#ecfdf5);
 }
 #template-modal-hdr h3 {
-    font-size:.92rem; font-weight:800; color:var(--text-primary,#1e293b); margin:0;
-    display:flex; align-items:center; gap:.45rem;
+    font-size:1rem; font-weight:800; color:var(--text-primary,#1e293b); margin:0;
+    display:flex; align-items:center; gap:.5rem;
 }
 #template-modal-hdr button {
-    background:none; border:none; font-size:1.3rem; cursor:pointer;
-    color:#6b7280; padding:.15rem .3rem; border-radius:6px; line-height:1;
+    background:none; border:none; font-size:1.4rem; cursor:pointer;
+    color:#6b7280; padding:.2rem .4rem; border-radius:6px; line-height:1;
     transition:background .12s;
 }
 #template-modal-hdr button:hover { background:rgba(0,0,0,.06); }
+.tpl-filter-bar {
+    display:flex; gap:.4rem; padding:.7rem 1.2rem; border-bottom:1px solid #f0f0f0;
+    flex-shrink:0; background:#fafafa;
+}
+.tpl-filter-pill {
+    font-size:.72rem; font-weight:700; padding:.28rem .75rem; border-radius:20px;
+    cursor:pointer; border:1.5px solid transparent; transition:all .12s;
+    background:#f1f5f9; color:#475569;
+}
+.tpl-filter-pill:hover { background:#e2e8f0; }
+.tpl-filter-pill.active { background:#059669; color:#fff; border-color:#059669; }
 .tpl-list {
-    padding:.4rem .5rem; overflow-y:auto; flex:1;
+    padding:.6rem .8rem; overflow-y:auto; flex:1;
+}
+.tpl-section-hdr {
+    font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+    color:#6b7280; padding:.5rem .5rem .3rem; margin-top:.4rem;
+    display:flex; align-items:center; gap:.4rem;
+}
+.tpl-section-hdr:first-child { margin-top:0; }
+.tpl-section-dot {
+    width:6px; height:6px; border-radius:50%; flex-shrink:0;
 }
 .tpl-item {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:.65rem .9rem; border-radius:10px; cursor:pointer;
-    transition:all .12s; border:1.5px solid transparent; margin-bottom:2px;
+    display:flex; align-items:flex-start; gap:.75rem;
+    padding:.75rem .9rem; border-radius:10px; cursor:pointer;
+    transition:all .12s; border:1.5px solid transparent; margin-bottom:3px;
 }
 .tpl-item:hover { background:#f0fdf4; border-color:#bbf7d0; }
-.tpl-item.is-selected { background:#ecfdf5; border-color:#86efac; }
-.tpl-item-name { font-size:.82rem; font-weight:600; color:var(--text-primary,#1e293b); }
-.tpl-item-meta {
-    display:flex; gap:.4rem; align-items:center;
+.tpl-item.is-selected { background:#ecfdf5; border-color:#86efac; box-shadow:0 0 0 2px rgba(5,150,105,.12); }
+.tpl-item-body { flex:1; min-width:0; }
+.tpl-item-top { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.tpl-item-name { font-size:.84rem; font-weight:700; color:var(--text-primary,#1e293b); }
+.tpl-item-badges { display:flex; gap:.35rem; align-items:center; flex-shrink:0; }
+.tpl-item-badge {
+    font-size:.65rem; font-weight:700; padding:.15rem .55rem;
+    border-radius:20px; white-space:nowrap;
 }
-.tpl-item-kcal {
-    font-size:.68rem; color:#059669; background:#dcfce7; padding:.15rem .5rem;
-    border-radius:20px; font-weight:600;
+.tpl-badge-kcal { color:#059669; background:#dcfce7; }
+.tpl-badge-7day { color:#6d28d9; background:#ede9fe; }
+.tpl-badge-1day { color:#0369a1; background:#e0f2fe; }
+.tpl-item-cat { font-size:.72rem; color:#6b7280; margin-top:2px; }
+.tpl-item-desc {
+    font-size:.72rem; color:#9ca3af; margin-top:3px; line-height:1.4;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
-.tpl-item-arrow { color:#9ca3af; font-size:.65rem; transition:transform .12s; }
-.tpl-item:hover .tpl-item-arrow { transform:translateX(2px); color:#059669; }
+.tpl-item-arrow {
+    color:#d1d5db; font-size:.7rem; margin-top:.3rem; flex-shrink:0;
+    transition:transform .12s,color .12s;
+}
+.tpl-item:hover .tpl-item-arrow { transform:translateX(3px); color:#059669; }
 .tpl-confirm {
-    padding:.85rem 1.2rem; border-top:1px solid var(--border,#e5e7eb);
+    padding:.9rem 1.3rem; border-top:1px solid var(--border,#e5e7eb);
     display:none; background:#fefce8; flex-shrink:0;
 }
 .tpl-confirm p {
-    font-size:.78rem; color:#92400e; margin:0 0 .6rem;
-    display:flex; align-items:center; gap:.35rem;
+    font-size:.8rem; color:#92400e; margin:0 0 .6rem;
+    display:flex; align-items:center; gap:.4rem;
 }
-.tpl-confirm-btns { display:flex; gap:.5rem; }
+.tpl-confirm-btns { display:flex; gap:.6rem; }
 .tpl-confirm-btns button {
-    flex:1; padding:.55rem; border-radius:8px; font-size:.8rem;
+    flex:1; padding:.6rem; border-radius:8px; font-size:.82rem;
     font-weight:700; cursor:pointer; border:none; transition:opacity .12s;
 }
 .tpl-confirm-btns button:hover { opacity:.85; }
@@ -792,7 +823,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                         <div class="slot-row-label" style="background:{{ $theme['header_bg'] }}">
                             <span class="slot-row-dot" style="background:{{ $theme['dot'] }}"></span>
                             <span class="slot-row-name">{{ $slotLabels[$slot] }}</span>
-                            <span class="slot-kcal-badge" id="slot-badge-{{ $slot }}">0 kcal</span>
+                            {{-- slot kJ badge removed --}}
                         </div>
 
                         {{-- Day cells for this slot --}}
@@ -804,7 +835,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                                 </button>
                                 @if(count($distForSlot) > 0)
                                     @foreach($distForSlot as $catEntry)
-                                        @php $catSlug = Str::slug($catEntry['name']); @endphp
+                                        @php $catSlug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($catEntry['name'])), '-'); @endphp
                                         <div class="cat-card"
                                             style="background:{{ $theme['tag_bg'] }};color:{{ $theme['tag_text'] }};border-color:{{ $theme['tag_border'] }}"
                                             data-day="{{ $di }}"
@@ -869,11 +900,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
                             </div>
                         @endforeach
 
-                        {{-- Kcal row for this slot --}}
-                        <div class="skcal-label" style="background:{{ $theme['bg'] }}">kJ</div>
-                        @foreach($days as $di => $dayName)
-                            <div class="skcal-day" id="slot-day-kcal-{{ $slot }}-{{ $di }}">0</div>
-                        @endforeach
+                        {{-- slot kJ row removed --}}
 
                     @endforeach
 
@@ -1133,6 +1160,7 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
 const ITEMS   = @json($jsItems);          // [{value,text,group,kcal,kj,serving}]
 const DISTRIB = @json($slotDistributionJs); // {slot:[{name,qty},...]}
 const SLOTS   = @json($slots);
+const EXCH_CAT_MAP = @json($exchangeCatMap ?? new \stdClass); // {slug: [libraryCat,...], ...}
 
 /* ── Derived lookups ──────────────────────────────────── */
 const groups   = {};   // group name -> [item,...]
@@ -1143,13 +1171,17 @@ ITEMS.forEach(function(it){
     idToItem[it.value]=it;
 });
 
-/* Official library categories — non-matching groups (e.g. FatSecret sub-types) are hidden */
+/* Official library categories — non-matching groups (e.g. FatSecret sub-types) are hidden in browse mode */
 const VALID_CATS = new Set([
-    'fruit & vegetables',
-    'starchy foods',
-    'protein',
-    'milk & dairy',
-    'spreading fat, oil & sauce',
+    'starch',
+    'protein - animal',
+    'protein - plant',
+    'fruit',
+    'vegetable',
+    'dairy',
+    'fat',
+    'hehp / hospital',
+    'other/limit',
 ]);
 
 function toKcal(it){
@@ -1223,7 +1255,7 @@ function renderCatCell(di, slot, catName, catSlug){
     // Update the card's quota badge
     var badge = document.getElementById('catqty_'+di+'_'+slot+'_'+catSlug);
     if(badge){
-        var used=catItems.reduce(function(s,it){ return s+(it.qty||1); },0);
+        var used=catItems.length;
         var allowed=parseInt(cellEl.dataset.qty||'0',10);
         if(allowed>0){
             badge.textContent=used+'/'+allowed;
@@ -1470,7 +1502,7 @@ window.openModal=function(cellEl){
     setTimeout(function(){ se.focus(); },60);
 };
 
-function selQtyTotal(){ return Object.values(_sel).reduce(function(s,it){ return s+(it.qty||1); },0); }
+function selItemCount(){ return Object.keys(_sel).length; }
 
 function updateQuotaBadge(){
     var quotaWrap  = document.getElementById('mp-modal-quota');
@@ -1478,7 +1510,7 @@ function updateQuotaBadge(){
     var lbl        = document.getElementById('mp-modal-quota-label');
     if(!_cat||_qty===0){ quotaWrap.style.display='none'; return; }
     quotaWrap.style.display='flex';
-    var n=selQtyTotal();
+    var n=selItemCount();
     lbl.textContent=_cat+':';
     badge.textContent=n+'/'+_qty+' selected';
     badge.className=''; // reset
@@ -1514,10 +1546,20 @@ function renderBody(q){
     var lq=q.toLowerCase().trim();
     var visible=0;
 
-    // When searching: include ALL groups (covers previously-imported FatSecret items in 'Other').
-    // When no query: restrict to canonical exchange categories for the default browse view.
+    // Determine which library categories to show based on the active exchange card
+    var allowedCats = null; // null = show all valid
+    if(_catSlug && _catSlug !== 'all' && _catSlug !== '__orphan__' && EXCH_CAT_MAP[_catSlug]) {
+        allowedCats = EXCH_CAT_MAP[_catSlug].map(function(c){ return c.toLowerCase(); });
+    }
+
     var targetGroups = Object.keys(groups).filter(function(g){
-        if(lq) return true;
+        if(lq) {
+            // When searching: if we have a category filter, still restrict to matching categories
+            if(allowedCats) return allowedCats.indexOf(g.toLowerCase()) !== -1;
+            return true;
+        }
+        // When browsing (no query): restrict to mapped categories if available, otherwise show all valid
+        if(allowedCats) return allowedCats.indexOf(g.toLowerCase()) !== -1;
         return VALID_CATS.size===0 || VALID_CATS.has(g.toLowerCase());
     });
 
@@ -1579,11 +1621,6 @@ function makeRow(it){
     qtyWrap.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); });
     function updateQty(q){
         q=Math.max(1,Math.min(99,Math.round(q)||1));
-        // If quota is set, cap so total qty across _sel doesn't exceed it
-        if(_qty>0&&_sel[val]){
-            var others=selQtyTotal()-(_sel[val].qty||1);
-            q=Math.min(q,Math.max(1,_qty-others));
-        }
         qtyInp.value=q;
         if(_sel[val]){ _sel[val].qty=q; updateCount(); updateQuotaBadge(); recalcLive(); }
     }
@@ -1593,7 +1630,7 @@ function makeRow(it){
     qtyInp.addEventListener('change',function(e){ e.stopPropagation(); updateQty(parseInt(this.value,10)||1); });
     chk.addEventListener('change',function(e){
         if(e.target.checked){
-            if(_qty>0&&selQtyTotal()>=_qty){ e.target.checked=false; return; }
+            if(_qty>0&&selItemCount()>=_qty){ e.target.checked=false; return; }
             _sel[val]={id:val,text:it.text,kcal:kcal,kj:kj,cho:it.cho||null,pro:it.pro||null,fat:it.fat||null,fib:it.fib||null,group:it.group,exchCat:_catSlug,qty:1};
             row.classList.add('selected'); qtyWrap.style.display='';
         } else {
@@ -1615,7 +1652,7 @@ window.addCustom=function(){
 };
 
 function updateCount(){
-    var n=selQtyTotal(), cntEl=document.getElementById('mp-sel-count'), cfm=document.getElementById('mp-btn-confirm');
+    var n=selItemCount(), cntEl=document.getElementById('mp-sel-count'), cfm=document.getElementById('mp-btn-confirm');
     if(_qty>0){
         var rem=_qty-n;
         if(rem<0){ cntEl.innerHTML='<span style="color:#b91c1c;font-weight:700">'+n+' selected \u2014 over limit of '+_qty+'</span>'; cfm.disabled=true; cfm.style.opacity='.45'; }
@@ -1646,7 +1683,7 @@ document.getElementById('mp-modal-search').addEventListener('input',function(){
             (data.db||[]).forEach(function(dbIt){
                 var val=String(dbIt.id);
                 if(!idToItem[val]){
-                    var newIt={value:val,text:dbIt.name,group:dbIt.category||'Other',kcal:dbIt.kcal||0,kj:dbIt.kj||0,serving:dbIt.serving||null};
+                    var newIt={value:val,text:dbIt.name,group:dbIt.category||'Other/Limit',kcal:dbIt.kcal||0,kj:dbIt.kj||0,serving:dbIt.serving||null,cho:dbIt.carbs||null,pro:dbIt.protein||null,fat:dbIt.fat||null,fib:dbIt.fiber||null};
                     ITEMS.push(newIt); idToItem[val]=newIt;
                     if(!groups[newIt.group]) groups[newIt.group]=[];
                     groups[newIt.group].push(newIt);
@@ -1684,15 +1721,16 @@ function appendFS(body,q){
             if(!e.target.checked){ delete _sel[food.id]; row.classList.remove('selected'); updateCount(); recalcLive(); return; }
             // Uncheck immediately — the portion modal will decide whether to proceed
             e.target.checked=false;
-            if(_qty>0&&selQtyTotal()>=_qty){ return; }
+            if(_qty>0&&selItemCount()>=_qty){ return; }
             fsPortion.open(food, function(scaled){
-                var payload=new URLSearchParams({_token:CSRF,name:scaled.name,serving:scaled.serving||'',kcal:scaled.kcal||'',kj:scaled.kj||'',fat:scaled.fat||'',carbs:scaled.carbs||'',protein:scaled.protein||'',fiber:scaled.fiber||''});
+                var libCat = (_catSlug && EXCH_CAT_MAP[_catSlug] && EXCH_CAT_MAP[_catSlug].length) ? EXCH_CAT_MAP[_catSlug][0] : 'Other/Limit';
+                var payload=new URLSearchParams({_token:CSRF,name:scaled.name,serving:scaled.serving||'',kcal:scaled.kcal||'',kj:scaled.kj||'',fat:scaled.fat||'',carbs:scaled.carbs||'',protein:scaled.protein||'',fiber:scaled.fiber||'',category:libCat});
                 var confirmBtn=document.getElementById('fs-portion-confirm');
                 if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='Saving…'; }
                 fetch(IMPORT_URL,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},body:payload.toString()})
                 .then(function(r){ return r.json(); })
                 .then(function(saved){
-                    var newIt={value:String(saved.id),text:saved.name,group:saved.category||'Other',kcal:saved.energy_kcal||0,kj:saved.energy_kj||0,serving:saved.serving_size||null};
+                    var newIt={value:String(saved.id),text:saved.name,group:saved.category||'Other/Limit',kcal:saved.energy_kcal||0,kj:saved.energy_kj||0,serving:saved.serving_size||null,cho:saved.cho_g||null,pro:saved.protein_g||null,fat:saved.fat_g||null,fib:saved.fiber_g||null};
                     if(!idToItem[newIt.value]){ ITEMS.push(newIt); idToItem[newIt.value]=newIt; if(!groups[newIt.group]){ groups[newIt.group]=[]; } groups[newIt.group].push(newIt); }
                     _sel[newIt.value]={id:newIt.value,text:newIt.text,kcal:toKcal(newIt),kj:toKj(newIt),group:newIt.group,exchCat:_catSlug,qty:1};
                     _fsResults=_fsResults.filter(function(f){ return f.id!==food.id; });
@@ -1826,6 +1864,25 @@ window.fsPortion=(function(){
 })();
 
 /* ── Initialise from saved DB data ───────────────────── */
+/* Reverse map: library category (lowercase) → exchange slug */
+var _libToExch = {};
+Object.keys(EXCH_CAT_MAP).forEach(function(slug){
+    (EXCH_CAT_MAP[slug]||[]).forEach(function(cat){
+        _libToExch[cat.toLowerCase()] = slug;
+    });
+});
+
+function inferExchCat(libGroup, slot){
+    if(!libGroup) return null;
+    var slug = _libToExch[libGroup.toLowerCase()];
+    if(!slug) return null;
+    var distrib = DISTRIB[slot]||[];
+    for(var i=0;i<distrib.length;i++){
+        if(slugify(distrib[i].name)===slug) return slug;
+    }
+    return null;
+}
+
 for(var di=0;di<7;di++){
     SLOTS.forEach(function(slot){
         var key=di+'_'+slot;
@@ -1834,7 +1891,8 @@ for(var di=0;di<7;di++){
             var parsed=JSON.parse(hidden?hidden.value:'[]');
             STATE[key]=Array.isArray(parsed)?parsed.map(function(it){
                 var lib=it.id?idToItem[it.id]:null;
-                return {id:it.id||null,text:it.text||(lib?lib.text:''),kcal:lib?toKcal(lib):0,kj:lib?toKj(lib):0,cho:lib?lib.cho:null,pro:lib?lib.pro:null,fat:lib?lib.fat:null,fib:lib?lib.fib:null,group:lib?lib.group:null,exchCat:it.exchCat||null,qty:it.qty||1};
+                var ec=it.exchCat||(lib?inferExchCat(lib.group, slot):null);
+                return {id:it.id||null,text:it.text||(lib?lib.text:''),kcal:lib?toKcal(lib):0,kj:lib?toKj(lib):0,cho:lib?lib.cho:null,pro:lib?lib.pro:null,fat:lib?lib.fat:null,fib:lib?lib.fib:null,group:lib?lib.group:null,exchCat:ec,qty:it.qty||1};
             }).filter(function(it){ return it.text||it.id; }):[];
         }catch(ex){ STATE[key]=[]; }
         renderAll(di,slot);
@@ -1980,25 +2038,72 @@ window.inlineQtySet = function(di, slot, idx, inp) {
 var _tplSlug = null;
 var PRESETS_URL = '{{ route("meal-planner.presets") }}';
 
+var _tplData = [];
+var _tplFilter = 'all';
+
+function renderTemplateList(){
+    var list = _tplData;
+    var filter = _tplFilter;
+    var seven = list.filter(function(p){ return p.is_7day; });
+    var single = list.filter(function(p){ return !p.is_7day; });
+    var html = '';
+
+    function renderItem(p){
+        var kcalBadge = p.kcal ? '<span class="tpl-item-badge tpl-badge-kcal">' + p.kcal + ' kcal</span>' : '';
+        var typeBadge = p.is_7day
+            ? '<span class="tpl-item-badge tpl-badge-7day">7-day plan</span>'
+            : '<span class="tpl-item-badge tpl-badge-1day">Single day</span>';
+        var catLine  = p.category ? '<div class="tpl-item-cat">' + p.category + '</div>' : '';
+        var descLine = p.description ? '<div class="tpl-item-desc">' + p.description + '</div>' : '';
+        return '<div class="tpl-item' + (_tplSlug===p.slug?' is-selected':'') + '" data-slug="' + p.slug + '" data-type="' + (p.is_7day?'7day':'1day') + '" onclick="selectTemplate(\'' + p.slug + '\')">'
+            + '<div class="tpl-item-body">'
+            + '<div class="tpl-item-top">'
+            + '<span class="tpl-item-name">' + p.name + '</span>'
+            + '<span class="tpl-item-badges">' + typeBadge + kcalBadge + '</span>'
+            + '</div>'
+            + catLine + descLine
+            + '</div>'
+            + '<span class="tpl-item-arrow">&#x25B6;</span>'
+            + '</div>';
+    }
+
+    if(filter==='all'||filter==='7day'){
+        if(seven.length){
+            html += '<div class="tpl-section-hdr"><span class="tpl-section-dot" style="background:#8b5cf6"></span>7-Day Meal Plans (' + seven.length + ')</div>';
+            seven.forEach(function(p){ html += renderItem(p); });
+        }
+    }
+    if(filter==='all'||filter==='1day'){
+        if(single.length){
+            html += '<div class="tpl-section-hdr"><span class="tpl-section-dot" style="background:#0ea5e9"></span>Single-Day Templates (' + single.length + ')</div>';
+            single.forEach(function(p){ html += renderItem(p); });
+        }
+    }
+    if(!html) html = '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:.82rem">No templates match this filter.</div>';
+    document.getElementById('tpl-list').innerHTML = html;
+}
+
+window.filterTemplates = function(f){
+    _tplFilter = f;
+    document.querySelectorAll('.tpl-filter-pill').forEach(function(el){
+        el.classList.toggle('active', el.dataset.filter===f);
+    });
+    renderTemplateList();
+};
+
 window.openTemplateModal = function() {
     _tplSlug = null;
+    _tplFilter = 'all';
+    document.querySelectorAll('.tpl-filter-pill').forEach(function(el){
+        el.classList.toggle('active', el.dataset.filter==='all');
+    });
     document.getElementById('tpl-confirm').style.display = 'none';
     document.getElementById('template-overlay').classList.add('is-open');
     fetch(PRESETS_URL, {headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
     .then(function(r){ return r.json(); })
     .then(function(list){
-        var html = '';
-        list.forEach(function(p){
-            var kcalBadge = p.kcal ? '<span class="tpl-item-kcal">' + p.kcal + ' kcal</span>' : '';
-            var dayBadge  = p.is_7day ? '<span class="tpl-item-kcal" style="background:#ede9fe;color:#6d28d9">7-day</span>' : '';
-            var catLine   = p.category ? '<span style="display:block;font-size:.7rem;color:#6b7280;margin-top:1px">' + p.category + '</span>' : '';
-            var descLine  = p.description ? '<span style="display:block;font-size:.68rem;color:#9ca3af;margin-top:2px;line-height:1.3">' + p.description + '</span>' : '';
-            html += '<div class="tpl-item" data-slug="' + p.slug + '" onclick="selectTemplate(\'' + p.slug + '\')">'
-                + '<span class="tpl-item-name">' + p.name + catLine + descLine + '</span>'
-                + '<span class="tpl-item-meta">' + dayBadge + kcalBadge + '<span class="tpl-item-arrow">&#x25B6;</span></span>'
-                + '</div>';
-        });
-        document.getElementById('tpl-list').innerHTML = html;
+        _tplData = list;
+        renderTemplateList();
     });
 };
 
@@ -2037,9 +2142,13 @@ window.confirmTemplateApply = function() {
             var daySlots = is7Day ? (data.days[di] || {}) : (data.slots || {});
             SLOTS.forEach(function(slot) {
                 var key = di + '_' + slot;
-                STATE[key] = daySlots[slot]
+                var items = daySlots[slot]
                     ? JSON.parse(JSON.stringify(daySlots[slot]))
                     : [];
+                STATE[key] = items.map(function(it){
+                    if(!it.exchCat && it.group) it.exchCat = inferExchCat(it.group, slot);
+                    return it;
+                });
                 renderAll(di, slot);
             });
         }
@@ -2233,10 +2342,15 @@ function submitRepeat() {
     <div id="template-modal">
         <div id="template-modal-hdr">
             <h3>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 Meal Plan Templates
             </h3>
             <button onclick="closeTemplateModal()" title="Close">&times;</button>
+        </div>
+        <div class="tpl-filter-bar" id="tpl-filter-bar">
+            <span class="tpl-filter-pill active" data-filter="all" onclick="filterTemplates('all')">All</span>
+            <span class="tpl-filter-pill" data-filter="7day" onclick="filterTemplates('7day')">7-Day Plans</span>
+            <span class="tpl-filter-pill" data-filter="1day" onclick="filterTemplates('1day')">Single Day</span>
         </div>
         <div class="tpl-list" id="tpl-list">
             <div style="padding:2.5rem;text-align:center;color:var(--text-muted,#94a3b8);font-size:.82rem">Loading templates&hellip;</div>

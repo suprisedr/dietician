@@ -387,63 +387,24 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr">
                         {{-- Left: IBW selector --}}
                         <div style="padding:1rem 1.25rem;border-right:1px solid var(--border)">
-                            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.5rem">Ideal Body Weight (IBW) — select active target</div>
-                            <table id="ibw-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
-                                <thead>
-                                    <tr style="background:#f3f4f6">
-                                        <th style="padding:.3rem .4rem;width:1.8rem;border-bottom:1px solid #e5e7eb"></th>
-                                        <th style="padding:.3rem .5rem;text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">BMI Target</th>
-                                        <th style="padding:.3rem .5rem;text-align:right;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid #e5e7eb">Weight</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $ibwRows = [
-                                            22 => ['label'=>'BMI 22','val'=>$patient->ibw22,'color'=>'var(--text-primary)'],
-                                            25 => ['label'=>'BMI 25','val'=>$patient->ibw25,'color'=>'var(--text-primary)'],
-                                            30 => ['label'=>'BMI 30','val'=>$patient->ibw30,'color'=>'#c2410c'],
-                                        ];
-                                        $activeTarget = (int) ($patient->ibw_bmi_target ?? 22);
-                                    @endphp
-                                    @foreach($ibwRows as $bmiVal => $row)
-                                        @php
-                                            $isActive    = ($bmiVal === $activeTarget);
-                                            $isIbwActive = ($bmiVal === 30 && $useIbwWeight);
-                                            $rowBg = $isIbwActive
-                                                ? 'background:#f0fdf4'
-                                                : ($loop->even ? 'background:#f9fafb' : 'background:#fff');
-                                        @endphp
-                                        <tr data-bmi="{{ $bmiVal }}"
-                                            style="{{ $rowBg }};{{ $isActive && !$isIbwActive ? 'outline:2px solid var(--primary);outline-offset:-2px;' : '' }}{{ $isIbwActive ? 'outline:2px solid #15803d;outline-offset:-2px;' : '' }}cursor:pointer"
-                                            onclick="selectIbwTarget({{ $bmiVal }})">
-                                            <td style="padding:.35rem .4rem;text-align:center;border-bottom:1px solid #f3f4f6">
-                                                <span id="ibw-radio-{{ $bmiVal }}"
-                                                      style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;border:2px solid {{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#9ca3af' }};background:{{ $isActive ? ($isIbwActive ? '#15803d' : 'var(--primary)') : '#fff' }};vertical-align:middle"></span>
-                                            </td>
-                                            <td style="padding:.3rem .5rem;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6">
-                                                {{ $row['label'] }}
-                                                @if($isIbwActive)
-                                                    <span style="display:inline-flex;align-items:center;gap:.2rem;margin-left:.3rem;padding:.1rem .35rem;background:#dcfce7;color:#15803d;border-radius:999px;font-size:.62rem;font-weight:700;white-space:nowrap">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" style="width:.55rem;height:.55rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                                        Using IBW
-                                                    </span>
-                                                @endif
-                                            </td>
-                                            <td style="padding:.3rem .5rem;text-align:right;font-weight:700;color:{{ $row['color'] }};border-bottom:1px solid #f3f4f6"
-                                                id="ibw-weight-{{ $bmiVal }}">
-                                                {{ $row['val'] ? number_format($row['val'], 2).' kg' : '—' }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <p id="ibw-save-msg" style="font-size:.72rem;color:#15803d;margin-top:.35rem;display:none">✓ Saving…</p>
-                            @if($useIbwWeight)
-                            <div id="ibw-weight-notice" style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding:.5rem .75rem;background:#dcfce7;border:1px solid #bbf7d0;border-radius:8px;font-size:.75rem;font-weight:600;color:#15803d">
-                                <svg xmlns="http://www.w3.org/2000/svg" style="width:.9rem;height:.9rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                IBW active — RMR, TEE &amp; macros are calculated using <strong>&nbsp;{{ number_format($patient->ibw, 2) }} kg&nbsp;</strong> (IBW at BMI&nbsp;30) instead of actual weight. Click BMI&nbsp;22 or BMI&nbsp;25 to revert.
+                            @php
+                                $activeTarget = (int) ($patient->ibw_bmi_target ?? 22);
+                                $ibwVal = match($activeTarget) {
+                                    25 => $patient->ibw25,
+                                    30 => $patient->ibw30,
+                                    default => $patient->ibw22,
+                                };
+                            @endphp
+                            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.5rem">Ideal Body Weight (IBW)</div>
+                            <div style="display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px">
+                                <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:var(--primary);color:#fff;font-size:.75rem;font-weight:800;flex-shrink:0">{{ $activeTarget }}</div>
+                                <div style="flex:1">
+                                    <div style="font-size:.82rem;font-weight:700;color:var(--text-primary)">BMI {{ $activeTarget }} Target</div>
+                                    <div style="font-size:.78rem;color:var(--text-muted);margin-top:1px">
+                                        IBW: <strong style="color:var(--text-primary)">{{ $ibwVal ? number_format($ibwVal, 2).' kg' : '—' }}</strong>
+                                    </div>
+                                </div>
                             </div>
-                            @endif
                         </div>
 
                         {{-- Right: Energy stats --}}

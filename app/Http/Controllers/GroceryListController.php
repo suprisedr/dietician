@@ -14,13 +14,17 @@ class GroceryListController extends Controller
 {
     // ── Category mapping: MealItem category → GroceryList category ───────────
     const MEAL_ITEM_CATEGORY_MAP = [
-        'Fruit & Vegetables'         => 'produce',
-        'Starchy Foods'              => 'bakery',
-        'Protein'                    => 'meat',
-        'Milk & Dairy'               => 'dairy',
-        'Spreading Fat, Oil & Sauce' => 'pantry',
-        'FatSecret'                  => 'pantry',    // Online items default
-        'Online'                     => 'pantry',
+        'Starch'            => 'bakery',
+        'Protein - Animal'  => 'meat',
+        'Protein - Plant'   => 'pantry',
+        'Fruit'             => 'produce',
+        'Vegetable'         => 'produce',
+        'Dairy'             => 'dairy',
+        'Fat'               => 'pantry',
+        'HEHP / Hospital'   => 'pantry',
+        'Other/Limit'       => 'pantry',
+        'FatSecret'         => 'pantry',
+        'Online'            => 'pantry',
     ];
 
     public function index()

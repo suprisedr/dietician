@@ -91,7 +91,6 @@
     border-right: none;
   }
 
-  td.fluids-col, th.fluids-col { width: 36px; }
 
   /* Per-item layout */
   .meal-entry  { margin-bottom: 1px; line-height: 1.2; }
@@ -145,7 +144,6 @@
       @foreach($slots as $slot)
         <th>{{ strtoupper($slotLabels[$slot] ?? $slot) }}</th>
       @endforeach
-      <th class="fluids-col">FLUIDS</th>
       <th class="total-col">TOTAL kJ</th>
     </tr>
   </thead>
@@ -181,7 +179,6 @@
             @endforeach
           </td>
         @endforeach
-        <td class="fluids-col"></td>
         <td class="total-col">{{ $dayKj[$di] > 0 ? number_format($dayKj[$di]) : '—' }}</td>
       </tr>
     @endforeach

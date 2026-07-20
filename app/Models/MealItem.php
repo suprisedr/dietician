@@ -43,11 +43,47 @@ class MealItem extends Model
     public static function categories(): array
     {
         return [
-            'Fruit & Vegetables',
-            'Starchy Foods',
-            'Protein',
-            'Milk & Dairy',
-            'Spreading Fat, Oil & Sauce',
+            'Starch',
+            'Protein - Animal',
+            'Protein - Plant',
+            'Fruit',
+            'Vegetable',
+            'Dairy',
+            'Fat',
+            'HEHP / Hospital',
+            'Other/Limit',
         ];
+    }
+
+    /**
+     * Map an exchange template item name (e.g. "Starch", "Meat, lean fat")
+     * to one or more library categories so the item picker can filter.
+     */
+    public static function exchangeToLibraryCategories(string $exchangeName): array
+    {
+        $lower = strtolower(trim($exchangeName));
+
+        if (str_contains($lower, 'starch'))          return ['Starch'];
+        if (str_contains($lower, 'fruit'))            return ['Fruit'];
+        if (str_contains($lower, 'veg'))              return ['Vegetable'];
+        if (str_contains($lower, 'milk'))             return ['Dairy'];
+        if (str_contains($lower, 'meat'))             return ['Protein - Animal'];
+        if (str_contains($lower, 'plant'))            return ['Protein - Plant'];
+        if (str_contains($lower, 'fat'))              return ['Fat'];
+        if (str_contains($lower, 'sugar'))            return ['Other/Limit'];
+        if (str_contains($lower, 'alcohol'))          return ['Other/Limit'];
+        if (str_contains($lower, 'hehp') || str_contains($lower, 'hospital')) return ['HEHP / Hospital'];
+
+        return [];
+    }
+
+    /**
+     * Reverse: given a library category, return the best-matching library category
+     * name. Used when importing FatSecret items from the meal planner.
+     */
+    public static function libraryCategory(string $exchangeName): string
+    {
+        $cats = self::exchangeToLibraryCategories($exchangeName);
+        return $cats[0] ?? 'Other/Limit';
     }
 }

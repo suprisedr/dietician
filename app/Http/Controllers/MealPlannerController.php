@@ -106,8 +106,9 @@ class MealPlannerController extends Controller
         $resolveSlots = function (array $slots) use ($items) {
             $result = [];
             foreach ($slots as $slot => $foodNames) {
+                $counts = array_count_values($foodNames);
                 $slotItems = [];
-                foreach ($foodNames as $name) {
+                foreach ($counts as $name => $qty) {
                     $mi = $items->get($name);
                     if ($mi) {
                         $slotItems[] = [
@@ -121,7 +122,7 @@ class MealPlannerController extends Controller
                             'fib'     => null,
                             'group'   => $mi->category,
                             'exchCat' => null,
-                            'qty'     => 1,
+                            'qty'     => $qty,
                         ];
                     } else {
                         $slotItems[] = [
@@ -135,7 +136,7 @@ class MealPlannerController extends Controller
                             'fib'     => null,
                             'group'   => null,
                             'exchCat' => null,
-                            'qty'     => 1,
+                            'qty'     => $qty,
                         ];
                     }
                 }
@@ -273,7 +274,7 @@ class MealPlannerController extends Controller
             ->groupBy('category');
 
         // ── Meal plan distribution from the patient's exchange template ──────
-        // slotDistribution['breakfast'] = [['name'=>'Starchy Foods','qty'=>2,'item_id'=>5], ...]
+        // slotDistribution['breakfast'] = [['name'=>'Starch','qty'=>2,'item_id'=>5], ...]
         // The 'supper' slot in the DB maps to 'dinner' in the planner
         $slotDistribution = array_fill_keys(
             \App\Models\MealPlannerWeek::MEAL_SLOTS, []
@@ -322,8 +323,19 @@ class MealPlannerController extends Controller
             }
         }
 
+        $exchangeCatMap = [];
+        if ($mealPlanner->patient_id) {
+            $patientModel = $mealPlanner->patient;
+            if ($patientModel && $patientModel->exchange_template_id) {
+                foreach ($patientModel->exchangeTemplate->items as $item) {
+                    $slug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($item->name)), '-');
+                    $exchangeCatMap[$slug] = MealItem::exchangeToLibraryCategories($item->name);
+                }
+            }
+        }
+
         return view('meal-planner.show', compact(
-            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution', 'slotLimits'
+            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution', 'slotLimits', 'exchangeCatMap'
         ));
     }
 

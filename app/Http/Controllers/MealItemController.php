@@ -131,6 +131,10 @@ class MealItemController extends Controller
                 'energy_kcal'    => $existing->energy_kcal,
                 'energy_kj'      => $existing->energy_kj,
                 'serving_size'   => $existing->serving_size,
+                'cho_g'          => $existing->cho_g,
+                'protein_g'      => $existing->protein_g,
+                'fat_g'          => $existing->fat_g,
+                'fiber_g'        => $existing->fiber_g,
                 'already_existed'=> true,
             ]);
         }
@@ -144,7 +148,7 @@ class MealItemController extends Controller
             'cho_g'        => $data['carbs']   ?? null,
             'protein_g'    => $data['protein'] ?? null,
             'fiber_g'      => $data['fiber']   ?? null,
-            'category'     => $data['category'] ?? 'Other',
+            'category'     => $data['category'] ?? 'Other/Limit',
             'is_system'    => false,
             'created_by'   => auth()->id(),
         ]);
@@ -156,6 +160,10 @@ class MealItemController extends Controller
             'energy_kcal'    => $item->energy_kcal,
             'energy_kj'      => $item->energy_kj,
             'serving_size'   => $item->serving_size,
+            'cho_g'          => $item->cho_g,
+            'protein_g'      => $item->protein_g,
+            'fat_g'          => $item->fat_g,
+            'fiber_g'        => $item->fiber_g,
             'already_existed'=> false,
         ]);
     }
