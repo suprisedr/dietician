@@ -109,6 +109,12 @@
 .macro-row-cho .mp-macro-td.has-val { color:#92400e; }
 .macro-row-pro .mp-macro-td.has-val { color:#3730a3; }
 .macro-row-fat .mp-macro-td.has-val { color:#0f766e; }
+.mp-macro-target { font-size:.58rem; font-weight:600; color:#9ca3af; }
+.mp-macro-td.over-target .mp-macro-actual { color:#dc2626; }
+.mp-macro-td.at-target .mp-macro-actual { color:#15803d; }
+.mp-target-row td { background:#f8fafc; }
+.mp-target-row .mp-macro-td-label { font-size:.62rem; color:#9ca3af; font-weight:600; }
+.mp-target-row .mp-macro-td { font-size:.62rem; font-weight:600; color:#9ca3af; border-top:1px dashed #e5e7eb; }
 
 /* ── Combined table ───────────────────────────────────────── */
 .mp-combined-card {
@@ -742,27 +748,47 @@ details[open] .mp-details-summary .chevron { transform:rotate(180deg); }
             </thead>
             <tbody>
                 <tr class="mp-macro-row macro-row-kj">
-                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#f97316"></span>kJ</td>
+                    <td class="mp-macro-td-label">
+                        <span class="mp-macro-dot" style="background:#f97316"></span>kJ
+                        @if(!empty($macroTargets['kj']))
+                            <span class="mp-macro-target">Target: {{ number_format($macroTargets['kj']) }}</span>
+                        @endif
+                    </td>
                     @foreach($days as $di => $dayName)
-                        <td class="mp-macro-td" id="grand-kj-{{ $di }}">0</td>
+                        <td class="mp-macro-td" id="grand-kj-{{ $di }}" data-target="{{ $macroTargets['kj'] ?? '' }}"><span class="mp-macro-actual">0</span></td>
                     @endforeach
                 </tr>
                 <tr class="mp-macro-row macro-row-cho">
-                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#d97706"></span>CHO (g)</td>
+                    <td class="mp-macro-td-label">
+                        <span class="mp-macro-dot" style="background:#d97706"></span>CHO (g)
+                        @if(!empty($macroTargets['cho_g']))
+                            <span class="mp-macro-target">Target: {{ number_format($macroTargets['cho_g']) }}g</span>
+                        @endif
+                    </td>
                     @foreach($days as $di => $dayName)
-                        <td class="mp-macro-td" id="grand-cho-{{ $di }}">0</td>
+                        <td class="mp-macro-td" id="grand-cho-{{ $di }}" data-target="{{ $macroTargets['cho_g'] ?? '' }}"><span class="mp-macro-actual">0</span></td>
                     @endforeach
                 </tr>
                 <tr class="mp-macro-row macro-row-pro">
-                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#6366f1"></span>Protein (g)</td>
+                    <td class="mp-macro-td-label">
+                        <span class="mp-macro-dot" style="background:#6366f1"></span>Protein (g)
+                        @if(!empty($macroTargets['pro_g']))
+                            <span class="mp-macro-target">Target: {{ number_format($macroTargets['pro_g']) }}g</span>
+                        @endif
+                    </td>
                     @foreach($days as $di => $dayName)
-                        <td class="mp-macro-td" id="grand-pro-{{ $di }}">0</td>
+                        <td class="mp-macro-td" id="grand-pro-{{ $di }}" data-target="{{ $macroTargets['pro_g'] ?? '' }}"><span class="mp-macro-actual">0</span></td>
                     @endforeach
                 </tr>
                 <tr class="mp-macro-row macro-row-fat">
-                    <td class="mp-macro-td-label"><span class="mp-macro-dot" style="background:#0d9488"></span>Fat (g)</td>
+                    <td class="mp-macro-td-label">
+                        <span class="mp-macro-dot" style="background:#0d9488"></span>Fat (g)
+                        @if(!empty($macroTargets['fat_g']))
+                            <span class="mp-macro-target">Target: {{ number_format($macroTargets['fat_g']) }}g</span>
+                        @endif
+                    </td>
                     @foreach($days as $di => $dayName)
-                        <td class="mp-macro-td" id="grand-fat-{{ $di }}">0</td>
+                        <td class="mp-macro-td" id="grand-fat-{{ $di }}" data-target="{{ $macroTargets['fat_g'] ?? '' }}"><span class="mp-macro-actual">0</span></td>
                     @endforeach
                 </tr>
             </tbody>
@@ -1409,6 +1435,19 @@ function doAutosave(){
 
 /* ── Recalc kJ badges & grand totals ────────────────── */
 /* recalcWithState(map) — shared engine used by both recalc() and recalcLive() */
+function applyMacroCell(el, display, raw){
+    var span = el.querySelector('.mp-macro-actual');
+    if(span) span.textContent = display; else el.textContent = display;
+    el.classList.toggle('has-val', raw > 0);
+    var target = parseFloat(el.dataset.target);
+    if(target > 0 && raw > 0){
+        var pct = raw / target;
+        el.classList.toggle('over-target', pct > 1.05);
+        el.classList.toggle('at-target', pct >= 0.90 && pct <= 1.05);
+    } else {
+        el.classList.remove('over-target','at-target');
+    }
+}
 function recalcWithState(stateMap){
     var slotTotals={};
     var dayMacros={};
@@ -1441,13 +1480,12 @@ function recalcWithState(stateMap){
     for(var di=0;di<7;di++){
         var m=dayMacros[di];
         var kjEl=document.getElementById('grand-kj-'+di);
-        if(kjEl){ kjEl.textContent=m.kj>0?Math.round(m.kj):0; kjEl.classList.toggle('has-val',m.kj>0); }
+        if(kjEl){ applyMacroCell(kjEl, m.kj>0?Math.round(m.kj):0, m.kj); }
         ['cho','pro','fat'].forEach(function(mac){
             var el=document.getElementById('grand-'+mac+'-'+di);
             if(el){
                 var v=Math.round(m[mac]*10)/10;
-                el.textContent=m[mac]>0?v:0;
-                el.classList.toggle('has-val',m[mac]>0);
+                applyMacroCell(el, m[mac]>0?v:0, m[mac]);
             }
         });
     }

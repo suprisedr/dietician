@@ -135,15 +135,6 @@ class MealItemSeeder extends Seeder
             ['category' => 'Other/Limit', 'name' => 'Boerewors',      'serving_size' => '60g cooked',            'cho_g' => 2,  'protein_g' => 10, 'fat_g' => 16, 'fruit_veg_portions' => 0],
             ['category' => 'Other/Limit', 'name' => 'Atchar',         'serving_size' => '1 tbsp (15g)',          'cho_g' => 2,  'protein_g' => 0,  'fat_g' => 3,  'fruit_veg_portions' => 0],
 
-            // ══════════════════════════════════════════════════════════════
-            //  HEHP / HOSPITAL
-            // ══════════════════════════════════════════════════════════════
-            ['category' => 'HEHP / Hospital', 'name' => 'Oral nutrition supplement powder',      'serving_size' => '1 serving mixed (50g)',    'cho_g' => 30, 'protein_g' => 8,  'fat_g' => 5,  'fruit_veg_portions' => 0],
-            ['category' => 'HEHP / Hospital', 'name' => 'Peanut butter fortified porridge',      'serving_size' => '1 bowl (300g)',             'cho_g' => 45, 'protein_g' => 12, 'fat_g' => 12, 'fruit_veg_portions' => 0],
-            ['category' => 'HEHP / Hospital', 'name' => 'Milk powder fortifier',                 'serving_size' => '2 tbsp (20g)',              'cho_g' => 8,  'protein_g' => 7,  'fat_g' => 5,  'fruit_veg_portions' => 0],
-            ['category' => 'HEHP / Hospital', 'name' => 'Full cream milk + milk powder',         'serving_size' => '1 cup fortified (270ml)',   'cho_g' => 20, 'protein_g' => 16, 'fat_g' => 12, 'fruit_veg_portions' => 0],
-            ['category' => 'HEHP / Hospital', 'name' => 'Egg enriched soft diet',                'serving_size' => '1 serving (250g)',           'cho_g' => 20, 'protein_g' => 18, 'fat_g' => 12, 'fruit_veg_portions' => 0],
-            ['category' => 'HEHP / Hospital', 'name' => 'Soup fortified with milk powder',       'serving_size' => '1 bowl (250ml)',             'cho_g' => 25, 'protein_g' => 12, 'fat_g' => 8,  'fruit_veg_portions' => 0],
         ];
 
         $rows = [];

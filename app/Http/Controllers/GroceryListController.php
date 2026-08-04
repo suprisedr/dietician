@@ -21,7 +21,6 @@ class GroceryListController extends Controller
         'Vegetable'         => 'produce',
         'Dairy'             => 'dairy',
         'Fat'               => 'pantry',
-        'HEHP / Hospital'   => 'pantry',
         'Other/Limit'       => 'pantry',
         'FatSecret'         => 'pantry',
         'Online'            => 'pantry',

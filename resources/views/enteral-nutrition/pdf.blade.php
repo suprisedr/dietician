@@ -124,18 +124,20 @@ body {
 <div class="patient-box">
     <table class="patient-grid">
         <tr>
-            <td class="pat-lbl">Patient</td>
-            <td class="pat-val">{{ $patient->full_name }}</td>
-            <td class="pat-lbl">Gender</td>
-            <td class="pat-val">{{ ucfirst($patient->gender ?? '—') }}</td>
-            <td class="pat-lbl">Age</td>
-            <td class="pat-val">{{ $patient->age ? $patient->age.' yrs' : '—' }}</td>
+            <td class="pat-lbl" style="width:50px">Patient</td>
+            <td class="pat-val" style="white-space:nowrap">{{ $patient->full_name }}</td>
+            <td class="pat-lbl" style="width:45px">Gender</td>
+            <td class="pat-val" style="white-space:nowrap">{{ ucfirst($patient->gender ?? '—') }}</td>
+            <td class="pat-lbl" style="width:30px">Age</td>
+            <td class="pat-val" style="white-space:nowrap">{{ $patient->age ? $patient->age.' yrs' : '—' }}</td>
+        </tr>
+        <tr>
             <td class="pat-lbl">Weight</td>
-            <td class="pat-val">{{ $patient->weight ? $patient->weight.' kg' : '—' }}</td>
+            <td class="pat-val" style="white-space:nowrap">{{ $patient->weight ? $patient->weight.' kg' : '—' }}</td>
             <td class="pat-lbl">Height</td>
-            <td class="pat-val">{{ $patient->height ? $patient->height.' cm' : '—' }}</td>
+            <td class="pat-val" style="white-space:nowrap">{{ $patient->height ? $patient->height.' cm' : '—' }}</td>
             <td class="pat-lbl">BMI</td>
-            <td class="pat-val">{{ $patient->bmi ? number_format($patient->bmi,1).' kg/m<sup>2</sup>' : '—' }}</td>
+            <td class="pat-val" style="white-space:nowrap">{{ $patient->bmi ? number_format($patient->bmi,1).' kg/m²' : '—' }}</td>
         </tr>
     </table>
 </div>
@@ -265,7 +267,7 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
                 <div class="row-sub">{{ $wtLabel }}</div>
 
                 <div class="row-lbl">BMI</div>
-                <div class="row-val">{{ $bmi > 0 ? number_format($bmi,1).' kg/m<sup>2</sup>' : '—' }}</div>
+                <div class="row-val">{!! $bmi > 0 ? number_format($bmi,1).' kg/m<sup>2</sup>' : '—' !!}</div>
                 <div class="row-sub">{{ $bmiClass }}</div>
             </td>
 

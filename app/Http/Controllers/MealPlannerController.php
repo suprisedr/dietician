@@ -334,8 +334,25 @@ class MealPlannerController extends Controller
             }
         }
 
+        $macroTargets = ['kj' => null, 'cho_g' => null, 'pro_g' => null, 'fat_g' => null];
+        if ($mealPlanner->patient_id) {
+            $p = $mealPlanner->patient;
+            $p->load('macronutrients');
+            $teeKj = $p->tee ?? 0;
+            if ($teeKj > 0 && $p->macronutrients->count()) {
+                $byType = $p->macronutrients->keyBy('type');
+                $choPct = $byType->get('carbohydrates')?->selected_percentage ?? 0;
+                $proPct = $byType->get('protein')?->selected_percentage ?? 0;
+                $fatPct = $byType->get('fats')?->selected_percentage ?? 0;
+                $macroTargets['kj']    = round($teeKj);
+                $macroTargets['cho_g'] = $choPct > 0 ? round($teeKj * $choPct / 100 / 17) : null;
+                $macroTargets['pro_g'] = $proPct > 0 ? round($teeKj * $proPct / 100 / 17) : null;
+                $macroTargets['fat_g'] = $fatPct > 0 ? round($teeKj * $fatPct / 100 / 38) : null;
+            }
+        }
+
         return view('meal-planner.show', compact(
-            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution', 'slotLimits', 'exchangeCatMap'
+            'mealPlanner', 'grid', 'mealItemsByCategory', 'slotDistribution', 'slotLimits', 'exchangeCatMap', 'macroTargets'
         ));
     }
 

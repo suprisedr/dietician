@@ -8,7 +8,6 @@
         'Vegetable'         => ['bg'=>'#d1fae5','text'=>'#065f46','dot'=>'#10b981'],
         'Dairy'             => ['bg'=>'#e0f2fe','text'=>'#0369a1','dot'=>'#0ea5e9'],
         'Fat'               => ['bg'=>'#ffedd5','text'=>'#c2410c','dot'=>'#f97316'],
-        'HEHP / Hospital'   => ['bg'=>'#fce7f3','text'=>'#9d174d','dot'=>'#ec4899'],
         'Other/Limit'       => ['bg'=>'#f1f5f9','text'=>'#475569','dot'=>'#94a3b8'],
     ];
     $catList = \App\Models\MealItem::categories();

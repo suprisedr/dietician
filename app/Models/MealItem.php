@@ -50,7 +50,6 @@ class MealItem extends Model
             'Vegetable',
             'Dairy',
             'Fat',
-            'HEHP / Hospital',
             'Other/Limit',
         ];
     }
@@ -72,8 +71,6 @@ class MealItem extends Model
         if (str_contains($lower, 'fat'))              return ['Fat'];
         if (str_contains($lower, 'sugar'))            return ['Other/Limit'];
         if (str_contains($lower, 'alcohol'))          return ['Other/Limit'];
-        if (str_contains($lower, 'hehp') || str_contains($lower, 'hospital')) return ['HEHP / Hospital'];
-
         return [];
     }
 
