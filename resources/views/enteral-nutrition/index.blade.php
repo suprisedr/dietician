@@ -33,9 +33,9 @@
 
     // EN formula database: macronutrients per 1 000 mL (generic standard formulas)
     $formulaDb = [
-        '1.0' => ['label' => '1.0 kcal/mL', 'kcalPerMl' => 1.0, 'proteinGL' => 40.0, 'carbsGL' => 127.0, 'fatGL' => 35.4, 'freeWater' => 0.85],
-        '1.2' => ['label' => '1.2 kcal/mL', 'kcalPerMl' => 1.2, 'proteinGL' => 55.5, 'carbsGL' => 169.4, 'fatGL' => 39.3, 'freeWater' => 0.80],
-        '1.5' => ['label' => '1.5 kcal/mL', 'kcalPerMl' => 1.5, 'proteinGL' => 62.0, 'carbsGL' => 200.0, 'fatGL' => 50.0, 'freeWater' => 0.70],
+        '1.0' => ['label' => '1.0 kcal/mL', 'kcalPerMl' => 1.0, 'proteinGL' => 40.0, 'carbsGL' => 127.0, 'fatGL' => 35.4],
+        '1.2' => ['label' => '1.2 kcal/mL', 'kcalPerMl' => 1.2, 'proteinGL' => 55.5, 'carbsGL' => 169.4, 'fatGL' => 39.3],
+        '1.5' => ['label' => '1.5 kcal/mL', 'kcalPerMl' => 1.5, 'proteinGL' => 62.0, 'carbsGL' => 200.0, 'fatGL' => 50.0],
     ];
 
     // Stress / activity factors (applied to MSJ REE → TEE)
@@ -404,24 +404,24 @@
                         </dl>
                     </div>
 
-                    {{-- Fluid --}}
+                    {{-- Water Flush --}}
                     <div style="padding:1rem 1.25rem;border-right:1px solid var(--border)">
-                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.8rem">Fluid</div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.8rem">Water Flush</div>
                         <dl style="display:flex;flex-direction:column;gap:.7rem;margin:0">
                             <div>
-                                <dt style="font-size:.72rem;color:var(--text-muted)">Total Fluids</dt>
-                                <dd id="res-total-fluid" style="font-size:1rem;font-weight:700;color:var(--primary);margin:0">&#x2014;</dd>
-                                <div id="res-total-fluid-sub" style="font-size:.72rem;color:var(--text-muted)">&#x2014;</div>
-                            </div>
-                            <div>
-                                <dt style="font-size:.72rem;color:var(--text-muted)">Daily Needs <span style="font-weight:400">(35 mL/kg)</span></dt>
-                                <dd id="res-fluid-std" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
-                                <div style="font-size:.72rem;color:var(--text-muted)">35 mL/kg/day</div>
-                            </div>
-                            <div>
-                                <dt style="font-size:.72rem;color:var(--text-muted)">Water Flush</dt>
+                                <dt style="font-size:.72rem;color:var(--text-muted)">Flush Prescription</dt>
                                 <dd id="res-flush-rx" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
                                 <div id="res-flush-rx-sub" style="font-size:.72rem;color:var(--text-muted)">&#x2014;</div>
+                            </div>
+                            <div>
+                                <dt style="font-size:.72rem;color:var(--text-muted)">Total Flush Water</dt>
+                                <dd id="res-flush-total" style="font-size:1rem;font-weight:700;color:var(--primary);margin:0">&#x2014;</dd>
+                                <div id="res-flush-total-sub" style="font-size:.72rem;color:var(--text-muted)">&#x2014;</div>
+                            </div>
+                            <div>
+                                <dt style="font-size:.72rem;color:var(--text-muted)">Feed Volume</dt>
+                                <dd id="res-feed-volume" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">&#x2014;</dd>
+                                <div id="res-feed-volume-sub" style="font-size:.72rem;color:var(--text-muted)">&#x2014;</div>
                             </div>
                         </dl>
                     </div>
@@ -431,7 +431,7 @@
                         <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.8rem">Anthropometry</div>
                         <dl style="display:flex;flex-direction:column;gap:.7rem;margin:0">
                             <div>
-                                <dt style="font-size:.72rem;color:var(--text-muted)">Ideal Body Weight <span style="font-weight:400">(Devine)</span></dt>
+                                <dt style="font-size:.72rem;color:var(--text-muted)">IBW</dt>
                                 <dd style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0">{{ $devineIbw > 0 ? number_format($devineIbw,1).' kg' : '&mdash;' }}</dd>
                             </div>
                             <div>
@@ -721,7 +721,7 @@ select.en-input { cursor: pointer; }
     function updatePatientSummary() {
         var wt     = parseFloat(document.getElementById('wt-kg-input').value) || 0;
         var wtType = document.getElementById('wt-type-input').value || '';
-        var wtLabels = { actual: 'Actual', ibw: 'IBW (Devine)', abw: 'NDW' };
+        var wtLabels = { actual: 'Actual', ibw: 'IBW', abw: 'NDW' };
         set('ref-body-weight',      wt > 0 ? wt.toFixed(1) + ' kg' : '—');
         set('ref-body-weight-type', wtLabels[wtType] || wtType);
     }
@@ -768,15 +768,8 @@ select.en-input { cursor: pointer; }
         }
         var rateMlHr = volumeMl / hours;
 
-        // ── Fluid ────────────────────────────────────────────────────
-        var formula    = FORMULA_DB[currentDensity] || FORMULA_DB['1.0'];
-        var fwFrac     = formula.freeWater || 0.85;
-        var fwMl       = volumeMl * fwFrac;
-        var fluidStd   = wt * 35;
-        var extraWater = Math.max(0, fluidStd - fwMl);
-        var totalFluid = fwMl + extraWater;
-
         // ── Macros from Formula ──────────────────────────────────────
+        var formula     = FORMULA_DB[currentDensity] || FORMULA_DB['1.0'];
         var volumeL     = volumeMl / 1000;
         var fmlProteinG = volumeL * (formula.proteinGL || 0);
         var fmlCarbsG   = volumeL * (formula.carbsGL   || 0);
@@ -821,15 +814,16 @@ select.en-input { cursor: pointer; }
         set('res-fml-carbs',    n(fmlCarbsG, 1) + ' g');
         set('res-fml-fat',      n(fmlFatG, 1) + ' g');
 
-        // ── Fluid section ─────────────────────────────────────────────
-        set('res-total-fluid',     n(totalFluid) + ' mL');
-        set('res-total-fluid-sub', '(' + n(totalFluid / wt, 1) + ' mL/kg/day)');
-        set('res-fluid-std',       n(fluidStd) + ' mL');
-        set('res-flush-rx',        flushVolMl + ' mL every ' + flushFreq);
-        set('res-flush-rx-sub',    flushesPerDay + '\u00d7/day \u2014 ' + n(flushTotalMl) + ' mL/day total');
+        // ── Water flush section ───────────────────────────────────────
+        set('res-flush-rx',         flushVolMl + ' mL every ' + flushFreq);
+        set('res-flush-rx-sub',     flushesPerDay + '\u00d7/day');
+        set('res-flush-total',      n(flushTotalMl) + ' mL/day');
+        set('res-flush-total-sub',  flushVolMl + ' mL \u00d7 ' + flushesPerDay + ' flushes');
+        set('res-feed-volume',      n(volumeMl) + ' mL/day');
+        set('res-feed-volume-sub',  n(rateMlHr, 1) + ' mL/hr over ' + hours + 'h');
 
         // ── Nutritional weight ────────────────────────────────────────
-        var wtLabels = { actual: 'Actual body weight', ibw: 'IBW (Devine)', abw: 'Adjusted body weight (NDW)' };
+        var wtLabels = { actual: 'Actual body weight', ibw: 'IBW', abw: 'Adjusted body weight (NDW)' };
         var wtType   = document.getElementById('wt-type-input').value || '';
         set('res-nutri-wt',      n(dosingWt, 1) + ' kg');
         set('res-nutri-wt-type', (wtLabels[wtType] || wtType) + (oedemAdj > 0 ? ' (dry \u2212\u202f' + oedemAdj + '\u202fkg)' : ''));
@@ -838,8 +832,6 @@ select.en-input { cursor: pointer; }
         set('res-formula-label',    currentDensity + ' kcal/mL');
         set('res-ftbl-kcal-ml',     density + ' kcal');
         set('res-kcal2',            n(energyKcal) + ' kcal');
-        set('res-ftbl-fw-ml',       Math.round((formula.freeWater || 0.85) * 1000) + ' mL');
-        set('res-ftbl-fw-daily',    n(fwMl) + ' mL');
         set('res-ftbl-pro-ml',      (formula.proteinGL || 0) + ' g');
         set('res-fml-protein',      n(fmlProteinG, 1) + ' g');
         set('res-ftbl-carbs-ml',    (formula.carbsGL || 0) + ' g');
@@ -951,18 +943,18 @@ select.en-input { cursor: pointer; }
             + '<div><dt>Total Carbohydrates</dt><dd>' + tv('res-fml-carbs') + '</dd></div>'
             + '<div><dt>Total Fat</dt><dd>' + tv('res-fml-fat') + '</dd></div>'
             + '</dl></div>';
-        // Fluid
-        html += '<div><div class="col-head">Fluid</div><dl>'
-            + '<div><dt>Total Fluids</dt><dd class="primary">' + tv('res-total-fluid') + '</dd><div class="sub">' + tv('res-total-fluid-sub') + '</div></div>'
-            + '<div><dt>Daily Needs (35 mL/kg)</dt><dd>' + tv('res-fluid-std') + '</dd><div class="sub">35 mL/kg/day</div></div>'
-            + '<div><dt>Water Flush</dt><dd>' + tv('res-flush-rx') + '</dd><div class="sub">' + tv('res-flush-rx-sub') + '</div></div>'
+        // Water flush
+        html += '<div><div class="col-head">Water Flush</div><dl>'
+            + '<div><dt>Flush Prescription</dt><dd>' + tv('res-flush-rx') + '</dd><div class="sub">' + tv('res-flush-rx-sub') + '</div></div>'
+            + '<div><dt>Total Flush Water</dt><dd class="primary">' + tv('res-flush-total') + '</dd><div class="sub">' + tv('res-flush-total-sub') + '</div></div>'
+            + '<div><dt>Feed Volume</dt><dd>' + tv('res-feed-volume') + '</dd><div class="sub">' + tv('res-feed-volume-sub') + '</div></div>'
             + '</dl></div>';
         // Anthropometrics
         var ibd = '{{ $devineIbw > 0 ? number_format($devineIbw,1)." kg" : "\u2014" }}';
         var abw = '{{ $actualWt > 0 ? number_format($actualWt,1)." kg" : "\u2014" }}';
         var bmiV= '{{ $bmi > 0 ? number_format($bmi,1)." kg/m\u00b2" : "\u2014" }}';
         html += '<div><div class="col-head">Anthropometry</div><dl>'
-            + '<div><dt>Ideal Body Weight (Devine)</dt><dd>' + ibd + '</dd></div>'
+            + '<div><dt>IBW</dt><dd>' + ibd + '</dd></div>'
             + '<div><dt>Actual Body Weight</dt><dd>' + abw + '</dd></div>'
             + '<div><dt>Nutritional Weight Used</dt><dd class="primary">' + tv('res-nutri-wt') + '</dd><div class="sub">' + tv('res-nutri-wt-type') + '</div></div>'
             + '<div><dt>BMI</dt><dd>' + bmiV + '</dd></div>'

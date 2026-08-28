@@ -149,9 +149,9 @@ body {
 
 @php
 $formulaDb = [
-    '1.0' => ['proteinGL' => 40.0,  'carbsGL' => 127.0, 'fatGL' => 35.4, 'freeWater' => 0.85],
-    '1.2' => ['proteinGL' => 55.5,  'carbsGL' => 169.4, 'fatGL' => 39.3, 'freeWater' => 0.80],
-    '1.5' => ['proteinGL' => 62.0,  'carbsGL' => 200.0, 'fatGL' => 50.0, 'freeWater' => 0.70],
+    '1.0' => ['proteinGL' => 40.0,  'carbsGL' => 127.0, 'fatGL' => 35.4],
+    '1.2' => ['proteinGL' => 55.5,  'carbsGL' => 169.4, 'fatGL' => 39.3],
+    '1.5' => ['proteinGL' => 62.0,  'carbsGL' => 200.0, 'fatGL' => 50.0],
 ];
 
 $heightCm = (float)($patient->height ?? 0);
@@ -174,17 +174,13 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
     $fmlPro       = round($volumeL * $formula['proteinGL'], 1);
     $fmlCarbs     = round($volumeL * $formula['carbsGL'], 1);
     $fmlFat       = round($volumeL * $formula['fatGL'], 1);
-    $fwMl         = round($calc->daily_volume_ml * $formula['freeWater']);
-    $totalFluidMl = $fwMl + (float)$calc->additional_water_ml;
     $adequate     = $fmlPro >= $calc->protein_target_g;
 
-    $flushFreqHours = (int) filter_var($calc->water_flush_frequency ?? '6-hourly', FILTER_SANITIZE_NUMBER_INT);
-    $flushFreqHours = max(1, $flushFreqHours ?: 6);
-    $flushesPerDay  = (int) round(24 / $flushFreqHours);
+    $flushesPerDay  = $calc->flushes_per_day;
     $flushVolMl     = (int)($calc->water_flush_ml ?? 30);
-    $flushTotalMl   = $flushVolMl * $flushesPerDay;
+    $flushTotalMl   = $calc->water_flush_total_ml;
 
-    $wtLabels = ['actual' => 'Actual body weight', 'ibw' => 'IBW (Devine)', 'abw' => 'Adjusted (NDW)'];
+    $wtLabels = ['actual' => 'Actual body weight', 'ibw' => 'IBW', 'abw' => 'Adjusted (NDW)'];
     $wtLabel  = $wtLabels[$calc->weight_type] ?? strtoupper($calc->weight_type);
 @endphp
 
@@ -233,28 +229,28 @@ $bmiClass = $bmi >= 40 ? 'Obese class III' : ($bmi >= 35 ? 'Obese class II' : ($
                 <div class="row-val">{{ $fmlFat }} g</div>
             </td>
 
-            {{-- Fluid --}}
+            {{-- Water flush --}}
             <td width="33%">
-                <div class="col-head">Fluid</div>
+                <div class="col-head">Water Flush</div>
 
-                <div class="row-lbl">Total Fluids</div>
-                <div class="row-val green">{{ number_format($totalFluidMl,0) }} mL</div>
-                <div class="row-sub">({{ number_format($totalFluidMl / max(1,(float)$calc->weight_kg),1) }} mL/kg/day)</div>
-
-                <div class="row-lbl">Daily Needs (35 mL/kg)</div>
-                <div class="row-val">{{ number_format($calc->fluid_requirement_ml,0) }} mL</div>
-                <div class="row-sub">35 mL/kg/day</div>
-
-                <div class="row-lbl">Water Flush</div>
+                <div class="row-lbl">Flush Prescription</div>
                 <div class="row-val">{{ $flushVolMl }} mL every {{ $calc->water_flush_frequency ?? '6-hourly' }}</div>
-                <div class="row-sub">{{ $flushesPerDay }}&times;/day &mdash; {{ number_format($flushTotalMl,0) }} mL/day total</div>
+                <div class="row-sub">{{ $flushesPerDay }}&times;/day</div>
+
+                <div class="row-lbl">Total Flush Water</div>
+                <div class="row-val green">{{ number_format($flushTotalMl,0) }} mL/day</div>
+                <div class="row-sub">{{ $flushVolMl }} mL &times; {{ $flushesPerDay }} flushes</div>
+
+                <div class="row-lbl">Feed Volume</div>
+                <div class="row-val">{{ number_format($calc->daily_volume_ml,0) }} mL/day</div>
+                <div class="row-sub">{{ number_format($calc->rate_ml_per_hour,1) }} mL/hr over {{ $calc->feeding_hours_per_day }}h</div>
             </td>
 
             {{-- Anthropometrics --}}
             <td width="34%">
                 <div class="col-head">Anthropometry</div>
 
-                <div class="row-lbl">Ideal Body Weight (Devine)</div>
+                <div class="row-lbl">IBW</div>
                 <div class="row-val">{{ $devineIbw !== null ? number_format($devineIbw,1).' kg' : '—' }}</div>
                 <div class="row-sub">&nbsp;</div>
 

@@ -22,9 +22,6 @@ class EnteralNutritionCalculation extends Model
         'feeding_hours_per_day',
         'daily_volume_ml',
         'rate_ml_per_hour',
-        'fluid_requirement_ml',
-        'free_water_from_formula_ml',
-        'additional_water_ml',
         'water_flush_ml',
         'water_flush_frequency',
         'notes',
@@ -40,9 +37,6 @@ class EnteralNutritionCalculation extends Model
         'feeding_hours_per_day'     => 'integer',
         'daily_volume_ml'           => 'decimal:0',
         'rate_ml_per_hour'          => 'decimal:1',
-        'fluid_requirement_ml'      => 'decimal:0',
-        'free_water_from_formula_ml'=> 'decimal:0',
-        'additional_water_ml'       => 'decimal:0',
         'water_flush_ml'            => 'integer',
     ];
 
@@ -107,16 +101,13 @@ class EnteralNutritionCalculation extends Model
     }
 
     /**
-     * Free-water percentage per formula density (mL free water per mL formula).
-     * 1.0 kcal/mL ≈ 85 %, 1.2 kcal/mL ≈ 80 %, 1.5 kcal/mL ≈ 70 %
+     * Number of water flushes per day, derived from the flush frequency.
      */
-    public static function freeWaterFractionFor(float $density): float
+    public static function flushesPerDayFor(?string $frequency): int
     {
-        return match ((string) $density) {
-            '1.2'   => 0.80,
-            '1.5'   => 0.70,
-            default => 0.85, // 1.0
-        };
+        $hours = (int) filter_var($frequency ?? '6-hourly', FILTER_SANITIZE_NUMBER_INT);
+
+        return (int) round(24 / max(1, $hours ?: 6));
     }
 
     // ── Relationships ─────────────────────────────────────────────────────────
@@ -141,5 +132,18 @@ class EnteralNutritionCalculation extends Model
     public function getEnergyTargetKjAttribute(): float
     {
         return round($this->energy_target_kcal * 4.184);
+    }
+
+    public function getFlushesPerDayAttribute(): int
+    {
+        return self::flushesPerDayFor($this->water_flush_frequency);
+    }
+
+    /**
+     * Total water delivered per day by flushes — the only water counted in the feed.
+     */
+    public function getWaterFlushTotalMlAttribute(): int
+    {
+        return (int) ($this->water_flush_ml ?? 30) * $this->flushes_per_day;
     }
 }

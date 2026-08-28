@@ -72,24 +72,30 @@
 
                             <div class="app-notif-list">
                                 @forelse($recentNotifications as $notif)
+                                @php
+                                    $notifName = $notif->data['patient_name'] ?? 'A patient';
+                                    if ($notif->type === \App\Notifications\PatientConsented::class) {
+                                        $notifTitle = $notifName . ' granted POPIA consent';
+                                        $notifMeta  = $notif->data['consented_at'] ?? '';
+                                        $notifIcon  = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+                                    } else {
+                                        $notifTitle = $notifName . ' submitted a food diary';
+                                        $notifMeta  = trim(($notif->data['diary_date'] ?? '')
+                                            . (!empty($notif->data['rating']) ? ' · ' . $notif->data['rating'] . '/5 ★' : ''));
+                                        $notifIcon  = 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z';
+                                    }
+                                @endphp
                                 <form method="POST" action="{{ route('notifications.read', $notif->id) }}">
                                     @csrf
                                     <button type="submit" class="app-notif-item {{ $notif->read_at ? '' : 'is-unread' }}">
                                         <span class="app-notif-icon">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="{{ $notifIcon }}"/>
                                             </svg>
                                         </span>
                                         <span class="app-notif-body">
-                                            <span class="app-notif-title">
-                                                {{ $notif->data['patient_name'] }} submitted a food diary
-                                            </span>
-                                            <span class="app-notif-meta">
-                                                {{ $notif->data['diary_date'] }}
-                                                @if(!empty($notif->data['rating']))
-                                                · {{ $notif->data['rating'] }}/5 ★
-                                                @endif
-                                            </span>
+                                            <span class="app-notif-title">{{ $notifTitle }}</span>
+                                            <span class="app-notif-meta">{{ $notifMeta }}</span>
                                             <span class="app-notif-time">{{ $notif->created_at->diffForHumans() }}</span>
                                         </span>
                                         @if(!$notif->read_at)

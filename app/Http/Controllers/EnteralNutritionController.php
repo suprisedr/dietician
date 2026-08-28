@@ -68,12 +68,6 @@ class EnteralNutritionController extends Controller
         $dailyVolumeMl   = round($energyKcal / $density);
         $rateMlPerHr     = round($dailyVolumeMl / $feedingHours, 1);
 
-        // Fluid requirements: 35 mL/kg/day (ClinCalc / ASPEN standard)
-        $fluidReqMl       = round($weightKg * 35);
-        $freeWaterFrac    = EnteralNutritionCalculation::freeWaterFractionFor($density);
-        $freeWaterMl      = round($dailyVolumeMl * $freeWaterFrac);
-        $additionalWaterMl = max(0, $fluidReqMl - $freeWaterMl);
-
         EnteralNutritionCalculation::create([
             'patient_id'                 => $patient->id,
             'user_id'                    => Auth::id(),
@@ -88,9 +82,6 @@ class EnteralNutritionController extends Controller
             'feeding_hours_per_day'      => $feedingHours,
             'daily_volume_ml'            => $dailyVolumeMl,
             'rate_ml_per_hour'           => $rateMlPerHr,
-            'fluid_requirement_ml'       => $fluidReqMl,
-            'free_water_from_formula_ml' => $freeWaterMl,
-            'additional_water_ml'        => $additionalWaterMl,
             'water_flush_ml'             => (int) $data['water_flush_ml'],
             'water_flush_frequency'      => $data['water_flush_frequency'],
         ]);

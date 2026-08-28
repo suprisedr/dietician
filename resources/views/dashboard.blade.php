@@ -92,6 +92,62 @@
             </div>
         </div>
 
+        {{-- ═════════ CONSENT ALERTS ═════════ --}}
+        @if(session('consent_success'))
+            <div style="padding:.7rem 1rem;background:#dcfce7;border:1px solid #86efac;border-radius:.75rem;color:#15803d;font-size:.85rem;font-weight:600">
+                &#x2713; {{ session('consent_success') }}
+            </div>
+        @endif
+
+        @if($awaitingConsent->isNotEmpty())
+        <section class="dash2-section">
+            <h2 class="dash2-section-title">Awaiting Consent</h2>
+            <div style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b;border-radius:.75rem;padding:1rem 1.25rem">
+                <p style="font-size:.85rem;color:#78350f;margin:0 0 .85rem;line-height:1.5">
+                    <strong style="color:#92400e">{{ $awaitingConsent->count() }}</strong>
+                    {{ $awaitingConsent->count() === 1 ? 'client has' : 'clients have' }}
+                    not granted POPIA consent yet &mdash; clinical features stay locked until they do.
+                </p>
+
+                <div style="display:flex;flex-direction:column;gap:.5rem">
+                    @foreach($awaitingConsent as $consentPatient)
+                        @php
+                            if ($consentPatient->consentDeclined()) {
+                                $consentState = ['label' => '&#x2717; Declined',    'bg' => '#fee2e2', 'fg' => '#b91c1c'];
+                                $consentNote  = 'Declined consent — ask them to reconsider, then resend the link.';
+                            } elseif ($consentPatient->consentTokenExpired()) {
+                                $consentState = ['label' => '&#x23F0; Link expired', 'bg' => '#fef3c7', 'fg' => '#92400e'];
+                                $consentNote  = 'The consent link has expired — resend it.';
+                            } else {
+                                $consentState = ['label' => '&#x23F3; Pending',      'bg' => '#fef3c7', 'fg' => '#92400e'];
+                                $consentNote  = $consentPatient->consent_token_expires_at
+                                    ? 'Link expires ' . $consentPatient->consent_token_expires_at->diffForHumans()
+                                    : 'Consent email sent to ' . $consentPatient->email;
+                            }
+                        @endphp
+                        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;background:#fff;border:1px solid #fde68a;border-radius:.6rem;padding:.6rem .85rem">
+                            <a href="{{ route('patients.show', $consentPatient->id) }}"
+                               style="font-size:.85rem;font-weight:700;color:var(--text-primary);text-decoration:none">
+                                {{ $consentPatient->full_name }}
+                            </a>
+                            <span style="font-size:.7rem;font-weight:700;padding:.15rem .55rem;border-radius:20px;background:{{ $consentState['bg'] }};color:{{ $consentState['fg'] }}">
+                                {!! $consentState['label'] !!}
+                            </span>
+                            <span style="font-size:.75rem;color:var(--text-muted);flex:1;min-width:8rem">{{ $consentNote }}</span>
+                            <form method="POST" action="{{ route('patients.resend-consent', $consentPatient->id) }}" style="margin:0">
+                                @csrf
+                                <button type="submit"
+                                        style="padding:.35rem .85rem;background:#d97706;color:#fff;font-size:.75rem;font-weight:700;border:none;border-radius:.4rem;cursor:pointer;white-space:nowrap">
+                                    Resend Consent Link
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+        @endif
+
         {{-- ═════════ QUICK ACTIONS ═════════ --}}
         <section class="dash2-section">
             <h2 class="dash2-section-title">Quick Actions</h2>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Patient;
+use App\Notifications\PatientConsented;
 use Illuminate\Http\Request;
 
 class PatientConsentController extends Controller
@@ -40,10 +41,17 @@ class PatientConsentController extends Controller
         abort_if($patient->consentDeclined(), 422, 'Consent has already been declined.');
         abort_if($patient->consentTokenExpired(), 410, 'This consent link has expired.');
 
+        $alreadyConsented = $patient->hasConsented();
+
         $patient->update([
             'consent_status' => 'consented',
             'consented_at'   => now(),
         ]);
+
+        // Tell the dietitian — a re-submitted link must not notify twice.
+        if (! $alreadyConsented) {
+            $patient->user?->notify(new PatientConsented($patient));
+        }
 
         return view('patients.consent-accepted', compact('patient'));
     }

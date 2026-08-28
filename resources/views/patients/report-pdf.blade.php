@@ -621,20 +621,20 @@
             </tbody>
         </table>
 
-        <div class="sub-header" style="margin-top:6px">Fluid Requirements</div>
+        <div class="sub-header" style="margin-top:6px">Water Flush</div>
         <table class="data-table" cellpadding="0" cellspacing="0">
             <tbody>
                 <tr>
-                    <td>Total Fluid Requirement</td>
-                    <td class="r">{{ $enteral->fluid_requirement_ml ? number_format($enteral->fluid_requirement_ml).' mL' : '—' }}</td>
+                    <td>Flush Volume</td>
+                    <td class="r">{{ ($enteral->water_flush_ml ?? 30).' mL' }}</td>
                 </tr>
                 <tr>
-                    <td>Free Water from Formula</td>
-                    <td class="r">{{ $enteral->free_water_from_formula_ml ? number_format($enteral->free_water_from_formula_ml).' mL' : '—' }}</td>
+                    <td>Frequency</td>
+                    <td class="r">{{ $enteral->water_flush_frequency ?? '6-hourly' }} ({{ $enteral->flushes_per_day }}&times;/day)</td>
                 </tr>
                 <tr class="tot">
-                    <td>Additional Water Needed</td>
-                    <td class="r">{{ $enteral->additional_water_ml ? number_format($enteral->additional_water_ml).' mL' : '—' }}</td>
+                    <td>Total Flush Water</td>
+                    <td class="r">{{ number_format($enteral->water_flush_total_ml).' mL/day' }}</td>
                 </tr>
             </tbody>
         </table>
@@ -713,17 +713,10 @@
     $dProG = round($dVol * $dDensity * $dm['pro_pct'] / 100 / 4, 1);
     $dFatG = round($dVol * $dDensity * $dm['fat_pct'] / 100 / 9, 1);
 
-    $dFwFrac   = match(true) { $dDensity >= 1.45 => 0.76, $dDensity >= 1.15 => 0.82, default => 0.85 };
-    $dFwMl     = round($dVol * $dFwFrac);
-    $dAddWater = (int)$enteral->additional_water_ml;
-    $dFluidReq = (int)$enteral->fluid_requirement_ml;
-    $dTotalFluid = $dFwMl + $dAddWater;
-
     $dFlushFreqStr = $enteral->water_flush_frequency ?? '6-hourly';
-    $dFlushHours   = max(1, (int)filter_var($dFlushFreqStr, FILTER_SANITIZE_NUMBER_INT) ?: 6);
-    $dFlushPerDay  = (int)round(24 / $dFlushHours);
+    $dFlushPerDay  = $enteral->flushes_per_day;
     $dFlushMl      = (int)($enteral->water_flush_ml ?? 30);
-    $dFlushTotal   = $dFlushMl * $dFlushPerDay;
+    $dFlushTotal   = $enteral->water_flush_total_ml;
 
     $dHeightCm = (float)($patient->height ?? 0);
     $dIsMale   = strtolower($patient->gender ?? '') === 'male';
@@ -788,23 +781,23 @@
                 {{-- Fluid --}}
                 <td>
                     <div class="tube-box">
-                        <div class="tube-box-title">Fluid Management</div>
+                        <div class="tube-box-title">Water Flush</div>
                         <table class="tube-row" cellpadding="0" cellspacing="0">
-                            <tr><td class="tube-lbl">Total Fluids</td><td class="tube-val">{{ number_format($dTotalFluid) }} mL</td></tr>
+                            <tr><td class="tube-lbl">Flush Prescription</td><td class="tube-val">{{ $dFlushMl }}mL {{ $dFlushFreqStr }}</td></tr>
                         </table>
                         <table class="tube-row" cellpadding="0" cellspacing="0">
-                            <tr><td class="tube-lbl">Daily Needs (35mL/kg)</td><td class="tube-val">{{ number_format($dFluidReq) }} mL</td></tr>
+                            <tr><td class="tube-lbl">Flushes per Day</td><td class="tube-val">{{ $dFlushPerDay }}&times;/day</td></tr>
                         </table>
                         <table class="tube-row" cellpadding="0" cellspacing="0">
-                            <tr><td class="tube-lbl">Free Water</td><td class="tube-val">{{ number_format($dFwMl) }} mL</td></tr>
+                            <tr><td class="tube-lbl">Total Flush Water</td><td class="tube-val">{{ number_format($dFlushTotal) }} mL/day</td></tr>
                         </table>
                         <table class="tube-row" cellpadding="0" cellspacing="0">
-                            <tr><td class="tube-lbl">Additional Water</td><td class="tube-val">{{ number_format($dAddWater) }} mL</td></tr>
+                            <tr><td class="tube-lbl">Feed Volume</td><td class="tube-val">{{ number_format($dVol) }} mL/day</td></tr>
                         </table>
                         <table class="tube-row" cellpadding="0" cellspacing="0">
-                            <tr><td class="tube-lbl">Water Flush</td><td class="tube-val">{{ $dFlushMl }}mL &times;{{ $dFlushPerDay }}/d = {{ number_format($dFlushTotal) }}mL</td></tr>
+                            <tr><td class="tube-lbl">Feed Rate</td><td class="tube-val">{{ $dRate }} mL/hr &times; {{ $dHours }}h</td></tr>
                         </table>
-                        <div style="font-size:6.5px;color:#6b7280;margin-top:2px">Flush {{ $dFlushMl }}mL {{ $dFlushFreqStr }}</div>
+                        <div style="font-size:6.5px;color:#6b7280;margin-top:2px">Water given is the prescribed flush only.</div>
                     </div>
                 </td>
                 {{-- Anthropometrics --}}
@@ -813,7 +806,7 @@
                         <div class="tube-box-title">Anthropometrics</div>
                         @if($dIbw !== null)
                         <table class="tube-row" cellpadding="0" cellspacing="0">
-                            <tr><td class="tube-lbl">IBW (Devine)</td><td class="tube-val">{{ $dIbw }} kg</td></tr>
+                            <tr><td class="tube-lbl">IBW</td><td class="tube-val">{{ $dIbw }} kg</td></tr>
                         </table>
                         @endif
                         <table class="tube-row" cellpadding="0" cellspacing="0">

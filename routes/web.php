@@ -50,8 +50,20 @@ Route::get('/dashboard', function () {
                         })->where('visited_at', '>=', now()->subDays(7))->count();
     $mealPlansCreated = \App\Models\MealPlannerWeek::where('user_id', $userId)->count();
 
+    // Patients still awaiting POPIA consent — clinical features stay locked until granted.
+    // Patients without an email cannot receive the link and are treated as consented.
+    $awaitingConsent  = \App\Models\Patient::where('user_id', $userId)
+                            ->whereNotNull('email')
+                            ->where('email', '!=', '')
+                            ->where(function ($q) {
+                                $q->whereNull('consent_status')
+                                  ->orWhere('consent_status', '!=', 'consented');
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+
     return view('dashboard', compact(
-        'patientCount', 'newThisWeek', 'followUps', 'mealPlansCreated'
+        'patientCount', 'newThisWeek', 'followUps', 'mealPlansCreated', 'awaitingConsent'
     ));
 })->middleware(['auth', 'two-factor', 'verified'])->name('dashboard');
 

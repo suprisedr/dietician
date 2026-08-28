@@ -787,25 +787,28 @@
 
                 {{-- Nutrition Impact Symptoms --}}
                 <div class="sub-header" style="margin-top:10px">Nutrition Impact Symptoms</div>
+                @php
+                    $nisIcons = [
+                        'Poor Intake'   => '🍽️',
+                        'Nausea'        => '🤢',
+                        'Early Satiety' => '😖',
+                        'Bloating'      => '🫄',
+                        'Constipation'  => '💩',
+                        'Other'         => '📋',
+                    ];
+                @endphp
+                @if(count($nis))
                 <div class="nis-row">
-                    @php
-                        $nisIcons = [
-                            'Poor Intake'   => '🍽️',
-                            'Nausea'        => '🤢',
-                            'Early Satiety' => '😖',
-                            'Bloating'      => '🫄',
-                            'Constipation'  => '💩',
-                            'Other'         => '📋',
-                        ];
-                    @endphp
-                    @foreach($nisIcons as $nisLabel => $nisEmoji)
-                        @php $nisActive = in_array($nisLabel, $nis); @endphp
+                    @foreach($nis as $nisLabel)
                         <div class="nis-item">
-                            <div class="nis-icon {{ $nisActive ? 'active' : '' }}">{{ $nisEmoji }}</div>
+                            <div class="nis-icon active">{{ $nisIcons[$nisLabel] ?? '📋' }}</div>
                             {{ $nisLabel }}
                         </div>
                     @endforeach
                 </div>
+                @else
+                    <div class="field" style="border:none"><span>None recorded</span></div>
+                @endif
             </div>
         </div>
 
@@ -869,29 +872,32 @@
                 <div>
                     <div class="sub-header" style="margin-top:0">Nutrition Prescription</div>
                     @php
-                        $rxOptions = [
-                            ['label' => 'Renal Diet',                  'dot' => 'green'],
-                            ['label' => 'Diabetic Diet',              'dot' => 'green'],
-                            ['label' => 'Cardiac Diet',               'dot' => 'green'],
-                            ['label' => 'High Protein',               'dot' => 'orange'],
-                            ['label' => 'High Energy',                'dot' => 'orange'],
-                            ['label' => 'Low Sodium',                 'dot' => 'orange'],
-                            ['label' => 'Texture Modified',           'dot' => 'purple'],
-                            ['label' => 'Enteral Feeding',            'dot' => 'purple'],
-                            ['label' => 'Parenteral Nutrition',       'dot' => 'blue'],
-                            ['label' => 'Oral Nutrition Supplements', 'dot' => 'blue'],
+                        $rxDots = [
+                            'Renal Diet'                  => 'green',
+                            'Diabetic Diet'               => 'green',
+                            'Cardiac Diet'                => 'green',
+                            'High Protein'                => 'orange',
+                            'High Energy'                 => 'orange',
+                            'Low Sodium'                  => 'orange',
+                            'Texture Modified'            => 'purple',
+                            'Enteral Feeding'             => 'purple',
+                            'Parenteral Nutrition'        => 'blue',
+                            'Oral Nutrition Supplements'  => 'blue',
                         ];
                     @endphp
+                    @if(count($rxList))
                     <div class="rx-grid">
-                        @foreach($rxOptions as $rx)
-                            @php $rxChecked = in_array($rx['label'], $rxList); @endphp
+                        @foreach($rxList as $rxLabel)
                             <div class="rx-item">
-                                <span class="rx-dot {{ $rx['dot'] }}"></span>
-                                {{ $rx['label'] }}
-                                <span class="rx-check {{ $rxChecked ? 'checked' : '' }}">{{ $rxChecked ? '✓' : '' }}</span>
+                                <span class="rx-dot {{ $rxDots[$rxLabel] ?? 'green' }}"></span>
+                                {{ $rxLabel }}
+                                <span class="rx-check checked">✓</span>
                             </div>
                         @endforeach
                     </div>
+                    @else
+                        <div class="field" style="border:none"><span>None recorded</span></div>
+                    @endif
                 </div>
 
                 {{-- Intervention Details --}}
@@ -950,17 +956,10 @@
         $dProG   = round($dVol * $dDensity * $dm['pro_pct'] / 100 / 4, 1);
         $dFatG   = round($dVol * $dDensity * $dm['fat_pct'] / 100 / 9, 1);
 
-        $dFwFrac = match(true) { $dDensity >= 1.45 => 0.76, $dDensity >= 1.15 => 0.82, default => 0.85 };
-        $dFwMl      = round($dVol * $dFwFrac);
-        $dAddWater  = (int)$enteral->additional_water_ml;
-        $dFluidReq  = (int)$enteral->fluid_requirement_ml;
-        $dTotalFluid = $dFwMl + $dAddWater;
-
         $dFlushFreqStr = $enteral->water_flush_frequency ?? '6-hourly';
-        $dFlushHours   = max(1, (int)filter_var($dFlushFreqStr, FILTER_SANITIZE_NUMBER_INT) ?: 6);
-        $dFlushPerDay  = (int)round(24 / $dFlushHours);
+        $dFlushPerDay  = $enteral->flushes_per_day;
         $dFlushMl      = (int)($enteral->water_flush_ml ?? 30);
-        $dFlushTotal   = $dFlushMl * $dFlushPerDay;
+        $dFlushTotal   = $enteral->water_flush_total_ml;
 
         $dHeightCm = (float)($patient->height ?? 0);
         $dIsMale   = strtolower($patient->gender ?? '') === 'male';
@@ -1005,18 +1004,18 @@
                     @endif
                 </div>
                 <div class="tube-col">
-                    <div class="tube-col-title">Fluid Management</div>
-                    <div class="tube-row"><span class="tube-label">Total Fluids</span><span class="tube-val">{{ number_format($dTotalFluid) }} mL</span></div>
-                    <div class="tube-row"><span class="tube-label">Daily Needs (35mL/kg)</span><span class="tube-val">{{ number_format($dFluidReq) }} mL</span></div>
-                    <div class="tube-row"><span class="tube-label">Free Water (formula)</span><span class="tube-val">{{ number_format($dFwMl) }} mL</span></div>
-                    <div class="tube-row"><span class="tube-label">Additional Water</span><span class="tube-val">{{ number_format($dAddWater) }} mL</span></div>
-                    <div class="tube-row"><span class="tube-label">Water Flush</span><span class="tube-val">{{ $dFlushMl }}mL &times; {{ $dFlushPerDay }}/day = {{ number_format($dFlushTotal) }}mL</span></div>
-                    <div style="margin-top:5px;font-size:9px;color:#6b7280">Flush {{ $dFlushMl }}mL {{ $dFlushFreqStr }}</div>
+                    <div class="tube-col-title">Water Flush</div>
+                    <div class="tube-row"><span class="tube-label">Flush Prescription</span><span class="tube-val">{{ $dFlushMl }}mL {{ $dFlushFreqStr }}</span></div>
+                    <div class="tube-row"><span class="tube-label">Flushes per Day</span><span class="tube-val">{{ $dFlushPerDay }}&times;/day</span></div>
+                    <div class="tube-row"><span class="tube-label">Total Flush Water</span><span class="tube-val">{{ number_format($dFlushTotal) }} mL/day</span></div>
+                    <div class="tube-row"><span class="tube-label">Feed Volume</span><span class="tube-val">{{ number_format($dVol) }} mL/day</span></div>
+                    <div class="tube-row"><span class="tube-label">Feed Rate</span><span class="tube-val">{{ $dRate }} mL/hr &times; {{ $dHours }}h</span></div>
+                    <div style="margin-top:5px;font-size:9px;color:#6b7280">Water given is the prescribed flush only; feed volume excluded.</div>
                 </div>
                 <div class="tube-col">
                     <div class="tube-col-title">Anthropometrics</div>
                     @if($dIbw !== null)
-                    <div class="tube-row"><span class="tube-label">IBW (Devine)</span><span class="tube-val">{{ $dIbw }} kg</span></div>
+                    <div class="tube-row"><span class="tube-label">IBW</span><span class="tube-val">{{ $dIbw }} kg</span></div>
                     @endif
                     <div class="tube-row"><span class="tube-label">Actual Body Weight</span><span class="tube-val">{{ $dActualBw }} kg</span></div>
                     <div class="tube-row"><span class="tube-label">Weight Used ({{ $dWeightLabel }})</span><span class="tube-val">{{ $dWeightKg }} kg</span></div>
